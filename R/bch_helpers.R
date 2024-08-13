@@ -11,6 +11,8 @@ bch_sim=function(j,Sim,eq_sim,df2){
   return(sim_res1)
 }
 
+
+
 bch_p_values=function(Sim,eq_sim,df,hold_clus,nSim,max_clus,Parallel){
   bch_out=list()
   for (l in 1:ncol(hold_clus)){
