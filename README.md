@@ -6,7 +6,11 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of spatInfer is to …
+The purpose of `spatInfer` is to run spatial regressions that are robust
+to trends and autocorrelation in the data, and to provide spatial noise
+diagnostics to test the accuracy of the inference method. At the same it
+aims to be extremely simple to use, requiring only a sequence of four
+commands.
 
 ## Installation
 
@@ -20,26 +24,48 @@ pak::pak("morganwkelly/spatInfer")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+The goal is to run and test a regression with a spatial basis made up of
+the first $p$ principal components of a $k \times k$ tensor using
+standard errors based on $c$ large clusters. The spatial basis controls
+for trends and other large scale structure in the variables, and the
+clusters deal with autocorrelation in residuals. We will use data on
+intergenerational mobility from Chetty et al
 
 ``` r
 library(spatInfer)
-## basic example code
+library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+data(opportunity)
+set.seed(123)
+opportunity=opportunity |> dplyr::slice_sample(n=250)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+## First Steps
+
+The goal is to run a regression with a spatial basis made up of the
+first $p$ principal components of a $k \times k$ tensor and with
+standard errors based on $c$ large clusters. The spatial basis controls
+for trends and other large scale structure in the variables, and the
+clusters deal with autocorrelation in residuals.
+
+The parameters $c$, $k$ and $p$ are estimated with two commands. The
+first is `optimal_basis` which includes the formula to be estimated and
+the name of the data:
 
 ``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
+optimal_basis(mobility~racial_seg+single_mom,
+              opportunity,
+              max_splines=6)
 ```
+
+<img src="man/figures/README-basis-1.png" width="100%" />
 
 You’ll still need to render `README.Rmd` regularly, to keep `README.md`
 up-to-date. `devtools::build_readme()` is handy for this.

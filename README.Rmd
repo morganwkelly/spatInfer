@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of spatInfer is to ...
+The purpose of `spatInfer` is to run spatial regressions that are robust to trends and autocorrelation in the data, and to provide spatial noise diagnostics to test the accuracy of the inference method. At the same it aims to be extremely simple to use, requiring only a sequence of four commands.
 
 ## Installation
 
@@ -31,17 +31,25 @@ pak::pak("morganwkelly/spatInfer")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+The goal is to run and test a regression with a spatial basis made up of the first $p$ principal components of a $k \times k$ tensor using standard errors based on $c$ large clusters. The spatial basis controls for trends and other large scale structure in the variables, and the clusters deal with autocorrelation in residuals. We will use data on intergenerational mobility from Chetty et al
 
 ```{r example}
 library(spatInfer)
-## basic example code
+library(dplyr)
+data(opportunity)
+set.seed(123)
+opportunity=opportunity |> dplyr::slice_sample(n=250)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## First Steps
 
-```{r cars}
-summary(cars)
+The goal is to run a regression with a spatial basis made up of the first $p$ principal components of a $k \times k$ tensor and with standard errors based on $c$ large clusters. The spatial basis controls for trends and other large scale structure in the variables, and the clusters deal with autocorrelation in residuals.
+
+The parameters $c$, $k$ and $p$ are estimated with two commands. The first is `optimal_basis` which includes the formula to be estimated and the name of the data:
+```{r basis}
+optimal_basis(mobility~racial_seg+single_mom,
+              opportunity,
+              max_splines=6)
 ```
 
 You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
