@@ -1,51 +1,52 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # spatInfer
 
-The purpose of `spatInfer` is to run spatial regressions that are robust to trends and autocorrelation in the data, and to test the accuracy of the inference method with a spatial noise placebo test. At the same it aims to be extremely simple to use, requiring only a sequence of four commands.
+<!-- badges: start -->
+<!-- badges: end -->
 
-## First Steps
+The goal of spatInfer is to …
 
-The goal is to run a regression with a spatial basis made up of the first $p$ principal components of a $k \times k$ tensor and with standard errors based on $c$ large clusters. The spatial basis controls for trends and other large scale structure in the variables, and the clusters deal with autocorrelation in residuals.
+## Installation
 
+You can install the development version of spatInfer from
+[GitHub](https://github.com/) with:
 
+``` r
+# install.packages("pak")
+pak::pak("morganwkelly/spatInfer")
+```
 
-The parameters $c$, $k$ and $p$ are esimated with two commands.
+## Example
 
-The first is `optimal_basis`:
+This is a basic example which shows you how to solve a common problem:
 
 ``` r
 library(spatInfer)
-
-optimal_basis(y ~ x1 + x2, dat)
+## basic example code
 ```
 
-This chooses the combination of $k$ and $p$ that optimally predicts the outcome $y$ based on a Bayes Information Criterion.
-
-Knowing $k$ and $p$, we next run the `placebo` command to choose the optimal number $c$ of large clusters by comparing the p-values of spatial noise placebos against that of the treatment $x1$.
+What is special about using `README.Rmd` instead of just `README.md`?
+You can include R chunks like so:
 
 ``` r
-placebo(y ~ x1 + x2, dat,
-            splines=k,
-            num_pcs=p
-        )
+summary(cars)
+#>      speed           dist       
+#>  Min.   : 4.0   Min.   :  2.00  
+#>  1st Qu.:12.0   1st Qu.: 26.00  
+#>  Median :15.0   Median : 36.00  
+#>  Mean   :15.4   Mean   : 42.98  
+#>  3rd Qu.:19.0   3rd Qu.: 56.00  
+#>  Max.   :25.0   Max.   :120.00
 ```
 
-For each number of clusters $c$, `placebo` gives the proportion of simulations with p-values below 0.05. The optimal cluster number is where this proportion is in the range 0.05 to 0.07. The command also gives the placebo significance level of the treatment variable: how often the t-statistics of spatial noise placebos are above the real one.
+You’ll still need to render `README.Rmd` regularly, to keep `README.md`
+up-to-date. `devtools::build_readme()` is handy for this.
 
-Knowing the spatial basis values $k$ and $p$ and the cluster number $c$ we can now run the spatial basis regression `basis_reg` that gives us standard regression coefficients, confidence intervals and so on.
+You can also embed plots, for example:
 
-``` r
-basis_reg(y ~ x1 + x2, dat,
-           clusters=c,
-           splines=k,
-           num_pcs=p
-          )
-```
+<img src="man/figures/README-pressure-1.png" width="100%" />
 
-Besides `placebo`, `spatInfer` gives a second diagnostic `synth`, a synthetic outcome test that tests the hypothesis that the outcome $y$ is spatial noise, and thus independent of the treatment $x1$.
-
-``` r
-synth(y ~ x1 + x2, dat,
-            splines=k,
-            num_pcs=p
-)
-```
+In that case, don’t forget to commit and push the resulting figure
+files, so they display on GitHub and CRAN.
