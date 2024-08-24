@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The purpose of `spatInfer` is to run spatial regressions that are robust to trends and autocorrelation in the data, and to provide spatial noise diagnostics to test the accuracy of the inference method. At the same it aims to be extremely simple to use, requiring only a sequence of four commands.
+The purpose of `spatInfer` is to run spatial regressions that are robust to trends and autocorrelation in the data, and to provide diagnostics to test the accuracy of the inference method. At the same it aims to be extremely simple to use, requiring only a sequence of four commands.
 
 ## Installation
 
@@ -29,39 +29,9 @@ You can install the development version of spatInfer from [GitHub](https://githu
 pak::pak("morganwkelly/spatInfer")
 ```
 
-A detailed tutorial can be found at 
-[Tutorial](https://morganwkelly.github.io/spatInfer_tutor/)
+## Tutorial
+A step by step tutorial can be found 
+[here](https://morganwkelly.github.io/spatInfer_tutor/)
 
-## Example
 
-The goal is to run and test a regression with a spatial basis made up of the first $p$ principal components of a $k \times k$ tensor using standard errors based on $c$ large clusters. The spatial basis controls for trends and other large scale structure in the variables, and the clusters deal with autocorrelation in residuals. We will use data on intergenerational mobility from Chetty et al
-
-```{r example}
-library(spatInfer)
-library(dplyr)
-data(opportunity)
-```
-
-## First Steps
-
-The goal is to run a regression with a spatial basis made up of the first $p$ principal components of a $k \times k$ tensor and with standard errors based on $c$ large clusters. The spatial basis controls for trends and other large scale structure in the variables, and the clusters deal with autocorrelation in residuals.
-
-The parameters $k$ and $p$ are chosen with `optimal_basis` which includes the formula to be estimated and the name of the data:
-```{r basis}
-optimal_basis(mobility~racial_seg+single_mom,
-              opportunity,
-              max_splines=6)
-```
-
-It can be seen that the optimal number of splines $k$ is 4, and optimal number of principal components $p$ is 11.
-
-Next we run `placebo` which generates spatial noise placebos with the same structure as `racial_seg`. This gives placebo values for heteroskedasticity consistent `HC` standard errors and large cluster BCH ones. 
-
-```{r placebo, cache=TRUE}
-plbo_bch=placebo(mobility~racial_seg+single_mom,  opportunity,
-                 splines=4,
-                 pc_num=11,
-                 nSim=1000)
-placebo_table(plbo_bch)
-```
 
