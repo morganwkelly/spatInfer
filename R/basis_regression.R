@@ -23,7 +23,7 @@
 #' opportunity=opportunity |> dplyr::slice_sample(n=250)
 #' # Use the number of splines and PCs indicated by optimal_basis and
 #' # the number of clusters from the placebo test.
-#' ck=CK_regression(mobility~racial_seg+single_mom,  opportunity,
+#' ck=basis_regression(mobility~racial_seg+single_mom,  opportunity,
 #' splines=4,pc_num=3,
 #' clusters=5,cov="BCH")
 #'
@@ -33,7 +33,7 @@
 #' coef_omit = c("Intercept|PC*"), #omit basis and intercept
 #' gof_map = c("nobs", "r.squared"),fmt=2)
 
-CK_regression=function(fm,df,splines,pc_num,clusters,weights=F,cov="BCH"){
+basis_regression=function(fm,df,splines,pc_num,clusters,weights=F,cov="BCH"){
 
   if(is.null(df$X)|is.null(df$Y))
     stop("You must have longitude and latitude variables named X and Y")

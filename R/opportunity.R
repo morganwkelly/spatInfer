@@ -2,17 +2,18 @@
 #'
 #' A subset of their variables with 709 observations containing information on the following variables.
 #'
-#' @docType data
 #'
-#' @usage data(opportunity)
+#' @format ## `opportunity`
 #'
-#' @format An object of class \code{"cross"}.
-#'
-#' @keywords datasets
-#'
-#' @references Moore et al. (2013) Genetics 195:1077-1086
-#' (\href{https://www.ncbi.nlm.nih.gov/pubmed/23979570}{PubMed})
-#'
-#' @source \href{https://phenome.jax.org/projects/Moore1b}{QTL Archive}
-#'
+#' \describe{
+#'   \item{state}{State abbreviation}
+#'   \item{mobility}{Intergenerational mobility}
+#'   \item{racial_seg}{Racial segregation.}
+#'   \item{short_commute}{Commuting distance under 15 miles.}
+#'   \item{X}{Longitude.}
+#'   \item{Y}{Latitude}
+#'   \item{single_mom}{Single parent hourseholds with children.}
+#'   ...
+#' }
+
 "opportunity"

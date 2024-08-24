@@ -40,7 +40,9 @@ syn_tab=tinytable::tt(rr[,-c(1)],theme="striped",align="r",digits=2 ,
                        ", Effective Range=",ss$Effective_Range,
                        ", R2=",ss$R2,"."
                 ),
-                paste0("Splines=",ss$Splines,
+                paste0(
+                  "N=",ss$N,
+                  ", Splines=",ss$Splines,
                        ", PCs=",ss$PCs,"."
                 ),
                 "Estimated and synthetic outcome p values for different cluster numbers.

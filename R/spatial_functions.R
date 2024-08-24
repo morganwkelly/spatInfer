@@ -13,6 +13,18 @@ set_names=function(fm){
   return(list(rhs=rhs,gg=gg,orig_name=orig_name))
 }
 
+set_names_iv=function(fm){
+  fm=deparse1(fm)
+  fm=stringr::str_replace_all(fm," ","")
+  gg=unlist(stringr::str_split_1(fm,"~"))
+  hh=unlist(stringr::str_split(gg[2],"\\|"))
+  var_dep=gg[1]
+  var_inst=gg[3]
+  rhs=hh[1]
+  var_expl=hh[2]
+  return(list(rhs=rhs,var_dep=var_dep,var_expl=var_expl,var_inst=var_inst,orig_name=var_expl))
+}
+
 generate_clusters=function(df,k_medoids,max_clus){
   Coords=as.matrix(df |> dplyr::select(X,Y))
   hold_clus=matrix(NA,nrow=nrow(Coords),ncol=(max_clus-1))

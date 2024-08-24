@@ -1,7 +1,7 @@
-#' Placebo significance level.
+#' Placebo significance level for IV regression.
 #'@description
 #'
-#'  `placebo()` runs a spatial noise placebo test on a regression to choose
+#'  `placebo_iv()` runs a spatial noise placebo test on a regression to choose
 #'  the optimal number of large clusters for BCH standard errors and obtain the
 #'  placebo significance level of the treatment variable. The placebo matches
 #'  the spatial trends of the explanatory variable by regressing it on the
@@ -59,9 +59,9 @@
 
 
 
-placebo=function(fm,df,splines,pc_num,
+placebo_iv=function(fm,df,splines,pc_num,
                      nSim=1000,weights=FALSE,max_clus=6,
-                     Parallel=TRUE,exact_cholesky=TRUE,
+                     Parallel=FALSE,exact_cholesky=TRUE,
                  k_medoids=TRUE,jitter_coords=TRUE){
 #
   if(is.null(df$X)|is.null(df$Y))
@@ -81,9 +81,10 @@ placebo=function(fm,df,splines,pc_num,
   }
 
 #rename dependent and explanatory variables as dep_var and explan_var and list all other variables in a string called rhs
-  new_names=set_names(fm)
-  df=df |> dplyr::rename(dep_var=new_names$gg[1],
-                   explan_var=stringr::str_split_1(new_names$gg[2],"\\+")[1])
+  new_names=set_names_iv(fm)
+  df=df |> dplyr::rename(dep_var=new_names$var_dep,
+                   explan_var=new_names$var_expl,
+                   inst_var=new_names$var_inst)
   rhs=new_names$rhs
 
 #get the principal components that minimise BIC and add them to the dataset.
@@ -94,23 +95,24 @@ df=cbind.data.frame(df,pc)
 # Define two equations: the estimated equation using the true explanatory variable and
 # the simulated equation that uses a placebo instead.
 # Both equations have a spatial basis of principal components added.
-eq_est=paste0("dep_var~explan_var",rhs)
-eq_sim=paste0("dep_var~sim",rhs)
-eq_sim=as.formula(paste(eq_sim,paste(names(pc),collapse="+"),sep="+"))
-eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
+eq_est=as.formula(paste0("dep_var~",rhs,"+",paste(names(pc),collapse="+"), "|","explan_var~inst_var"))
+eq_sim=as.formula(paste0("dep_var~",rhs,"+",paste(names(pc),collapse="+"), "|","sim~inst_var"))
+
+#Moran test using 5 nearest neighbours Inapplicable for IVs as is
+eq_moran=paste0("dep_var~explan_var+",rhs)
+eq_moran=as.formula(paste(eq_moran,paste(names(pc),collapse="+"),sep="+"))
+Moran=moran(eq_moran,df)
 
 # Regress explanatory variable on spatial basis to get trend of placebo and residuals.
 lm_res=lm(as.formula(paste("explan_var",paste(names(pc),collapse="+"),sep="~")),
           data=df)
-
 rm(pc)
 
 # Get spatial correlation pattern of residuals and generate placebo noise with the same structure.
 noise_sim=Noise_Sim(df,lm_res,nSim,exact_cholesky,Parallel)
 #Collect Output
 
-#Moran test using 5 nearest neighbours
-Moran=moran(eq_est,df)
+
 
 Spatial_Params=data.frame(Moran,R2=summary(lm_res)$r.squared,   #explanatory power of principal components for x
                           Effective_Range=noise_sim$matern_params$Effective_Range,   #fraction of 95th perc distance bw coords

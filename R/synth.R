@@ -84,8 +84,18 @@ df=cbind.data.frame(df,pc)
 # Both equations have a spatial basis of principal components added.
 eq_est=paste0("dep_var~explan_var",rhs)
 eq_sim=paste0("sim~explan_var",rhs)
-eq_sim=as.formula(paste(eq_sim,paste(names(pc),collapse="+"),sep="+"))
-eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
+
+if(is.vector(pc)){
+  eq_sim=as.formula(paste(eq_sim,"pc",sep="+"))
+}else{
+  eq_sim=as.formula(paste(eq_sim,paste(names(pc),collapse="+"),sep="+"))
+}
+if(is.vector(pc)){
+  eq_est=as.formula(paste(eq_est,"pc",sep="+"))
+}else{
+  eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
+}
+
 
 # Regress dep_var on quadratic in long and lat to generate syn outcomes.
 lm_res=lm(dep_var~poly(X,2)+poly(Y,2),
@@ -103,7 +113,7 @@ Spatial_Params=data.frame(Moran,R2=summary(lm_res)$r.squared,   #explanatory pow
                           Effective_Range=noise_sim$matern_params$Effective_Range,   #fraction of 95th perc distance bw coords
                           Structure=noise_sim$matern_params$Structure)
 Spatial_Params=round(Spatial_Params,3)
-Spatial_Params=cbind.data.frame(Spatial_Params,Splines=splines,PCs=pc_num)
+Spatial_Params=cbind.data.frame(Spatial_Params,N=nrow(df),Splines=splines,PCs=pc_num)
 
 #Simulated variables
 Sim=noise_sim$Sim

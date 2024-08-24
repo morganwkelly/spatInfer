@@ -1,7 +1,7 @@
-#' Placebo significance level.
+#' IV Placebo significance level. First stage regression. Noise IV
 #'@description
 #'
-#'  `placebo()` runs a spatial noise placebo test on a regression to choose
+#'  `placebo_iv_stage1()` runs a spatial noise placebo test on a regression to choose
 #'  the optimal number of large clusters for BCH standard errors and obtain the
 #'  placebo significance level of the treatment variable. The placebo matches
 #'  the spatial trends of the explanatory variable by regressing it on the
@@ -59,7 +59,7 @@
 
 
 
-placebo=function(fm,df,splines,pc_num,
+placebo_iv_stage1=function(fm,df,splines,pc_num,
                      nSim=1000,weights=FALSE,max_clus=6,
                      Parallel=TRUE,exact_cholesky=TRUE,
                  k_medoids=TRUE,jitter_coords=TRUE){
@@ -81,21 +81,26 @@ placebo=function(fm,df,splines,pc_num,
   }
 
 #rename dependent and explanatory variables as dep_var and explan_var and list all other variables in a string called rhs
-  new_names=set_names(fm)
-  df=df |> dplyr::rename(dep_var=new_names$gg[1],
-                   explan_var=stringr::str_split_1(new_names$gg[2],"\\+")[1])
+  new_names=set_names_iv(fm)
+  df=df |> dplyr::rename(dep_var=new_names$var_dep,
+                         explan_var=new_names$var_expl,
+                         inst_var=new_names$var_inst)
   rhs=new_names$rhs
 
 #get the principal components that minimise BIC and add them to the dataset.
 pc=prin_comp(df,splines,pc_num)
 df=cbind.data.frame(df,pc)
 
+###now turn explan var in dep var and inst into explan
+df=df |>
+  select(-dep_var)|>
+  rename(dep_var=explan_var,explan_var=inst_var)
 
 # Define two equations: the estimated equation using the true explanatory variable and
 # the simulated equation that uses a placebo instead.
 # Both equations have a spatial basis of principal components added.
-eq_est=paste0("dep_var~explan_var",rhs)
-eq_sim=paste0("dep_var~sim",rhs)
+eq_est=paste0("dep_var~explan_var+",rhs)
+eq_sim=paste0("dep_var~sim+",rhs)
 eq_sim=as.formula(paste(eq_sim,paste(names(pc),collapse="+"),sep="+"))
 eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
 

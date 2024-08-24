@@ -4,24 +4,29 @@
 \alias{plot_basis}
 \title{Placebo significance level.}
 \usage{
-plot_basis(fm, df, splines, phi = 50, theta = 30)
+plot_basis(fm, df, splines, grd_num = 20, phi = 50, theta = 30, Title = "")
 }
 \arguments{
-\item{fm}{}
+\item{fm}{Regression formula}
 
-\item{df}{}
+\item{df}{Name of dataframe}
 
-\item{splines}{}
+\item{splines}{Number of tensor splines given by optimal_basis()}
 
-\item{phi}{}
+\item{grd_num}{Number of grid lines in plot.}
 
-\item{theta}{}
+\item{phi}{Figure viewing height in degrees}
+
+\item{theta}{Figure rotation in degrees.}
+
+\item{Title}{String giving title of plot}
 }
 \value{
-A 3d plot of the fitted outcome surface.
+A 3d plot of the fitted outcome surface.#'
 }
 \description{
-\code{plot_basis()} gives a 3d plot of the fitted tensor spline surface of the outcome.
+\code{plot_basis()} gives a 3d plot of the fitted tensor spline surface of the outcome. This is just a
+wrapper around the mgcv command vis.gam()
 }
 \examples{
 library(spatInfer)

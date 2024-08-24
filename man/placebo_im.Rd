@@ -12,7 +12,7 @@ placebo_im(
   nSim = 1000,
   weights = FALSE,
   max_clus = 6,
-  Parallel = FALSE,
+  Parallel = TRUE,
   exact_cholesky = TRUE,
   k_medoids = TRUE,
   jitter_coords = TRUE

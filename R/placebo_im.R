@@ -55,7 +55,7 @@
 
 placebo_im=function(fm,df,splines,pc_num,
                     nSim=1000,weights=FALSE,max_clus=6,
-                    Parallel=FALSE,exact_cholesky=TRUE,
+                    Parallel=TRUE,exact_cholesky=TRUE,
                     k_medoids=TRUE,jitter_coords=TRUE){
 #
   if(is.null(df$X)|is.null(df$Y))

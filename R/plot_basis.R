@@ -41,9 +41,11 @@ plot_basis=function(fm,df,splines,grd_num=20,phi=50,theta=30, Title=""){
                       m=1),
                  data=df,
                  discrete=T)
+  par(mai=c(0.5,0.2,0.5,0.2))
   
   mgcv::vis.gam(gm_2,n.grid=grd_num,theta=30,phi=50,ticktype="detailed", #   color="gray",   #phi does view height, theta rotation
-          xlab="Long",ylab="Lat",zlab="Outcome",main=Title)
+          xlab="Long",ylab="Lat",zlab="Outcome",main=Title,
+          xaxs = "i",yaxs="i")
 }
   
 #plot_basis(fm,df,splines=5)

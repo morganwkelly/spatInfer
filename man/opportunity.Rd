@@ -5,19 +5,24 @@
 \alias{opportunity}
 \title{Chetty et al data on intergenerational mobility across US Census Zones.}
 \format{
-An object of class \code{"cross"}.
+\subsection{\code{opportunity}}{
+
+\describe{
+\item{state}{State abbreviation}
+\item{mobility}{Intergenerational mobility}
+\item{racial_seg}{Racial segregation.}
+\item{short_commute}{Commuting distance under 15 miles.}
+\item{X}{Longitude.}
+\item{Y}{Latitude}
+\item{single_mom}{Single parent hourseholds with children.}
+...
 }
-\source{
-\href{https://phenome.jax.org/projects/Moore1b}{QTL Archive}
+}
 }
 \usage{
-data(opportunity)
+opportunity
 }
 \description{
 A subset of their variables with 709 observations containing information on the following variables.
-}
-\references{
-Moore et al. (2013) Genetics 195:1077-1086
-(\href{https://www.ncbi.nlm.nih.gov/pubmed/23979570}{PubMed})
 }
 \keyword{datasets}
