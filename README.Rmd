@@ -29,6 +29,9 @@ You can install the development version of spatInfer from [GitHub](https://githu
 pak::pak("morganwkelly/spatInfer")
 ```
 
+A detailed tutorial can be found at 
+[Tutorial](https://morganwkelly.github.io/spatInfer_tutor/)
+
 ## Example
 
 The goal is to run and test a regression with a spatial basis made up of the first $p$ principal components of a $k \times k$ tensor using standard errors based on $c$ large clusters. The spatial basis controls for trends and other large scale structure in the variables, and the clusters deal with autocorrelation in residuals. We will use data on intergenerational mobility from Chetty et al
@@ -37,27 +40,28 @@ The goal is to run and test a regression with a spatial basis made up of the fir
 library(spatInfer)
 library(dplyr)
 data(opportunity)
-set.seed(123)
-opportunity=opportunity |> dplyr::slice_sample(n=250)
 ```
 
 ## First Steps
 
 The goal is to run a regression with a spatial basis made up of the first $p$ principal components of a $k \times k$ tensor and with standard errors based on $c$ large clusters. The spatial basis controls for trends and other large scale structure in the variables, and the clusters deal with autocorrelation in residuals.
 
-The parameters $c$, $k$ and $p$ are estimated with two commands. The first is `optimal_basis` which includes the formula to be estimated and the name of the data:
+The parameters $k$ and $p$ are chosen with `optimal_basis` which includes the formula to be estimated and the name of the data:
 ```{r basis}
 optimal_basis(mobility~racial_seg+single_mom,
               opportunity,
               max_splines=6)
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+It can be seen that the optimal number of splines $k$ is 4, and optimal number of principal components $p$ is 11.
 
-You can also embed plots, for example:
+Next we run `placebo` which generates spatial noise placebos with the same structure as `racial_seg`. This gives placebo values for heteroskedasticity consistent `HC` standard errors and large cluster BCH ones. 
 
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r placebo, cache=TRUE}
+plbo_bch=placebo(mobility~racial_seg+single_mom,  opportunity,
+                 splines=4,
+                 pc_num=11,
+                 nSim=1000)
+placebo_table(plbo_bch)
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
