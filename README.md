@@ -268,6 +268,10 @@ reliability of the regression estimate. We therefore estimate a
 regression with 11 principal components of a 4x4 spline, and compute
 standard errors using 3 k-medoids clusters.
 
+Because the 5% significance level of a t-statistic with two degrees of
+freedom is 4.3, and the familiar t-statistic of 2 has a p-value of 0.18
+we report 95% confidence intervals and p-values for each variable.
+
 For comparison we also include a regression with no spatial adjustment
 where standard errors are clustered by state, the standard practice in
 such studies.
