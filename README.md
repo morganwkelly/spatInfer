@@ -10,9 +10,11 @@ Strong autocorrelation and directional trends mean that regressions
 using spatial observations are prone to return inflated t-statistics
 regardless of the validity of their identification procedure.
 `spatInfer` introduces a regression procedure to obtain reliable results
-in these circumstances, a spatial noise placebo to ensure the validity
-of the inference procedure, and a synthetic outcome test to ascertain
-whether the outcome is spatial noise independent of the treatment.
+in these circumstances by adding a spatial basis and using large cluster
+standard errors. It generates a spatial noise placebo to ensure the
+validity of the inference procedure, and a synthetic outcome test to
+ascertain whether the outcome is spatial noise independent of the
+treatment.
 
 ## Workflow.
 
