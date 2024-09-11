@@ -106,11 +106,15 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
   }
   if(Parallel){
     n_cores=parallel::detectCores()-2  #number of cores to use
-    cl_k <- parallel::makeForkCluster(n_cores)
-    doParallel::registerDoParallel(cl_k)
     `%dopar%` <- foreach::`%dopar%`
+    # cl_k <- parallel::makeForkCluster(n_cores)
+    # doParallel::registerDoParallel(cl_k)
+    # sim_krig=foreach::foreach(j=1:length(rng_search)) %dopar% {kriging_search(j)}
+    # parallel::stopCluster(cl_k)
+    doParallel::registerDoParallel(n_cores)
     sim_krig=foreach::foreach(j=1:length(rng_search)) %dopar% {kriging_search(j)}
-    parallel::stopCluster(cl_k)
+    doParallel::stopImplicitCluster()
+    
   }else{
     sim_krig=list()
     environment(kriging_search)=environment()
@@ -164,10 +168,13 @@ hc_p_values=function(Sim,eq_sim,df,nSim,Parallel){
     n_cores=parallel::detectCores()-2  #number of cores to use
     fixest::setFixest_nthreads(nthreads=1)
     `%dopar%` <- foreach::`%dopar%`
-    cl_k <- parallel::makeForkCluster(n_cores)
-    doParallel::registerDoParallel(cl_k)
+    # cl_k <- parallel::makeForkCluster(n_cores)
+    # doParallel::registerDoParallel(cl_k)
+    # hc_out=foreach::foreach(j=1:nSim) %dopar% {hc_sim(j,Sim,eq_sim,df)}
+    # parallel::stopCluster(cl_k)
+    doParallel::registerDoParallel(n_cores)
     hc_out=foreach::foreach(j=1:nSim) %dopar% {hc_sim(j,Sim,eq_sim,df)}
-    parallel::stopCluster(cl_k)
+    doParallel::stopImplicitCluster()
   }else{
     for (j in 1:nSim){
       hc_out[[j]]=hc_sim(j,Sim,eq_sim,df)
