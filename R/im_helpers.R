@@ -8,10 +8,13 @@ im_p_values=function(Sim,eq_sim,df,hold_clus,nSim,max_clus,Parallel){
       fixest::setFixest_nthreads(nthreads=1)
       `%dopar%` <- foreach::`%dopar%`
       n_cores=parallel::detectCores()-2  #number of cores to use
-      cl_k <- parallel::makeForkCluster(n_cores)
-      doParallel::registerDoParallel(cl_k)
+      # cl_k <- parallel::makeForkCluster(n_cores)
+      # doParallel::registerDoParallel(cl_k)
+      # clus_out=foreach::foreach(j=1:nSim) %dopar% {im_sim(j,Sim,eq_sim,df2)}
+      # parallel::stopCluster(cl_k)
+      doParallel::registerDoParallel(n_cores)
       clus_out=foreach::foreach(j=1:nSim) %dopar% {im_sim(j,Sim,eq_sim,df2)}
-      parallel::stopCluster(cl_k)
+      doParallel::stopImplicitCluster()
     }else{
       for (j in 1:nSim){
         clus_out[[j]]=im_sim(j,Sim,eq_sim,df2)
