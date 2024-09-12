@@ -145,13 +145,5 @@ return(obj)
 
 
 #' #'@export
-#' print.placebo=function(obj){
-#'
-#'   cat("Regression and placebo significance levels for BCH and HC standard errors.\nPlacebo_05 gives the percentage of placebo simulations significant at 5%.\nConf Int gives the width of the 95% confidence interval.\n")
-#'   results=obj$Results #|>
-#'    # dplyr::rename(`Placebo p`= sim_p, `Placebo 5%`=sim_05,`Est p`=est_p,`CI Width`=width_ci,`Var Ratio`=var_range)
-#'   print(results)
-#'   cat("\n\nSpatial parameters of treatment variable.\nSpatial R2 is the R2 of the regression of the treatment on the spatial basis.\n\n")
-#'   print(obj$Spatial_Params)
-#'   }
+
 
