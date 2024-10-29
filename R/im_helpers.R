@@ -86,3 +86,25 @@ summary_im=function(df,eq_est,hold_clus,max_clus,im_out,hc_out){
     dplyr::mutate(dplyr::across(dplyr::where(is.numeric), \(x) round(x, 3)))
   return(sim_summ)
 }
+
+
+coef_im=function(df,eq_est,hold_clus,max_clus){
+  
+  estimate=fixest::feols(eq_est,data=df,             #baseline estimate with real variables
+                         weights = ~wts,
+                         vcov="hetero")
+  coef_orig=estimate$coeftable[2,1]
+  
+  im_coef=list()
+  for(k in 1:(max_clus-1)){
+    df1=df
+    df1$clust=hold_clus[,k]
+    im=split(df1,df1$clust) |>
+      purrr::map(~fixest::feols(eq_est, data = .x,weights=~wts)) |>
+      purrr::map_df(broom::tidy) |>
+      dplyr::filter(term == 'sim'|term == 'explan_var') |>
+      dplyr::select(estimate)
+    im_coef[[k]]=im/coef_orig
+  }
+  return(im_coef)
+}

@@ -29,12 +29,12 @@ rr=syn$Results
 rr=rr |>
   dplyr::rename(Adj=SE) |> 
   dplyr::select(-dplyr::contains("_05"))|>
-  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
+  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,3)}))
 ss=syn$Spatial_Params
 ss=ss |>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
 
-syn_tab=tinytable::tt(rr,theme="striped",align="r",digits=2 ,
+syn_tab=tinytable::tt(rr,theme="striped",align="r",digits=3 ,
               notes=   list(
                 paste0("Moran=",ss$Moran,
                        ", Structure=",ss$Structure,

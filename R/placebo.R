@@ -96,6 +96,7 @@ df=cbind.data.frame(df,pc)
 # Both equations have a spatial basis of principal components added.
 eq_est=paste0("dep_var~explan_var",rhs)
 eq_sim=paste0("dep_var~sim",rhs)
+
 eq_sim=as.formula(paste(eq_sim,paste(names(pc),collapse="+"),sep="+"))
 eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
 
@@ -144,6 +145,6 @@ return(obj)
 }
 
 
-#' #'@export
+#'@export
 
 

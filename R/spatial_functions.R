@@ -43,6 +43,7 @@ generate_clusters=function(df,k_medoids,max_clus){
   return(hold_clus)
 }
 
+#####Get BIC minimizing set of principal components of tensor spline.
 prin_comp=function(df,splines,pc_num){
 gm_2=mgcv::bam(dep_var~
            te(X,Y,bs=c("bs"),
@@ -53,7 +54,8 @@ gm_2=mgcv::bam(dep_var~
 
 df_p=prcomp(model.matrix(gm_2))
 pc=as.data.frame(df_p$x)
-pc=pc[,1:pc_num]   #keep number than minimize BIC
+pc=pc[1:pc_num]   #keep number than minimize BIC
+
 return(pc)
 }
 
@@ -72,12 +74,14 @@ hc_sim=function(j,Sim,eq_sim,df){
   return(sim_res2)
 }
 
-#############search for mle ests of matern params
+#############search for mle ests of matern params and generate simulated noise with these parameters.
+#############For large datasets use exact_cholesky=F which uses BRISC.
 Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
   Residuals=lm_res$residuals
   Coords=as.matrix(df |> dplyr::select(X,Y))
-  rng_search=seq(0.025,1,by=0.025)*quantile(fields::rdist(x1=Coords),probs=0.95)   #fraction of 95th distance bw point
-  kriging_search=function(j){
+  rng_search=seq(0.025,1,by=0.025)*                 #search in increments of 0.025: proportions of
+    quantile(fields::rdist(x1=Coords),probs=0.95)   #95th percentile distance bw point
+  kriging_search=function(j){                       #find MLE of structure at each range
     ##find range, structure
     ##rng_search is set of ranges to try
     ##range measured in degrees
@@ -107,10 +111,6 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
   if(Parallel){
     n_cores=parallel::detectCores()-2  #number of cores to use
     `%dopar%` <- foreach::`%dopar%`
-    # cl_k <- parallel::makeForkCluster(n_cores)
-    # doParallel::registerDoParallel(cl_k)
-    # sim_krig=foreach::foreach(j=1:length(rng_search)) %dopar% {kriging_search(j)}
-    # parallel::stopCluster(cl_k)
     doParallel::registerDoParallel(n_cores)
     sim_krig=foreach::foreach(j=1:length(rng_search)) %dopar% {kriging_search(j)}
     doParallel::stopImplicitCluster()
@@ -123,7 +123,7 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
     }
   }
   sim_krig=purrr::list_rbind(sim_krig)
-  matern_params=sim_krig|> dplyr::arrange(Likelihood) |> dplyr::slice(1)
+  matern_params=sim_krig|> dplyr::arrange(Likelihood) |> dplyr::slice(1)   #Choose MLE params
   #return(matern_params)
   Range=matern_params$Range
   Structure=matern_params$Structure
@@ -139,10 +139,10 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
       diag(nrow(Coords))*(1-Structure)
     KL=t(chol(KL))
 
-    ###################Generate simulated variables.
+    ###################Generate simulated variables. 
     set.seed(1234)
     Sim=KL%*%matrix(rnorm(nSim*nrow(Coords)),ncol=nSim)   #sims without original trend
-  }else{
+  }else{    #Use BRISC approx Cholesky for large data
     set.seed(123)
     beg_seed=round(1e4*runif(nSim))
     Sim=BRISC::BRISC_simulation(
@@ -155,13 +155,12 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
 
 
     Sim=Sim$output.data
-    #Sim=lm_res$fitted+sd(Residuals)*Sim
-  }
+    }
   Sim=lm_res$fitted+sd(Residuals)*Sim         #Adding trend leaves results unchanged: resids orthogonal to spatial basis.
   return(list(Sim=Sim,matern_params=matern_params))
 }
 
-
+######Calculate p_values for simulated data, using HC standard errors.
 hc_p_values=function(Sim,eq_sim,df,nSim,Parallel){
   hc_out=list()
   if(Parallel){
@@ -187,15 +186,15 @@ hc_p_values=function(Sim,eq_sim,df,nSim,Parallel){
 
 
 
-#Moran z test for autocorr in residuals. Uses five nearest neighbours
-moran=function(fm,df){
+#Moran z test for autocorr in residuals. Uses near_neigh nearest neighbours
+moran=function(fm,df,near_neigh=5){
   Coords=as.matrix(df |> dplyr::select(X,Y))
   lm_1=lm(fm,df,weights=wts)
   if(anyDuplicated(Coords)>0){
     set.seed(123)
     Coords=Coords+matrix(rnorm(2*nrow(Coords),0,0.01),ncol=2)    #jitter by 1km to remove potential duplication
   }
-  nearest=spdep::knn2nb(spdep::knearneigh(Coords,k=5,longlat = F))   #k nearest neighbours for Moran
+  nearest=spdep::knn2nb(spdep::knearneigh(Coords,k=near_neigh,longlat = F))   #k nearest neighbours for Moran
   nearest=spdep::nb2listw(nearest,style="W")
   moran=spdep::lm.morantest(lm_1,listw=nearest)$statistic[1,1]
   return(moran)

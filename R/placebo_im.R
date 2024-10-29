@@ -126,16 +126,12 @@ Results=summary_im(df,eq_est,hold_clus,max_clus,im_out,hc_out)
 Results=Results  |>
                  dplyr::rename(`Plac p`= sim_p, `Plac 5%`=sim_05,
                                `Est p`=est_p,`CI Width`=width_ci)
-
-# #Collect Output
-# Spatial_Params=data.frame(R2=summary(lm_res)$r.squared,   #explanatory power of principal components for x
-#                           Effective_Range=noise_sim$matern_params$Effective_Range,   #fraction of 95th perc distance bw coords
-#                           Structure=noise_sim$matern_params$Structure)
-# Spatial_Params=round(Spatial_Params,3)
+Coefs=coef_im(df,eq_est,hold_clus,max_clus)
 
 obj=list(
   Results=Results,
-  Spatial_Params=Spatial_Params
+  Spatial_Params=Spatial_Params,
+  Coefs=Coefs
 
 )
 #class(obj)=c("placebo_im")

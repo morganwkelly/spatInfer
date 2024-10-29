@@ -29,11 +29,11 @@ plbo$Results[3:5,1]=""
 
 rr=plbo$Results|>
   dplyr::rename(Adj=SE) |> 
-  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
+  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,3)}))
 ss=plbo$Spatial_Params|>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
 
-plac_tab=tinytable::tt(rr,theme="striped",align="r",digits=2,
+plac_tab=tinytable::tt(rr,theme="striped",align="r",digits=3,
               notes=   list(
                 paste0("Moran=",ss$Moran,
                        ", Structure=",ss$Structure,

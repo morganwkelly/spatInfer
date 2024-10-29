@@ -73,7 +73,7 @@ optimal_basis=function(fm,df,max_splines,Description=""){
 bas=bic_results[[1]]
 
 
-###########splines from 4x4 up: linear or quadratic
+###########splines from 4x4 up: linear
   for (i in 2:mx){
     spl=i+2
   gm_2=mgcv::bam(dep_var~

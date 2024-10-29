@@ -1,18 +1,22 @@
-#' Chetty et al data on intergenerational mobility across US Census Zones.
+#' Chetty et al data on mobility across US Census Zones.
 #'
-#' A subset of their variables with 709 observations containing information on the following variables.
+#' Variables from Table VI excluding Alaska and Hawaii.
 #'
 #'
 #' @format ## `opportunity`
 #'
 #' \describe{
-#'   \item{state}{State abbreviation}
-#'   \item{mobility}{Intergenerational mobility}
-#'   \item{racial_seg}{Racial segregation.}
-#'   \item{short_commute}{Commuting distance under 15 miles.}
+#'   \item{state_id}{State abbreviation}
+#'   \item{mobility}{Absolute upward mobility: e_rank_b.}
+#'   \item{short_commute}{Fraction short commute: frac_traveltime_lt15.}
+#'   \item{single_mom}{Fraction single mothers: cs_fam_wkidsinglemom.}
+#'   \item{gini}{Gini bottom 99: gini99.}
+#'   \item{dropout_rate}{High school dropout rate: dropout_r.}
+#'   \item{social_cap}{Social capital index: scap_ski90pcm.}
+#'   \item{dropout_na}{Dropout rate missing: set at average value.}
 #'   \item{X}{Longitude.}
 #'   \item{Y}{Latitude}
-#'   \item{single_mom}{Single parent hourseholds with children.}
+
 #'   ...
 #' }
 
