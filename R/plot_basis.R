@@ -12,19 +12,17 @@
 #' @param theta Figure rotation in degrees.
 #' @param Title String giving title of plot
 #'
-#' @return A 3d plot of the fitted outcome surface.#' 
+#' @return A 3d plot of the fitted outcome surface.
 #' @export
 #'
 #' @examples
 #' library(spatInfer)
 #' data(opportunity)
-#' # Use 100 observations and 100 simulations to speed things up.
-#' set.seed(123)
-#' opportunity=opportunity |> dplyr::slice_sample(n=100)
-
-#' # Use the number of splines indicated by [optimal_basis()].
-#' plot_basis(mobility~racial_seg+single_mom,  opportunity,
-#' splines=4)
+#' # Use the number of splines indicated by `optimal_basis()`.
+#' plot_basis(mobility~single_mothers+short_commute+
+#' gini+dropout_rate+social_cap+dropout_na, opportunity,
+#' splines=6, 
+#' Title="6x6 Tensor Surface of Mobility")
 #' 
 
 

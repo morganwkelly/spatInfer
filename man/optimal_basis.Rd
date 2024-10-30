@@ -16,7 +16,7 @@ optimal_basis(fm, df, max_splines, Description = "")
 \item{Description}{Optional description of the regression used to label the output diagram.}
 }
 \value{
-ggplot object: graph of BIC and R2 of regression of dependent variable on bases.
+ggplot object: graph of BIC and R2 of regression of dependent variable on different tensor bases.
 }
 \description{
 \code{optimal_basis()} gives a plot of BIC and adjusted R-squared against number of
@@ -26,9 +26,7 @@ that minimizes BIC.
 \examples{
 library(spatInfer)
 data(opportunity)
-#Choose a sample of 100 to speed things up.
-set.seed(123)
-opportunity=opportunity |> dplyr::slice_sample(n=100)
-optimal_basis(mobility~racial_seg+single_mom,opportunity,
-    max_splines=6, Description="Intergenerational Mobility.")
+optimal_basis(mobility~single_mothers+short_commute+
+gini+dropout_rate+social_cap+dropout_na,  opportunity,
+max_splines=7)
 }

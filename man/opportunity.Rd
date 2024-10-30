@@ -3,26 +3,34 @@
 \docType{data}
 \name{opportunity}
 \alias{opportunity}
-\title{Chetty et al data on intergenerational mobility across US Census Zones.}
+\title{Chetty et al data on intergenerational mobility for US Census Zones.}
 \format{
 \subsection{\code{opportunity}}{
 
+A data frame with 693 rows and 10 variables.
 \describe{
-\item{state}{State abbreviation}
-\item{mobility}{Intergenerational mobility}
-\item{racial_seg}{Racial segregation.}
-\item{short_commute}{Commuting distance under 15 miles.}
+\item{state_id}{State abbreviation}
+\item{mobility}{Absolute upward mobility: e_rank_b.}
+\item{short_commute}{Fraction short commute: frac_traveltime_lt15.}
+\item{single_mom}{Fraction single mothers: cs_fam_wkidsinglemom.}
+\item{gini}{Gini bottom 99: gini99.}
+\item{dropout_rate}{High school dropout rate: dropout_r.}
+\item{social_cap}{Social capital index: scap_ski90pcm.}
+\item{dropout_na}{Dummy for missing dropout rate.}
 \item{X}{Longitude.}
 \item{Y}{Latitude}
-\item{single_mom}{Single parent hourseholds with children.}
 ...
 }
 }
+}
+\source{
+Chetty et al (2014) "Where is the Land of Opportunity? The Geography of Intergenerational Mobility in the United States."
+Quarterly Journal of Economics, 129, 1553–1623.
 }
 \usage{
 opportunity
 }
 \description{
-A subset of their variables with 709 observations containing information on the following variables.
+Variables from Table VI, and data exclude Alaska and Hawaii.
 }
 \keyword{datasets}

@@ -22,7 +22,7 @@ plot_basis(fm, df, splines, grd_num = 20, phi = 50, theta = 30, Title = "")
 \item{Title}{String giving title of plot}
 }
 \value{
-A 3d plot of the fitted outcome surface.#'
+A 3d plot of the fitted outcome surface.
 }
 \description{
 \code{plot_basis()} gives a 3d plot of the fitted tensor spline surface of the outcome. This is just a
@@ -31,11 +31,10 @@ wrapper around the mgcv command vis.gam()
 \examples{
 library(spatInfer)
 data(opportunity)
-# Use 100 observations and 100 simulations to speed things up.
-set.seed(123)
-opportunity=opportunity |> dplyr::slice_sample(n=100)
-# Use the number of splines indicated by [optimal_basis()].
-plot_basis(mobility~racial_seg+single_mom,  opportunity,
-splines=4)
+# Use the number of splines indicated by `optimal_basis()`.
+plot_basis(mobility~single_mothers+short_commute+
+gini+dropout_rate+social_cap+dropout_na, opportunity,
+splines=6, 
+Title="6x6 Tensor Surface of Mobility")
 
 }

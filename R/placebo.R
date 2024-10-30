@@ -1,11 +1,11 @@
-#' Placebo significance level.
+#' Placebo significance levels using BCH standard errors.
 #'@description
 #'
 #'  `placebo()` runs a spatial noise placebo test on a regression to choose
 #'  the optimal number of large clusters for BCH standard errors and obtain the
 #'  placebo significance level of the treatment variable. The placebo matches
 #'  the spatial trends of the explanatory variable by regressing it on the
-#'  principal components chosen by [spatial_basis()] and then simulates noise
+#'  principal components chosen by [optimal_basis()] and then simulates noise
 #'  with the same correlation structure as the residuals from that regression.
 #'  For each number of clusters it gives the regression and placebo significance
 #'  levels.
@@ -28,12 +28,13 @@
 #'  variable in the dataset must be named `weights`.
 #'@param max_clus The maximum number of large cluster standard errors to examine
 #'  with the placebo test. Defaults to 6.
-#'@param Parallel Run the simulations in parallel.
+#'@param Parallel Run the simulations in parallel. Set to `FALSE` if there are memory problems, 
+#'  which can happen especially with large datasets.
 #'@param exact_cholesky For very large datasets, setting this to `FALSE` will use
 #'  the `BRISC` Cholesky approximation.
-#'@param k_medoids For large datasets, set to `FALSE` to use Clara to generate
+#'@param k_medoids For large datasets, set to `FALSE` to use a faster approximation to generate
 #'  medoids.
-#'@param jitter_coords If some sites have identical coordinates, jitter by
+#'@param jitter_coords If some sites have identical coordinates, automatically jitter by
 #'  adding Gaussian noise with standard deviation of 0.01 (10 km) to allow a
 #'  Moran test to be calculated.
 #'
@@ -50,13 +51,15 @@
 #' # Use 100 observations and 100 simulations to speed things up.
 #' set.seed(123)
 #' opportunity=opportunity |> dplyr::slice_sample(n=100)
-
-#' # Use the number of splines and PCs indicated by [optimal_basis()].
-#' plbo_bch=placebo(mobility~racial_seg+single_mom,  opportunity,
-#' splines=4, pc_num=3,nSim=100, Parallel=FALSE)    #Turn Parallel on to speed up.
-#'
-#' placebo_table(plbo_bch,adjust="BCH")
-
+#' # Use the number of splines and PCs indicated by [optimal_basis()] and turn off parallel processing.
+#' plbo=placebo(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap+dropout_na,                                 opportunity,
+#' splines=6,
+#' pc_num=15,
+#' nSim=100,
+#' Parallel=F,
+#' max_clus = 7
+#' )
+#' placebo_table(plbo)
 
 
 placebo=function(fm,df,splines,pc_num,

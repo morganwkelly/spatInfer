@@ -9,17 +9,16 @@
 #' @param max_splines The maximum dimension of tensor to examine
 #' @param Description Optional description of the regression used to label the output diagram.
 #'
-#' @return ggplot object: graph of BIC and R2 of regression of dependent variable on bases.
+#' @return ggplot object: graph of BIC and R2 of regression of dependent variable on different tensor bases.
 #' @export
 #'
 #' @examples
 #' library(spatInfer)
 #' data(opportunity)
-#' #Choose a sample of 100 to speed things up.
-#' set.seed(123)
-#' opportunity=opportunity |> dplyr::slice_sample(n=100)
-#' optimal_basis(mobility~racial_seg+single_mom,opportunity,
-#'     max_splines=6, Description="Intergenerational Mobility.")
+#' optimal_basis(mobility~single_mothers+short_commute+
+#' gini+dropout_rate+social_cap+dropout_na,  opportunity,
+#' max_splines=7)
+
 
 
 

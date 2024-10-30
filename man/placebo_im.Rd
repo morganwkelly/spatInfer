@@ -2,7 +2,7 @@
 % Please edit documentation in R/placebo_im.R
 \name{placebo_im}
 \alias{placebo_im}
-\title{IM placebo tests}
+\title{Placebo significance levels using IM inference.}
 \usage{
 placebo_im(
   fm,
@@ -49,9 +49,9 @@ synthetic noise. For very large datasets, setting this to F will use the
 BRISC Cholesky approximation.}
 
 \item{k_medoids}{Use k-medoids clustering (PAM). For large datasets, set to F
-to use Clara to generate medoids.}
+to use fast approximation to generate medoids.}
 
-\item{jitter_coords}{If some sites have identical coordinates, jitter by
+\item{jitter_coords}{If some sites have identical coordinates, automatically jitter by
 adding Gaussian noise with standard deviation of 0.01 (10 km) to allow
 Moran test to be calculated.}
 }
@@ -59,26 +59,34 @@ Moran test to be calculated.}
 A list containing Results which summarizes the placebo values and
 Spatial_Params giving the Moran test value and the range and structure used
 to generate the placebos. Choose the number of clusters where the
-proportion of placebo regressions significant at 5\\% is in the region of
+proportion of placebo regressions significant at 5\% is in the region of
 0.05 to 0.07. Sometimes, however, given the conservatism of IM, the highest
 proportion will only be 0.03--0.04.
 }
 \description{
-Run placebo tests on regressions to choose the optimal number of large
-clusters for IM inference and obtain the placebo significance level of the
-treatment variable.
+\code{placebo_im()} runs a spatial noise placebo test to choose
+the optimal number of large clusters for IM inference and obtain the
+placebo significance level of the treatment variable. The placebo matches
+the spatial trends of the explanatory variable by regressing it on the
+principal components chosen by \code{\link[=optimal_basis]{optimal_basis()}} and then simulates noise
+with the same correlation structure as the residuals from that regression.
+For each number of clusters it gives the regression and placebo significance
+levels.
 }
 \examples{
 library(spatInfer)
 data(opportunity)
-# Use 100 observations and 100 simulations to speed things up
-
+# Use 100 observations and 100 simulations to speed things up.
 set.seed(123)
 opportunity=opportunity |> dplyr::slice_sample(n=100)
-# Use the number of splines and PCs indicated by optimal_basis()
-plbo_im=placebo_im(mobility~racial_seg+single_mom,  opportunity,
-splines=4, pc_num=3,nSim=100,Parallel=FALSE)
-
-placebo_table(plbo_im,adjust="IM")
+# Use the number of splines and PCs indicated by `optimal_basis()`. Turn off parallel processing.
+plbo_im=placebo_im(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap+dropout_na,                                 opportunity,
+splines=6,
+pc_num=15,
+nSim=100,
+Parallel=F,
+max_clus = 7
+)
+placebo_table(plbo_im, caption="IM placebo values for single mothers variable.")
 
 }
