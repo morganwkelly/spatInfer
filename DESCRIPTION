@@ -36,8 +36,9 @@ Suggests:
   modelsummary,
   BRISC,
   knitr,
-  rmarkdown
+  rmarkdown,
+  testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 License: MIT + file LICENSE

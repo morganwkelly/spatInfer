@@ -5,7 +5,7 @@
 #' @param splines The dimension of the linear tensor used, from optimal_basis function.
 #' @param pc_num The number of principal component to include, again from optimal_basis.
 #' @param clusters Number of k-medoids clusters to use based on the placebo test.
-#' @param weights Set weights=T if the regression is weighted. The weighting variable in the dataset must be named weights.
+#' @param weights Set weights=T if the regression is weighted. The weighting variable in the dataset must be named wts.
 #' @param cov Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.
 #'
 #' @return feols object that can be printed and exported using the modelsummary package.
@@ -23,7 +23,7 @@
 #' opportunity=opportunity |> dplyr::slice_sample(n=250)
 #' # Use the number of splines and PCs indicated by optimal_basis and
 #' # the number of clusters from the placebo test.
-#' ck=basis_regression(mobility~racial_seg+single_mom,  opportunity,
+#' ck=basis_regression(mobility~single_mothers+gini,  opportunity,
 #' splines=4,pc_num=3,
 #' clusters=5,cov="BCH")
 #'
@@ -59,18 +59,20 @@ eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
 
 
 
+wts_formula=if(weights) ~wts else NULL
+
 if(cov=="BCH"){
   Coords=as.matrix(df |> dplyr::select(X,Y))
   clust_bch=factor(cluster::pam(Coords,k=clusters)$clustering)    #BCH clusters
   CK=fixest::feols(eq_est,
                    data=df1,
-                  # weights = ~wts,
+                   weights=wts_formula,
            cluster=clust_bch,
            data.save=T
   )}else{
   CK=fixest::feols(eq_est,
                    data=df1,
-                  # weights = ~wts,
+                   weights=wts_formula,
            vcov="hetero",
            data.save=T
   )}

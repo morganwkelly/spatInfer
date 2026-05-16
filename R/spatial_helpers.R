@@ -14,14 +14,20 @@ set_names=function(fm){
 }
 
 set_names_iv=function(fm){
-  fm=deparse1(fm)
-  fm=stringr::str_replace_all(fm," ","")
-  gg=unlist(stringr::str_split_1(fm,"~"))
-  hh=unlist(stringr::str_split(gg[2],"\\|"))
-  var_dep=gg[1]
-  var_inst=gg[3]
-  rhs=hh[1]
-  var_expl=hh[2]
+  # R's ~ is left-associative and | has higher precedence than ~, so
+  # `y ~ exog | endog ~ inst` is parsed as `(y ~ (exog | endog)) ~ inst`:
+  #   fm[[2]] = y ~ (exog | endog)   (inner formula)
+  #   fm[[3]] = inst                  (instrument expression)
+  # Navigate the AST directly to avoid deparse() adding explicit "(" wrappers
+  # around the | group, which would break fixest's IV formula detection.
+  var_inst  <- gsub(" ", "", deparse1(fm[[3]]))
+  inner     <- fm[[2]]               # y ~ (exog | endog)
+  var_dep   <- gsub(" ", "", deparse1(inner[[2]]))
+  pipe_expr <- inner[[3]]            # exog | endog (may have explicit `(` wrapper)
+  if (is.call(pipe_expr) && identical(pipe_expr[[1]], as.symbol("(")))
+    pipe_expr <- pipe_expr[[2]]
+  rhs      <- gsub(" ", "", deparse1(pipe_expr[[2]]))
+  var_expl <- gsub(" ", "", deparse1(pipe_expr[[3]]))
   return(list(rhs=rhs,var_dep=var_dep,var_expl=var_expl,var_inst=var_inst,orig_name=var_expl))
 }
 

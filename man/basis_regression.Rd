@@ -17,7 +17,7 @@ basis_regression(fm, df, splines, pc_num, clusters, weights = F, cov = "BCH")
 
 \item{clusters}{Number of k-medoids clusters to use based on the placebo test.}
 
-\item{weights}{Set weights=T if the regression is weighted. The weighting variable in the dataset must be named weights.}
+\item{weights}{Set weights=T if the regression is weighted. The weighting variable in the dataset must be named wts.}
 
 \item{cov}{Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.}
 }
@@ -39,7 +39,7 @@ set.seed(123)
 opportunity=opportunity |> dplyr::slice_sample(n=250)
 # Use the number of splines and PCs indicated by optimal_basis and
 # the number of clusters from the placebo test.
-ck=basis_regression(mobility~racial_seg+single_mom,  opportunity,
+ck=basis_regression(mobility~single_mothers+gini,  opportunity,
 splines=4,pc_num=3,
 clusters=5,cov="BCH")
 
