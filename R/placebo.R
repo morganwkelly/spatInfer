@@ -135,7 +135,8 @@ hc_out=hc_p_values(Sim,eq_sim,df,nSim,Parallel)
 Results=summary_bch(df,eq_est,hold_clus,max_clus,bch_out,hc_out)
 Results=Results  |>
                  dplyr::rename(`Plac p`= sim_p, `Plac 5%`=sim_05,
-                               `Est p`=est_p,`CI Width`=width_ci)
+                               `Est p`=est_p)
+Results=Results |> dplyr::select(-width_ci,-CI)
 
 obj=list(
   Results=Results,

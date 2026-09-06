@@ -136,9 +136,11 @@ hc_out=hc_p_values(Sim,eq_sim,df,nSim,Parallel)
 # Summary Placebo results
 Results=summary_bch(df,eq_est,hold_clus,max_clus,bch_out,hc_out)
 Results=Results  |>
-  dplyr::select(-sim_05)|>
+  dplyr::select(-sim_05,
+                -width_ci,
+                -CI)|>
   dplyr::rename(`Synth p`= sim_p,
-                `Est p`=est_p,`CI Width`=width_ci)
+                `Est p`=est_p)
 
 
 
