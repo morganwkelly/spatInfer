@@ -77,10 +77,10 @@ placebo_im=function(fm,df,splines,pc_num,
 # Define two equations: the estimated equation using the true explanatory variable and
 # the simulated equation that uses a placebo instead.
 # Both equations have a spatial basis of principal components added.
-eq_est=paste0("dep_var~explan_var",rhs)
-eq_sim=paste0("dep_var~sim",rhs)
-eq_sim=as.formula(paste(eq_sim,paste(names(pc),collapse="+"),sep="+"))
-eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
+eqs=build_formulas(rhs,pc,sim_replaces="explan_var")
+eq_est=eqs$eq_est
+eq_sim=eqs$eq_sim
+rm(eqs)
 
 # Regress explanatory variable on spatial basis to get trend of placebo and residuals.
 lm_res=lm(as.formula(paste("explan_var",paste(names(pc),collapse="+"),sep="~")),

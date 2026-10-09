@@ -67,18 +67,10 @@ synth_im=function(fm,df,splines,pc_num,
 # Define two equations: the estimated equation using the true outcome variable and
 # the simulated equation that uses paramaterized noise instead.
 # Both equations have a spatial basis of principal components added.
-eq_est=paste0("dep_var~explan_var",rhs)
-eq_sim=paste0("sim~explan_var",rhs)
-if(is.vector(pc)){
-  eq_sim=as.formula(paste(eq_sim,"pc",sep="+"))
-}else{
-  eq_sim=as.formula(paste(eq_sim,paste(names(pc),collapse="+"),sep="+"))
-}
-if(is.vector(pc)){
-  eq_est=as.formula(paste(eq_est,"pc",sep="+"))
-}else{
-  eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
-}
+eqs=build_formulas(rhs,pc,sim_replaces="dep_var")
+eq_est=eqs$eq_est
+eq_sim=eqs$eq_sim
+rm(eqs)
 
 # Regress dep_var on quadratic in long and lat to generate syn outcomes.
 lm_res=lm(dep_var~poly(X,2)+poly(Y,2),

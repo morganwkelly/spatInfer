@@ -44,6 +44,19 @@ prepare_spatial_data=function(fm,df,splines,pc_num,weights,max_clus){
   return(list(df=df,rhs=new_names$rhs,pc=pc))
 }
 
+#####Estimated and simulated equations with the spatial basis principal components added.
+#####The simulated noise `sim` replaces either the treatment (placebo) or the outcome (synth).
+#####Formulas keep the caller's environment, as when built inline with as.formula().
+build_formulas=function(rhs,pc,sim_replaces=c("explan_var","dep_var")){
+  sim_replaces=match.arg(sim_replaces)
+  env=parent.frame()
+  basis=paste(names(pc),collapse="+")
+  eq_est=paste0("dep_var~explan_var",rhs)
+  eq_sim=if(sim_replaces=="explan_var") paste0("dep_var~sim",rhs) else paste0("sim~explan_var",rhs)
+  return(list(eq_est=as.formula(paste(eq_est,basis,sep="+"),env=env),
+              eq_sim=as.formula(paste(eq_sim,basis,sep="+"),env=env)))
+}
+
 generate_clusters=function(df,k_medoids,max_clus){
   Coords=as.matrix(df |> dplyr::select(X,Y))
   hold_clus=matrix(NA,nrow=nrow(Coords),ncol=(max_clus-1))
