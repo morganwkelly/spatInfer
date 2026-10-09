@@ -40,6 +40,18 @@ test_that("basis_regression() returns a fixest object with saved data", {
   expect_true(all(paste0("PC", 1:4) %in% rownames(m$coeftable)))
 })
 
+test_that("basis_regression() applies weights = TRUE", {
+  d <- fixture_data(weighted = TRUE)
+  unweighted <- quietly(basis_regression(fixture_fm, d, 4, 4, 4))
+  weighted <- quietly(basis_regression(fixture_fm, d, 4, 4, 4, weights = TRUE))
+  expect_false(isTRUE(all.equal(coef(weighted), coef(unweighted))))
+  expect_equal(unname(weights(weighted)), d$weights)
+
+  # Same coefficients as a weighted lm() fit on the regression's own data.
+  check <- lm(formula(weighted), data = weighted$data, weights = weights)
+  expect_equal(coef(weighted), coef(check))
+})
+
 test_that("placebo_table() and synth_table() return tinytables", {
   plac_tab <- placebo_table(readRDS(golden_path("placebo")), caption = "x")
   expect_s4_class(plac_tab, "tinytable")

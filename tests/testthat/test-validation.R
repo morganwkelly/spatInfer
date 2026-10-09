@@ -22,6 +22,8 @@ test_that("weights = TRUE requires a weights column", {
   for (fun in list(placebo, placebo_im, synth, synth_im)) {
     expect_error(fun(fixture_fm, fixture_data(), 4, 4, weights = TRUE), "no variable called weights")
   }
+  expect_error(basis_regression(fixture_fm, fixture_data(), 4, 4, 4, weights = TRUE),
+    "no variable called weights")
 })
 
 test_that("optimal_basis() rejects max_splines above 12", {

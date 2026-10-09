@@ -59,6 +59,10 @@ golden_cases <- list(
     summarise_feols(quietly(basis_regression(fixture_fm, fixture_data(),
       splines = 4, pc_num = 4, clusters = 4, cov = "HC")))
   },
+  basis_regression_weighted = function() {
+    summarise_feols(quietly(basis_regression(fixture_fm, fixture_data(TRUE),
+      splines = 4, pc_num = 4, clusters = 4, weights = TRUE)))
+  },
   placebo = function() run_sim(placebo, Parallel = FALSE),
   placebo_im = function() run_sim(placebo_im, Parallel = FALSE),
   synth = function() run_sim(synth, Parallel = FALSE),

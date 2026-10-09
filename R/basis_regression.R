@@ -39,6 +39,11 @@ basis_regression=function(fm,df,splines,pc_num,clusters,weights=FALSE,cov="BCH")
     stop("You must have longitude and latitude variables named X and Y")
   if(sum(is.na(df$X))>0|sum(is.na(df$Y))>0)
     stop("You cannot have missing values in longitude and latitude.")
+  if(weights&&is.null(df$weights))
+    stop("There is no variable called weights in your data.")
+
+#regression weights, taken from the weights variable when weights=TRUE
+wts=if(weights) ~weights else NULL
 
 new_names=set_names(fm)
 orig_name= new_names$orig_name  #stringr::str_split_1(new_names$gg[2],"\\+")[1]
@@ -64,13 +69,13 @@ if(cov=="BCH"){
   clust_bch=factor(cluster::pam(Coords,k=clusters)$clustering)    #BCH clusters
   CK=fixest::feols(eq_est,
                    data=df1,
-                  # weights = ~wts,
+                   weights=wts,
            cluster=clust_bch,
            data.save=TRUE
   )}else{
   CK=fixest::feols(eq_est,
                    data=df1,
-                  # weights = ~wts,
+                   weights=wts,
            vcov="hetero",
            data.save=TRUE
   )}

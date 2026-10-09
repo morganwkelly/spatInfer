@@ -7,6 +7,7 @@ test_that("optimal_basis() BIC/R2 curves and chosen basis are unchanged", {
 test_that("basis_regression() estimates are unchanged", {
   expect_golden("basis_regression_bch")
   expect_golden("basis_regression_hc")
+  expect_golden("basis_regression_weighted")
 })
 
 test_that("placebo() and placebo_im() results are unchanged", {
