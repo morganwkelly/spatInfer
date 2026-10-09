@@ -13,6 +13,37 @@ set_names=function(fm){
   return(list(rhs=rhs,gg=gg,orig_name=orig_name))
 }
 
+#####Shared setup for placebo(), placebo_im(), synth() and synth_im(): check inputs, set weights,
+#####rename outcome and treatment to dep_var and explan_var, and add the spatial basis principal components.
+prepare_spatial_data=function(fm,df,splines,pc_num,weights,max_clus){
+  if(is.null(df$X)|is.null(df$Y))
+    stop("You must have longitude and latitude variables named X and Y")
+  if(sum(is.na(df$X))>0|sum(is.na(df$Y))>0)
+    stop("You cannot have missing values in longitude and latitude.")
+  if(max_clus<3)
+    stop("Your maximum number of clusters max_clus must be greater than 2.")
+
+  if(!weights){
+    df$wts=1
+  }else{
+    if(is.null(df$weights)){
+      stop("There is no variable called weights in your data.")
+    }else{
+    df$wts=df$weights}
+  }
+
+#rename dependent and explanatory variables as dep_var and explan_var and list all other variables in a string called rhs
+  new_names=set_names(fm)
+  df=df |> dplyr::rename(dep_var=new_names$gg[1],
+                   explan_var=new_names$orig_name)
+
+#get the principal components that minimise BIC and add them to the dataset.
+  pc=prin_comp(df,splines,pc_num)
+  df=cbind.data.frame(df,pc)
+
+  return(list(df=df,rhs=new_names$rhs,pc=pc))
+}
+
 generate_clusters=function(df,k_medoids,max_clus){
   Coords=as.matrix(df |> dplyr::select(X,Y))
   hold_clus=matrix(NA,nrow=nrow(Coords),ncol=(max_clus-1))

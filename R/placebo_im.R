@@ -67,31 +67,11 @@ placebo_im=function(fm,df,splines,pc_num,
                     Parallel=TRUE,exact_cholesky=TRUE,
                     k_medoids=TRUE,jitter_coords=TRUE){
 #
-  if(is.null(df$X)|is.null(df$Y))
-    stop("You must have longitude and latitude variables named X and Y")
-  if(sum(is.na(df$X))>0|sum(is.na(df$Y))>0)
-    stop("You cannot have missing values in longitude and latitude.")
-  if(max_clus<3)
-    stop("Your maximum number of clusters max_clus must be greater than 2.")
-
-  if(!weights){
-    df$wts=1
-  }else{
-    if(is.null(df$weights)){
-      stop("There is no variable called weights in your data.")
-    }else{
-    df$wts=df$weights}
-  }
-
-#rename dependent and explanatory variables as dep_var and explan_var and list all other variables in a string called rhs
-  new_names=set_names(fm)
-  df=df |> dplyr::rename(dep_var=new_names$gg[1],
-                   explan_var=stringr::str_split_1(new_names$gg[2],"\\+")[1])
-  rhs=new_names$rhs
-
-#get the principal components that minimise BIC and add them to the dataset.
-pc=prin_comp(df,splines,pc_num)
-df=cbind.data.frame(df,pc)
+  prep=prepare_spatial_data(fm,df,splines,pc_num,weights,max_clus)
+  df=prep$df
+  rhs=prep$rhs
+  pc=prep$pc
+  rm(prep)
 
 
 # Define two equations: the estimated equation using the true explanatory variable and
