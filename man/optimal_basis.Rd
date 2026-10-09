@@ -26,7 +26,6 @@ that minimizes BIC.
 \examples{
 library(spatInfer)
 data(opportunity)
-optimal_basis(mobility~single_mothers+short_commute+
-gini+dropout_rate+social_cap+dropout_na,  opportunity,
+optimal_basis(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap,  opportunity,
 max_splines=7)
 }

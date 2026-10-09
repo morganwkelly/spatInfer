@@ -47,7 +47,7 @@ set.seed(123)
 opportunity=opportunity |> dplyr::slice_sample(n=250)
 # Use the number of splines and PCs indicated by optimal_basis and
 # the number of clusters from the placebo test.
-ck=basis_regression(mobility~racial_seg+single_mom,  opportunity,
+ck=basis_regression(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap,  opportunity,
 splines=4,pc_num=3,
 clusters=5,cov="BCH")
 
