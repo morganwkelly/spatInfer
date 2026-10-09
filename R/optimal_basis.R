@@ -63,7 +63,6 @@ bas=bas |> dplyr::relocate(index)
   best_spline=stringr::str_split_1(best$name,"_")[2]
   best=best$index
 
-  cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#CC79A7", "#009E73", "#F0E442", "#0072B2", "#D55E00") #colorblind palette
   bic=bas |> dplyr::select(index,dplyr::starts_with("BIC")) |>
     tidyr::pivot_longer(-index,values_to = "BIC") |>
     na.omit() |>
@@ -71,7 +70,7 @@ bas=bas |> dplyr::relocate(index)
     ggplot2::geom_line()+
     ggplot2::geom_vline(xintercept=best,linewidth=0.25,colour="red")+
     ggplot2::theme_bw()+
-    ggplot2::scale_color_manual(values=cbPalette[1:mx])+
+    ggplot2::scale_color_manual(values=basis_colours(mx))+
     ggplot2::theme(legend.title = ggplot2::element_blank())+
     ggplot2::labs(x="")
  r2= bas |> dplyr::select(index,dplyr::starts_with("R2")) |>
@@ -82,7 +81,7 @@ bas=bas |> dplyr::relocate(index)
    ggplot2::geom_vline(xintercept=best,linewidth=0.25,colour="red")+
    ggplot2::labs(x="Number of Principal Components",y="Adj R2")+
    ggplot2::theme_bw()+
-   ggplot2::scale_color_manual(values=cbPalette[1:mx])+
+   ggplot2::scale_color_manual(values=basis_colours(mx))+
    ggplot2::theme(legend.title = ggplot2::element_blank())
   #spl_type=" Linear"
 
@@ -115,4 +114,12 @@ pc_bic=function(df,spl){
   pc_fit$index=1:nrow(pc_fit)
   names(pc_fit)=c(paste0("BIC_",spl),paste0("R2_",spl),"index")
   return(pc_fit)
+}
+
+#####Colourblind-safe colours for the n tensor curves (3x3 up to 12x12, so at most 10).
+#####The first eight are the Okabe-Ito colours used before; black and wine extend them to ten.
+basis_colours=function(n){
+  cbPalette=c("#999999", "#E69F00", "#56B4E9", "#CC79A7", "#009E73", "#F0E442", "#0072B2", "#D55E00",
+              "#000000", "#882255")
+  return(cbPalette[1:n])
 }

@@ -24,6 +24,11 @@
   3x3 results. `max_splines` below 3 is now rejected with an error. Results for
   `max_splines` of 4 or more are unchanged.
 
+* `optimal_basis()` with `max_splines` of 11 or 12 now gives every tensor its
+  own colour. The palette had eight colours, so the 11x11 and 12x12 curves
+  were drawn in the default grey for missing colours. Two colours (black and
+  wine) are added; plots with up to eight tensors are unchanged.
+
 * `placebo_table()` and `synth_table()` no longer add rows of `NA` when
   `max_clus` is below 5, and show the standard error label (HC, BCH or IM) only
   in the first row of each block for any `max_clus`. Previously rows 3 to 5

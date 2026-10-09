@@ -8,6 +8,18 @@ test_that("optimal_basis(max_splines = 3) uses only the 3x3 tensor", {
   expect_match(ob3$subtitle, "3x3 Linear Tensor")
 })
 
+test_that("optimal_basis() has a distinct colour for every tensor up to 12x12", {
+  for (n in 1:10) {
+    colours <- basis_colours(n)
+    expect_length(colours, n)
+    expect_false(anyNA(colours))
+    expect_identical(anyDuplicated(colours), 0L)
+  }
+  # Plots with up to eight tensors keep their colours.
+  expect_identical(basis_colours(8),
+    c("#999999", "#E69F00", "#56B4E9", "#CC79A7", "#009E73", "#F0E442", "#0072B2", "#D55E00"))
+})
+
 test_that("placebo-type results have the documented components and columns", {
   plbo <- readRDS(golden_path("placebo"))
   expect_type(plbo, "list")
