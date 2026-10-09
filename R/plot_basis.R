@@ -42,7 +42,7 @@ plot_basis=function(fm,df,splines,grd_num=20,phi=50,theta=30, Title=""){
   old_par=graphics::par(mai=c(0.5,0.2,0.5,0.2))
   on.exit(graphics::par(old_par),add=TRUE)
   
-  mgcv::vis.gam(gm_2,n.grid=grd_num,theta=30,phi=50,ticktype="detailed", #   color="gray",   #phi does view height, theta rotation
+  mgcv::vis.gam(gm_2,n.grid=grd_num,theta=theta,phi=phi,ticktype="detailed", #   color="gray",   #phi does view height, theta rotation
           xlab="Long",ylab="Lat",zlab="Outcome",main=Title,
           xaxs = "i",yaxs="i")
 }

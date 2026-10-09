@@ -27,9 +27,10 @@
 #'   BRISC Cholesky approximation.
 #' @param k_medoids For large datasets, set to F to use Clara to generate
 #'   medoids.
-#' @param jitter_coords If some sites have identical coordinates, jitter by
-#'   adding Gaussian noise with standard deviation of 0.01 (10 km) to allow
-#'   Moran test to be calculated.
+#' @param jitter_coords If some sites have identical coordinates, jitter them for the
+#'   Moran test by adding Gaussian noise with standard deviation 0.01 degrees
+#'   (about 1 km). Set to `FALSE` to use the coordinates as they are, in which
+#'   case spdep warns about identical points. Only the Moran test is affected.
 #'
 #' @return A list containing Results which summarizes the placebo values and
 #'   Spatial_Params giving the Moran test value and the range and structure used
@@ -84,7 +85,7 @@ rm(pc)
 noise_sim=Noise_Sim(df,lm_res,nSim,exact_cholesky,Parallel)
 
 #Moran test using 5 nearest neighbours
-Moran=moran(eq_est,df)
+Moran=moran(eq_est,df,jitter_coords=jitter_coords)
 
 #Spatial output
 Spatial_Params=data.frame(Moran,R2=summary(lm_res)$r.squared,   #explanatory power of principal components for x

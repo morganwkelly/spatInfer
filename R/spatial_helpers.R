@@ -283,15 +283,16 @@ finish_summary=function(sim_summ){
   return(sim_summ)
 }
 
-#Moran z test for autocorr in residuals. Uses near_neigh nearest neighbours
-moran=function(fm,df,near_neigh=5){
+#Moran z test for autocorr in residuals. Uses near_neigh nearest neighbours.
+#Identical coordinates are jittered by about 1km when jitter_coords=TRUE.
+moran=function(fm,df,near_neigh=5,jitter_coords=TRUE){
   Coords=as.matrix(df |> dplyr::select(X,Y))
   lm_1=lm(fm,df,weights=wts)
-  if(anyDuplicated(Coords)>0){
+  if(jitter_coords&&anyDuplicated(Coords)>0){
     set.seed(123)
     Coords=Coords+matrix(rnorm(2*nrow(Coords),0,0.01),ncol=2)    #jitter by 1km to remove potential duplication
   }
-  nearest=spdep::knn2nb(spdep::knearneigh(Coords,k=near_neigh,longlat = F))   #k nearest neighbours for Moran
+  nearest=spdep::knn2nb(spdep::knearneigh(Coords,k=near_neigh,longlat = FALSE))   #k nearest neighbours for Moran
   nearest=spdep::nb2listw(nearest,style="W")
   moran=spdep::lm.morantest(lm_1,listw=nearest)$statistic[1,1]
   return(moran)

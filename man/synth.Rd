@@ -49,9 +49,10 @@ BRISC Cholesky approximation.}
 \item{k_medoids}{For large datasets, set to F to use Clara to generate
 medoids.}
 
-\item{jitter_coords}{If some sites have identical coordinates, jitter by
-adding Gaussian noise with standard deviation of 0.01 (10 km) to allow
-Moran test to be calculated.}
+\item{jitter_coords}{If some sites have identical coordinates, jitter them for the
+Moran test by adding Gaussian noise with standard deviation 0.01 degrees
+(about 1 km). Set to \code{FALSE} to use the coordinates as they are, in which
+case spdep warns about identical points. Only the Moran test is affected.}
 }
 \value{
 A list containing Results which summarizes the placebo values and

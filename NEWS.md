@@ -35,4 +35,13 @@
   where the number of cores cannot be detected. Machines with three or more
   cores use the same number of workers as before.
 
+* `jitter_coords = FALSE` now turns off jittering of identical coordinates
+  in the Moran test of `placebo()`, `placebo_im()`, `synth()` and `synth_im()`.
+  Previously the argument was ignored and identical coordinates were always
+  jittered. The default, `TRUE`, is unchanged. The documentation now gives the
+  jitter as about 1 km (0.01 degrees), not 10 km.
+
+* `plot_basis()` now uses its `theta` and `phi` arguments. Previously the view
+  was fixed at the default values.
+
 * `plot_basis()` restores the graphics parameters it changes.
