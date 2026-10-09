@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_basis.R
 \name{plot_basis}
 \alias{plot_basis}
-\title{Placebo significance level.}
+\title{Plot the fitted tensor spline surface of the outcome.}
 \usage{
 plot_basis(fm, df, splines, grd_num = 20, phi = 50, theta = 30, Title = "")
 }

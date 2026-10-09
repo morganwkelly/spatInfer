@@ -5,7 +5,7 @@
 #' @param splines The dimension of the linear tensor used, from optimal_basis function.
 #' @param pc_num The number of principal component to include, again from optimal_basis.
 #' @param clusters Number of k-medoids clusters to use based on the placebo test.
-#' @param weights Set weights=T if the regression is weighted. The weighting variable in the dataset must be named weights.
+#' @param weights Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.
 #' @param cov Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.
 #'
 #' @return feols object that can be printed and exported using the modelsummary package.
@@ -33,7 +33,7 @@
 #' coef_omit = c("Intercept|PC*"), #omit basis and intercept
 #' gof_map = c("nobs", "r.squared"),fmt=2)
 
-basis_regression=function(fm,df,splines,pc_num,clusters,weights=F,cov="BCH"){
+basis_regression=function(fm,df,splines,pc_num,clusters,weights=FALSE,cov="BCH"){
 
   if(is.null(df$X)|is.null(df$Y))
     stop("You must have longitude and latitude variables named X and Y")
@@ -66,13 +66,13 @@ if(cov=="BCH"){
                    data=df1,
                   # weights = ~wts,
            cluster=clust_bch,
-           data.save=T
+           data.save=TRUE
   )}else{
   CK=fixest::feols(eq_est,
                    data=df1,
                   # weights = ~wts,
            vcov="hetero",
-           data.save=T
+           data.save=TRUE
   )}
 return(CK)
 

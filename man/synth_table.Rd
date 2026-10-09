@@ -9,8 +9,7 @@ synth_table(syn, caption = "")
 \arguments{
 \item{syn}{An object containing simulation results created by synth or synth_im.}
 
-\item{caption}{An optional caption for the table.
-#'}
+\item{caption}{An optional caption for the table.}
 }
 \value{
 Generates a tinytable object. This gives the regression and synthetic outcome p values as the number of clusters increases.
@@ -33,7 +32,7 @@ synt=synth(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap+dr
 splines=6,
 pc_num=15,
 nSim=100,
-Parallel=F,
+Parallel=FALSE,
 max_clus = 7
 )
 synth_table(synt, caption="Synthetic outcomes significance levels for single mothers variable.")

@@ -13,18 +13,6 @@ set_names=function(fm){
   return(list(rhs=rhs,gg=gg,orig_name=orig_name))
 }
 
-set_names_iv=function(fm){
-  fm=deparse1(fm)
-  fm=stringr::str_replace_all(fm," ","")
-  gg=unlist(stringr::str_split_1(fm,"~"))
-  hh=unlist(stringr::str_split(gg[2],"\\|"))
-  var_dep=gg[1]
-  var_inst=gg[3]
-  rhs=hh[1]
-  var_expl=hh[2]
-  return(list(rhs=rhs,var_dep=var_dep,var_expl=var_expl,var_inst=var_inst,orig_name=var_expl))
-}
-
 generate_clusters=function(df,k_medoids,max_clus){
   Coords=as.matrix(df |> dplyr::select(X,Y))
   hold_clus=matrix(NA,nrow=nrow(Coords),ncol=(max_clus-1))
@@ -50,7 +38,7 @@ gm_2=mgcv::bam(dep_var~
               k=splines,
               m=1),
          data=df,
-         discrete=T)
+         discrete=TRUE)
 
 df_p=prcomp(model.matrix(gm_2))
 pc=as.data.frame(df_p$x)
@@ -75,7 +63,7 @@ hc_sim=function(j,Sim,eq_sim,df){
 }
 
 #############search for mle ests of matern params and generate simulated noise with these parameters.
-#############For large datasets use exact_cholesky=F which uses BRISC.
+#############For large datasets use exact_cholesky=FALSE which uses BRISC.
 Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
   Residuals=lm_res$residuals
   Coords=as.matrix(df |> dplyr::select(X,Y))
@@ -92,7 +80,7 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
                                 smoothness = 0.5,
                                 aRange = rng_search[j],
                                 m=1,
-                                na.rm=T,
+                                na.rm=TRUE,
                                 give.warnings = F
     )
 

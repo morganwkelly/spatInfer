@@ -53,7 +53,7 @@ optimal_basis=function(fm,df,max_splines,Description=""){
                       k=3,
                       m=1),
                  data=df,
-                 discrete=T)
+                 discrete=TRUE)
   pc=prcomp(model.matrix(gm_2))
   pc=cbind.data.frame(df$dep_var,pc$x)
   names(pc)[1]="dep_var"
@@ -79,7 +79,7 @@ bas=bic_results[[1]]
                 k=spl,
                 m=1),
            data=df,
-           discrete=T)
+           discrete=TRUE)
   pc=prcomp(model.matrix(gm_2))
   pc=cbind.data.frame(df$dep_var,pc$x)
   names(pc)[1]="dep_var"
@@ -109,7 +109,7 @@ bas=bas |> dplyr::relocate(index)
   best=best$index
 
   cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#CC79A7", "#009E73", "#F0E442", "#0072B2", "#D55E00") #colorblind palette
-  bic=bas |> dplyr::select(index,starts_with("BIC")) |>
+  bic=bas |> dplyr::select(index,dplyr::starts_with("BIC")) |>
     tidyr::pivot_longer(-index,values_to = "BIC") |>
     na.omit() |>
     ggplot2::ggplot(ggplot2::aes(index,BIC,color=name))+

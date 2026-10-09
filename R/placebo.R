@@ -56,7 +56,7 @@
 #' splines=6,
 #' pc_num=15,
 #' nSim=100,
-#' Parallel=F,
+#' Parallel=FALSE,
 #' max_clus = 7
 #' )
 #' placebo_table(plbo)
@@ -146,8 +146,3 @@ obj=list(
 return(obj)
 
 }
-
-
-#'@export
-
-

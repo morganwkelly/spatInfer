@@ -35,11 +35,11 @@ optimal_basis}
 values should be used first to get an idea of how the regression is
 behaving.}
 
-\item{weights}{Set weights=T if the regression is weighted. The weighting
+\item{weights}{Set weights=TRUE if the regression is weighted. The weighting
 variable in the dataset must be named weights.}
 
 \item{max_clus}{The maximum number of large cluster standard errors to
-examine with the placebo test. Defaults to 8.}
+examine with the placebo test. Defaults to 6.}
 
 \item{Parallel}{Run the simulations in parallel.}
 
@@ -74,7 +74,7 @@ syn_im=synth_im(mobility~single_mothers+short_commute+gini+dropout_rate+social_c
 splines=6,
 pc_num=15,
 nSim=100,
-Parallel=F,
+Parallel=FALSE,
 max_clus = 7
 )
 

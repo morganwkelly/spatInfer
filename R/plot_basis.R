@@ -1,4 +1,4 @@
-#' Placebo significance level.
+#' Plot the fitted tensor spline surface of the outcome.
 #'@description
 #'
 #'  `plot_basis()` gives a 3d plot of the fitted tensor spline surface of the outcome. This is just a 
@@ -38,8 +38,8 @@ plot_basis=function(fm,df,splines,grd_num=20,phi=50,theta=30, Title=""){
                       k=splines,
                       m=1),
                  data=df,
-                 discrete=T)
-  par(mai=c(0.5,0.2,0.5,0.2))
+                 discrete=TRUE)
+  graphics::par(mai=c(0.5,0.2,0.5,0.2))
   
   mgcv::vis.gam(gm_2,n.grid=grd_num,theta=30,phi=50,ticktype="detailed", #   color="gray",   #phi does view height, theta rotation
           xlab="Long",ylab="Lat",zlab="Outcome",main=Title,

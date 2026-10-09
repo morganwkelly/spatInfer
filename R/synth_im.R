@@ -18,10 +18,10 @@
 #' @param nSim The number of placebos to generate. Defaults to 1000 but lower
 #'   values should be used first to get an idea of how the regression is
 #'   behaving.
-#' @param weights Set weights=T if the regression is weighted. The weighting
+#' @param weights Set weights=TRUE if the regression is weighted. The weighting
 #'   variable in the dataset must be named weights.
 #' @param max_clus The maximum number of large cluster standard errors to
-#'   examine with the placebo test. Defaults to 8.
+#'   examine with the placebo test. Defaults to 6.
 #' @param Parallel Run the simulations in parallel.
 #' @param exact_cholesky For very large datasets, setting this to F will use the
 #'   BRISC Cholesky approximation.
@@ -46,7 +46,7 @@
 #' splines=6,
 #' pc_num=15,
 #' nSim=100,
-#' Parallel=F,
+#' Parallel=FALSE,
 #' max_clus = 7
 #' )
 #'
@@ -150,16 +150,3 @@ class(obj)=c("synth_im")
 return(obj)
 
 }
-
-
-#' #'@export
-#' print.synth_im=function(obj){
-#'
-#'   cat("Regression and synth significance levels for IM and HC standard errors.\nsynth_05 gives the percentage of synth simulations significant at 5%.\nConf Int gives the width of the 95% confidence interval.\n")
-#'   results=obj$Results #|>
-#'    # dplyr::rename(`synth p`= sim_p, `synth 5%`=sim_05,`Est p`=est_p,`CI Width`=width_ci,`Var Ratio`=var_range)
-#'   print(results)
-#'   cat("\n\nSpatial parameters of treatment variable.\nSpatial R2 is the R2 of the regression of the treatment on the spatial basis.\n\n")
-#'   print(obj$Spatial_Params)
-#'   }
-

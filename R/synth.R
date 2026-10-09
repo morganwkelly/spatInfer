@@ -18,7 +18,7 @@
 #' @param nSim The number of placebos to generate. Defaults to 1000 but lower
 #'   values should be used first to get an idea of how the regression is
 #'   behaving.
-#' @param weights Set weights=T if the regression is weighted. The weighting
+#' @param weights Set weights=TRUE if the regression is weighted. The weighting
 #'   variable in the dataset must be named weights.
 #' @param max_clus The maximum number of large cluster standard errors to
 #'   examine with the placebo test. Defaults to 6.
@@ -47,7 +47,7 @@
 #' splines=6,
 #' pc_num=15,
 #' nSim=100,
-#' Parallel=F,
+#' Parallel=FALSE,
 #' max_clus = 7
 #' )
 #'
@@ -151,14 +151,3 @@ obj=list(
 return(obj)
 
 }
-
-#' #' @export
-#' print.synth=function(obj){
-#'
-#'   cat("Regression and synthetic outcome significance levels for BCH and HC standard errors.\nsim_05 gives the percentage of simulations significant at 5%.\nNote that, because the synthetic outcome can be mechanically related to the treatment through common trends, this should not be interpreted as a test of the validity of the inference method.\n\n")
-#'   results=obj$Results
-#'   print(results)
-#'   cat("\n\nSpatial parameters of outcome variable.\nSpatial R2 is the R2 of the regression of the treatment on the spatial basis.\n\n")
-#'   print(obj$Spatial_Params)
-#'   }
-

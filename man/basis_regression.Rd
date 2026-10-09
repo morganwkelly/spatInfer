@@ -4,7 +4,15 @@
 \alias{basis_regression}
 \title{Carry out spatial basis regressions with BCH standard errors.}
 \usage{
-basis_regression(fm, df, splines, pc_num, clusters, weights = F, cov = "BCH")
+basis_regression(
+  fm,
+  df,
+  splines,
+  pc_num,
+  clusters,
+  weights = FALSE,
+  cov = "BCH"
+)
 }
 \arguments{
 \item{fm}{The equation formula. The variable of interest is the first one on the right hand side.}
@@ -17,7 +25,7 @@ basis_regression(fm, df, splines, pc_num, clusters, weights = F, cov = "BCH")
 
 \item{clusters}{Number of k-medoids clusters to use based on the placebo test.}
 
-\item{weights}{Set weights=T if the regression is weighted. The weighting variable in the dataset must be named weights.}
+\item{weights}{Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.}
 
 \item{cov}{Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.}
 }

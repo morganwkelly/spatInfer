@@ -26,7 +26,7 @@
 #' splines=6,
 #' pc_num=15,
 #' nSim=100,
-#' Parallel=F,
+#' Parallel=FALSE,
 #' max_clus = 7
 #' )
 #' placebo_table(plbo, caption="Placebo significance levels for single mothers variable.")
@@ -60,8 +60,8 @@ plac_tab=tinytable::tt(rr,theme="striped",align="r",digits=3,
 )
 
 plac_tab= plac_tab |>
-  tinytable::style_tt(i = 0, bold=T ) |>
-  tinytable::style_tt(j=1, bold=T ) |>
+  tinytable::style_tt(i = 0, bold=TRUE ) |>
+  tinytable::style_tt(j=1, bold=TRUE ) |>
   tinytable::style_tt(j = c("Plac 5%"), color = "orange")
 
 return(plac_tab)

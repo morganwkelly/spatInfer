@@ -35,7 +35,7 @@ optimal_basis function.}
 values should be used first to get an idea of how the regression is
 behaving.}
 
-\item{weights}{Set weights=T if the regression is weighted. The weighting
+\item{weights}{Set weights=TRUE if the regression is weighted. The weighting
 variable in the dataset must be named weights.}
 
 \item{max_clus}{The maximum number of clusters to examine with the placebo
@@ -84,7 +84,7 @@ plbo_im=placebo_im(mobility~single_mothers+short_commute+gini+dropout_rate+socia
 splines=6,
 pc_num=15,
 nSim=100,
-Parallel=F,
+Parallel=FALSE,
 max_clus = 7
 )
 placebo_table(plbo_im, caption="IM placebo values for single mothers variable.")

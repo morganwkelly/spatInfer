@@ -6,7 +6,7 @@
 #' 
 #' @param syn An object containing simulation results created by synth or synth_im.
 #' @param caption An optional caption for the table.
-#'#'
+#'
 #' @return Generates a tinytable object. This gives the regression and synthetic outcome p values as the number of clusters increases.
 #'  The regression confidence interval and its width are also reported. The next part of the table gives
 #'  the z-score of a Moran test, using 5 nearest neighbours, the R2 of a regression of the outcome on a
@@ -24,7 +24,7 @@
 #' splines=6,
 #' pc_num=15,
 #' nSim=100,
-#' Parallel=F,
+#' Parallel=FALSE,
 #' max_clus = 7
 #' )
 #' synth_table(synt, caption="Synthetic outcomes significance levels for single mothers variable.")
@@ -61,7 +61,7 @@ syn_tab=tinytable::tt(rr,theme="striped",align="r",digits=3 ,
 )
 
 syn_tab= syn_tab |>
-  tinytable::style_tt(j = 1, bold=T )
+  tinytable::style_tt(j = 1, bold=TRUE )
 
 return(syn_tab)
 }
