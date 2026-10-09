@@ -7,3 +7,4 @@ spatInfer.Rproj
 .Rhistory
 .Rbuildignore
 README.Rmd
+.DS_Store
