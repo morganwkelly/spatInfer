@@ -29,3 +29,11 @@ test_that("errors in parallel workers are raised", {
   expect_error(run_sims(4, function(j) if (j == 3) stop("worker failed") else j, TRUE, FALSE),
     "worker failed")
 })
+
+test_that("n_workers() uses all cores but two, and at least one", {
+  for (cores in list(NA_integer_, 1L, 2L, 3L, 10L)) {
+    local_mocked_bindings(detectCores = function(...) cores, .package = "parallel")
+    expected <- if (is.na(cores)) 1L else max(1L, cores - 2L)
+    expect_identical(n_workers(), expected)
+  }
+})

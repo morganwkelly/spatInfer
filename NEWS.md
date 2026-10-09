@@ -19,4 +19,9 @@
   raised instead of being lost. `foreach` and `doParallel` are no longer
   dependencies; `withr` is new.
 
+* Parallel runs use at least one worker. Previously `detectCores() - 2`
+  workers were requested, which fails on machines with two or fewer cores or
+  where the number of cores cannot be detected. Machines with three or more
+  cores use the same number of workers as before.
+
 * `plot_basis()` restores the graphics parameters it changes.

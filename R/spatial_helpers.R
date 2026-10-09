@@ -187,6 +187,14 @@ hc_p_values=function(Sim,eq_sim,df,nSim,Parallel){
   return(hc_out)
 }
 
+######Number of parallel workers: all cores but two, and at least one.
+######detectCores() can return NA, in which case one worker is used.
+n_workers=function(){
+  cores=parallel::detectCores()
+  if(is.na(cores)) return(1L)
+  return(as.integer(max(1,cores-2)))
+}
+
 ######Run fun(1), ..., fun(n) serially or in parallel and return the results as a list.
 ######fixest_single_thread=TRUE runs fixest on one thread in each worker; the user's
 ######thread setting is restored afterwards. No parallel backend is left registered.
@@ -199,7 +207,7 @@ run_sims=function(n,fun,Parallel,fixest_single_thread){
     return(out)
   }
 
-  n_cores=parallel::detectCores()-2  #number of cores to use
+  n_cores=n_workers()
   if(fixest_single_thread){
     old_threads=fixest::getFixest_nthreads()
     fixest::setFixest_nthreads(nthreads=1)
