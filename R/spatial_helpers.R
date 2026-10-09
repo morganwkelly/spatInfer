@@ -227,6 +227,40 @@ cluster_p_values=function(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun,clust_na
 }
 
 
+######Summary rows shared by summary_bch() and summary_im().
+######Confidence interval of the treatment coefficient, normalized by the coefficient.
+normalized_ci=function(estimate){
+  ci=confint(estimate)/abs(estimate$coeftable[2,1])     #normalize by coef
+  return(c(ci[2,1],ci[2,2]))
+}
+
+######One row of results: estimated p value, share of simulated p values below it and below 0.05,
+######and the normalized confidence interval.
+ci_summary_row=function(SE,Clusters,est_p,ci,sim_p_values){
+  width_ci=round(ci[2]-ci[1],2)
+  conf_int=paste0("[",round(ci[1],2),", ",round(ci[2],2),"]")
+  sim_p=mean(sim_p_values<est_p)
+  sim_05=mean(sim_p_values<0.05)
+  return(data.frame(SE=SE,Clusters=Clusters,est_p,sim_p,sim_05,width_ci,CI=conf_int))
+}
+
+######HC row: baseline estimate with real variables and heteroskedasticity robust standard errors.
+hc_summary_row=function(df,eq_est,hc_out){
+  estimate=fixest::feols(eq_est,data=df,
+                         weights = ~wts,
+                         vcov="hetero")
+  return(ci_summary_row("HC",0,estimate$coeftable[2,4],normalized_ci(estimate),hc_out[,1]))
+}
+
+######Drop the two cluster row, put HC first, and round.
+finish_summary=function(sim_summ){
+  sim_summ=purrr::list_rbind(sim_summ) |>
+    dplyr::filter(Clusters!=2) |>
+    dplyr::arrange(Clusters) |>
+    dplyr::mutate(Clusters=ifelse(Clusters==0,".",Clusters)) |>
+    dplyr::mutate(dplyr::across(dplyr::where(is.numeric), \(x) round(x, 3)))
+  return(sim_summ)
+}
 
 #Moran z test for autocorr in residuals. Uses near_neigh nearest neighbours
 moran=function(fm,df,near_neigh=5){
