@@ -26,6 +26,7 @@ test_that("weights = TRUE requires a weights column", {
     "no variable called weights")
 })
 
-test_that("optimal_basis() rejects max_splines above 12", {
+test_that("optimal_basis() rejects max_splines outside 3 to 12", {
   expect_error(optimal_basis(fixture_fm, fixture_data(), max_splines = 13), "12")
+  expect_error(optimal_basis(fixture_fm, fixture_data(), max_splines = 2), "minimum")
 })

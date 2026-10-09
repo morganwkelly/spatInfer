@@ -19,6 +19,11 @@
   raised instead of being lost. `foreach` and `doParallel` are no longer
   dependencies; `withr` is new.
 
+* `optimal_basis(max_splines = 3)` now examines only the 3x3 tensor.
+  Previously its loop ran backwards, adding a 4x4 tensor and duplicating the
+  3x3 results. `max_splines` below 3 is now rejected with an error. Results for
+  `max_splines` of 4 or more are unchanged.
+
 * Parallel runs use at least one worker. Previously `detectCores() - 2`
   workers were requested, which fails on machines with two or fewer cores or
   where the number of cores cannot be detected. Machines with three or more

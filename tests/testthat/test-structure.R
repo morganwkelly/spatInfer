@@ -1,5 +1,13 @@
 # Returned object structures that downstream code and the table functions rely on.
 
+test_that("optimal_basis(max_splines = 3) uses only the 3x3 tensor", {
+  expect_golden("optimal_basis_max3")
+  ob3 <- readRDS(golden_path("optimal_basis_max3"))
+  expect_identical(unique(ob3$bic$name), "BIC_3")
+  expect_identical(unique(ob3$r2$name), "R2_3")
+  expect_match(ob3$subtitle, "3x3 Linear Tensor")
+})
+
 test_that("placebo-type results have the documented components and columns", {
   plbo <- readRDS(golden_path("placebo"))
   expect_type(plbo, "list")

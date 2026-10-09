@@ -27,6 +27,8 @@ optimal_basis=function(fm,df,max_splines,Description=""){
 
   if(max_splines>12)
     stop("The maximum number of splines you can use is 12.")
+  if(max_splines<3)
+    stop("The minimum number of splines you can use is 3.")
 
   fm=deparse1(fm)
   fm=stringr::str_replace_all(fm," ","")
@@ -44,60 +46,13 @@ optimal_basis=function(fm,df,max_splines,Description=""){
                    explan_var=stringr::str_split_1(gg[2],"\\+")[1])
 
   ####get principal components of tensors spline and add to dataset
-  bic_results=list()
   mx=max_splines-2
+  bic_results=lapply(3:max_splines,function(spl) pc_bic(df,spl))   #3x3 up to max_splines x max_splines linear tensors
 
-############3x3 linear spline
-  gm_2=mgcv::bam(dep_var~
-                   te(X,Y,bs=c("bs"),
-                      k=3,
-                      m=1),
-                 data=df,
-                 discrete=TRUE)
-  pc=prcomp(model.matrix(gm_2))
-  pc=cbind.data.frame(df$dep_var,pc$x)
-  names(pc)[1]="dep_var"
-  pc_fit=list()
-  for(j in 1:(ncol(pc)-1)){
-    ll=lm(dep_var~.,pc[,1:(j+1)])
-    pc_fit[[j]]=data.frame(BIC=BIC(ll),R2=summary(ll)$adj.r.squared)
+  bas=bic_results[[1]]
+  for (i in seq_along(bic_results)[-1]){
+    bas=dplyr::full_join(bas,bic_results[[i]],by="index")
   }
-  pc_fit=purrr::list_rbind(pc_fit) |> as.data.frame()
-  pc_fit$index=1:nrow(pc_fit)
-  bic_results[[1]]=  pc_fit   #data.frame(pc_fit$BIC)
-  names(bic_results[[1]])=c(paste0("BIC_",3),paste0("R2_",3),"index")
-
-
-bas=bic_results[[1]]
-
-
-###########splines from 4x4 up: linear
-  for (i in 2:mx){
-    spl=i+2
-  gm_2=mgcv::bam(dep_var~
-             te(X,Y,bs=c("bs"),
-                k=spl,
-                m=1),
-           data=df,
-           discrete=TRUE)
-  pc=prcomp(model.matrix(gm_2))
-  pc=cbind.data.frame(df$dep_var,pc$x)
-  names(pc)[1]="dep_var"
-  pc_fit=list()
-  for(j in 1:(ncol(pc)-1)){
-    ll=lm(dep_var~.,pc[,1:(j+1)])
-   pc_fit[[j]]=data.frame(BIC=BIC(ll),R2=summary(ll)$adj.r.squared)
-  }
-  pc_fit=purrr::list_rbind(pc_fit) |> as.data.frame()
-  pc_fit$index=1:nrow(pc_fit)
-bic_results[[i]]=  pc_fit   #data.frame(pc_fit$BIC)
-names(bic_results[[i]])=c(paste0("BIC_",i+2),paste0("R2_",i+2),"index")
-}
-
-  #bas=bic_results[[1]]
-    for (i in 2:mx){
-  bas=dplyr::full_join(bas,bic_results[[i]],by="index")
-    }
 bas=bas |> dplyr::relocate(index)
 
   best=bas |> dplyr::select(index,dplyr::starts_with("BIC")) |>
@@ -138,3 +93,26 @@ bas=bas |> dplyr::relocate(index)
     )
 }
 
+
+#####BIC and adjusted R2 of regressions of dep_var on the first 1, 2, ... principal components
+#####of a spl x spl linear tensor spline.
+pc_bic=function(df,spl){
+  gm_2=mgcv::bam(dep_var~
+                   te(X,Y,bs=c("bs"),
+                      k=spl,
+                      m=1),
+                 data=df,
+                 discrete=TRUE)
+  pc=prcomp(model.matrix(gm_2))
+  pc=cbind.data.frame(df$dep_var,pc$x)
+  names(pc)[1]="dep_var"
+  pc_fit=list()
+  for(j in 1:(ncol(pc)-1)){
+    ll=lm(dep_var~.,pc[,1:(j+1)])
+    pc_fit[[j]]=data.frame(BIC=BIC(ll),R2=summary(ll)$adj.r.squared)
+  }
+  pc_fit=purrr::list_rbind(pc_fit) |> as.data.frame()
+  pc_fit$index=1:nrow(pc_fit)
+  names(pc_fit)=c(paste0("BIC_",spl),paste0("R2_",spl),"index")
+  return(pc_fit)
+}

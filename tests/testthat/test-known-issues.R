@@ -14,9 +14,3 @@ test_that("KNOWN ISSUE: tables pad NA rows when max_clus < 5", {
   expect_equal(nrow(plac_tab@data), 5)
   expect_true(all(is.na(plac_tab@data$Clusters[3:5])))
 })
-
-test_that("KNOWN ISSUE: optimal_basis(max_splines = 3) adds 4x4 and duplicates 3x3", {
-  expect_golden("optimal_basis_max3")
-  ob3 <- readRDS(golden_path("optimal_basis_max3"))
-  expect_setequal(unique(ob3$bic$name), c("BIC_3.x", "BIC_4", "BIC_3.y"))
-})

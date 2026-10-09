@@ -46,8 +46,6 @@ golden_cases <- list(
   optimal_basis = function() {
     summarise_basis(quietly(optimal_basis(fixture_fm, fixture_data(), max_splines = 5)))
   },
-  # Known issue: with max_splines = 3 the loop 2:mx runs backwards, adding a
-  # 4x4 tensor and duplicating the 3x3 results (BIC_3.x, BIC_4, BIC_3.y).
   optimal_basis_max3 = function() {
     summarise_basis(quietly(optimal_basis(fixture_fm, fixture_data(), max_splines = 3)))
   },
