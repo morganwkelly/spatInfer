@@ -24,7 +24,6 @@ Imports:
   mgcv,
   fixest,
   fields,
-  foreach,
   parallel,
   dplyr,
   stringr,
@@ -34,7 +33,7 @@ Imports:
   tinytable,
   broom,
   purrr,
-  doParallel
+  withr
 Suggests:
   modelsummary,
   BRISC,

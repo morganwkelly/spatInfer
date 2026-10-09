@@ -188,23 +188,36 @@ hc_p_values=function(Sim,eq_sim,df,nSim,Parallel){
 }
 
 ######Run fun(1), ..., fun(n) serially or in parallel and return the results as a list.
-######fixest_single_thread=TRUE sets fixest to one thread before running in parallel.
+######fixest_single_thread=TRUE runs fixest on one thread in each worker; the user's
+######thread setting is restored afterwards. No parallel backend is left registered.
 run_sims=function(n,fun,Parallel,fixest_single_thread){
-  if(Parallel){
-    n_cores=parallel::detectCores()-2  #number of cores to use
-    if(fixest_single_thread) fixest::setFixest_nthreads(nthreads=1)
-    `%dopar%` <- foreach::`%dopar%`
-    # cl_k <- parallel::makeForkCluster(n_cores)
-    # doParallel::registerDoParallel(cl_k)
-    # out=foreach::foreach(j=1:n) %dopar% {fun(j)}
-    # parallel::stopCluster(cl_k)
-    doParallel::registerDoParallel(n_cores)
-    out=foreach::foreach(j=1:n) %dopar% {fun(j)}
-    doParallel::stopImplicitCluster()
-  }else{
+  if(!Parallel){
     out=list()
     for (j in 1:n){
       out[[j]]=fun(j)
+    }
+    return(out)
+  }
+
+  n_cores=parallel::detectCores()-2  #number of cores to use
+  if(fixest_single_thread){
+    old_threads=fixest::getFixest_nthreads()
+    fixest::setFixest_nthreads(nthreads=1)
+    on.exit(fixest::setFixest_nthreads(nthreads=old_threads),add=TRUE)
+  }
+
+  if(.Platform$OS.type=="windows"){
+    cl=parallel::makePSOCKcluster(n_cores)
+    on.exit(parallel::stopCluster(cl),add=TRUE)
+    out=parallel::parLapply(cl,1:n,fun)
+  }else{
+    #mclapply only warns about failed workers; those are raised as errors below
+    out=suppressWarnings(parallel::mclapply(1:n,fun,mc.cores=n_cores))
+    failed=vapply(out,function(x) is.null(x)||inherits(x,"try-error"),logical(1))
+    if(any(failed)){
+      first=out[[which(failed)[1]]]
+      if(inherits(first,"try-error")) stop(attr(first,"condition"))
+      stop("A parallel worker returned no result, possibly from running out of memory. Try Parallel = FALSE.")
     }
   }
   return(out)

@@ -57,6 +57,7 @@ synth_im=function(fm,df,splines,pc_num,
                      nSim=1000,weights=FALSE,max_clus=6,
                      Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE,jitter_coords=TRUE){
 #
+  withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
   prep=prepare_spatial_data(fm,df,splines,pc_num,weights,max_clus)
   df=prep$df
   rhs=prep$rhs
