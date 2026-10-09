@@ -42,7 +42,7 @@
 #' set.seed(123)
 #' opportunity=opportunity |> dplyr::slice_sample(n=100)
 #' # Use the number of splines and PCs indicated by optimal_basis()
-#' syn_im=synth_im(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap+dropout_na,                                 opportunity,
+#' syn_im=synth_im(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap,                                 opportunity,
 #' splines=6,
 #' pc_num=15,
 #' nSim=100,
