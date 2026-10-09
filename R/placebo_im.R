@@ -37,6 +37,11 @@
 #'   (about 1 km). Set to `FALSE` to use the coordinates as they are, in which
 #'   case spdep warns about identical points. Only the Moran test is affected.
 #'
+#' @details In IM inference the treatment coefficient is estimated separately in
+#'   each cluster. Clusters where it cannot be estimated, for example because the
+#'   treatment does not vary within the cluster, are left out of the t-test. A
+#'   warning is given when this happens in the regression on the actual data.
+#'
 #' @return A list containing Results which summarizes the placebo values and
 #'   Spatial_Params giving the Moran test value and the range and structure used
 #'   to generate the placebos. Choose the number of clusters where the

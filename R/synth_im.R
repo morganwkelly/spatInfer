@@ -33,6 +33,11 @@
 #'   case spdep warns about identical points. Only the Moran test is affected.
 #'
 #'
+#' @details In IM inference the treatment coefficient is estimated separately in
+#'   each cluster. Clusters where it cannot be estimated, for example because the
+#'   treatment does not vary within the cluster, are left out of the t-test. A
+#'   warning is given when this happens in the regression on the actual data.
+#'
 #' @return Returns a list of synthetic outcome p values and spatial parameters.
 #' @export
 #'

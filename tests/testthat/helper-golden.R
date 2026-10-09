@@ -23,6 +23,9 @@ fixture_args <- list(splines = 4, pc_num = 4, nSim = 20, max_clus = 5)
 # are expected with small clusters; silence them so test output stays readable.
 quietly <- function(expr) suppressWarnings(suppressMessages(expr))
 
+# Silence fixest notes only, so that the package's own warnings can be tested.
+quietly_notes <- function(expr) suppressMessages(expr)
+
 run_sim <- function(fun, ..., data = fixture_data()) {
   args <- utils::modifyList(c(list(fm = fixture_fm, df = data), fixture_args), list(...))
   quietly(do.call(fun, args))

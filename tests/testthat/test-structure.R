@@ -136,6 +136,26 @@ test_that("plot_basis() passes theta and phi to vis.gam()", {
   expect_identical(c(defaults$theta, defaults$phi), c(30, 50))
 })
 
+test_that("IM leaves out clusters without a treatment estimate, with a warning", {
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE, 5)
+  df <- prep$df
+  eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
+  hold <- generate_clusters(df, TRUE, 5)
+  # The treatment does not vary within cluster 1 of the four cluster partition.
+  df$explan_var[hold[, 3] == 1] <- 0
+  im_out <- as.data.frame(matrix(0.5, nrow = 5, ncol = 4))
+  hc_out <- data.frame(hc_p = rep(0.5, 5))
+
+  warnings <- capture_warnings(quietly_notes(summary_im(df, eqs$eq_est, hold, 5, im_out, hc_out)))
+  expect_match(warnings, "IM with 4 clusters: .* in 1 cluster", all = FALSE)
+
+  coefs <- quietly(im_cluster_coefs(eqs$eq_est, df, hold[, 3]))
+  expect_equal(nrow(coefs), 3)
+  expect_identical(im_t_test(coefs)$p.value, t.test(coefs$estimate)$p.value)
+  expect_identical(im_t_test(tibble::tibble(estimate = c(1, 2, NA, 4)))$p.value,
+    t.test(c(1, 2, 4))$p.value)
+})
+
 test_that("plot_basis() draws without error", {
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off())

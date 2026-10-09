@@ -41,6 +41,13 @@
   jittered. The default, `TRUE`, is unchanged. The documentation now gives the
   jitter as about 1 km (0.01 degrees), not 10 km.
 
+* `placebo_im()` and `synth_im()` now warn when the treatment coefficient
+  cannot be estimated in some clusters of the regression on the actual data.
+  Those clusters are left out of the IM t-test, as before; previously this
+  happened without notice. The IM t-test no longer passes an
+  `na.action = na.fail()` argument, which `t.test()` ignored. Results are
+  unchanged.
+
 * `plot_basis()` now uses its `theta` and `phi` arguments. Previously the view
   was fixed at the default values.
 

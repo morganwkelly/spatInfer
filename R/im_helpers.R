@@ -7,7 +7,7 @@ im_sim=function(j,Sim,eq_sim,df2){
   sim=Sim[,j]
   df1=cbind.data.frame(sim,df2)
   im_coefs=im_cluster_coefs(eq_sim,df1,df1$clust_im)
-  im=t.test(im_coefs,na.action=na.fail())
+  im=im_t_test(im_coefs)
   sim_res1=data.frame(
     im$p.value
   )
@@ -23,10 +23,22 @@ im_cluster_coefs=function(eq,df,clust){
     dplyr::select(estimate)
 }
 
+######t-test of the cluster coefficients. Clusters where the coefficient could not be
+######estimated (missing or not finite) are left out.
+im_t_test=function(im_coefs){
+  estimate=im_coefs$estimate
+  return(t.test(estimate[is.finite(estimate)]))
+}
+
 summary_im=function(df,eq_est,hold_clus,max_clus,im_out,hc_out){
   sim_summ=list()
   for(k in 1:(max_clus-1)){
-    im=t.test(im_cluster_coefs(eq_est,df,hold_clus[,k]),na.action=na.fail())
+    im_coefs=im_cluster_coefs(eq_est,df,hold_clus[,k])
+    n_missing=nlevels(hold_clus[,k])-sum(is.finite(im_coefs$estimate))
+    if(n_missing>0)
+      warning("IM with ",k+1," clusters: the treatment coefficient could not be estimated in ",
+              n_missing," cluster(s), which are left out of the t-test.",call.=FALSE)
+    im=im_t_test(im_coefs)
     ci=im$conf.int[1:2]/abs(im$estimate)    #normalize by coef
     sim_summ[[k]]=ci_summary_row("IM",k+1,im$p.value,ci,im_out[,k])
   }

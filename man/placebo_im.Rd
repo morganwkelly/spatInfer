@@ -74,6 +74,12 @@ with the same correlation structure as the residuals from that regression.
 For each number of clusters it gives the regression and placebo significance
 levels.
 }
+\details{
+In IM inference the treatment coefficient is estimated separately in
+each cluster. Clusters where it cannot be estimated, for example because the
+treatment does not vary within the cluster, are left out of the t-test. A
+warning is given when this happens in the regression on the actual data.
+}
 \examples{
 library(spatInfer)
 data(opportunity)
