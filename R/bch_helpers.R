@@ -14,34 +14,7 @@ bch_sim=function(j,Sim,eq_sim,df2){
 
 
 bch_p_values=function(Sim,eq_sim,df,hold_clus,nSim,max_clus,Parallel){
-  bch_out=list()
-  for (l in 1:ncol(hold_clus)){
-    df2=df
-    df2$clust_bch=hold_clus[,l]
-    clus_out=list()
-    if(Parallel){
-      n_cores=parallel::detectCores()-2  #number of cores to use
-      fixest::setFixest_nthreads(nthreads=1)
-      `%dopar%` <- foreach::`%dopar%`
-      # cl_k <- parallel::makeForkCluster(n_cores)
-      # doParallel::registerDoParallel(cl_k)
-      # clus_out=foreach::foreach(j=1:nSim) %dopar% {bch_sim(j,Sim,eq_sim,df2)}
-      # parallel::stopCluster(cl_k)
-      doParallel::registerDoParallel(n_cores)
-      clus_out=foreach::foreach(j=1:nSim) %dopar% {bch_sim(j,Sim,eq_sim,df2)}
-      doParallel::stopImplicitCluster()
-    }else{
-      for (j in 1:nSim){
-        clus_out[[j]]=bch_sim(j,Sim,eq_sim,df2)
-      }
-    }
-    clus_out=purrr::list_rbind(clus_out)
-    bch_out[[l]]=clus_out
-
-  }
-  names(bch_out)=paste0("clus_",2:(length(bch_out)+1))
-  bch_out=purrr::list_cbind(bch_out)
-  return(bch_out)
+  cluster_p_values(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun=bch_sim,clust_name="clust_bch")
 }
 
 summary_bch=function(df,eq_est,hold_clus,max_clus,bch_out,hc_out){

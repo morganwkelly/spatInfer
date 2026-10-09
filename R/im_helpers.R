@@ -1,32 +1,5 @@
 im_p_values=function(Sim,eq_sim,df,hold_clus,nSim,max_clus,Parallel){
-  im_out=list()
-  for (l in 1:ncol(hold_clus)){
-    df2=df
-    df2$clust_im=hold_clus[,l]
-    clus_out=list()
-    if(Parallel){
-      fixest::setFixest_nthreads(nthreads=1)
-      `%dopar%` <- foreach::`%dopar%`
-      n_cores=parallel::detectCores()-2  #number of cores to use
-      # cl_k <- parallel::makeForkCluster(n_cores)
-      # doParallel::registerDoParallel(cl_k)
-      # clus_out=foreach::foreach(j=1:nSim) %dopar% {im_sim(j,Sim,eq_sim,df2)}
-      # parallel::stopCluster(cl_k)
-      doParallel::registerDoParallel(n_cores)
-      clus_out=foreach::foreach(j=1:nSim) %dopar% {im_sim(j,Sim,eq_sim,df2)}
-      doParallel::stopImplicitCluster()
-    }else{
-      for (j in 1:nSim){
-        clus_out[[j]]=im_sim(j,Sim,eq_sim,df2)
-      }
-    }
-    clus_out=purrr::list_rbind(clus_out)
-    im_out[[l]]=clus_out
-
-  }
-  names(im_out)=paste0("clus_",2:(length(im_out)+1))
-  im_out=purrr::list_cbind(im_out)
-  return(im_out)
+  cluster_p_values(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun=im_sim,clust_name="clust_im")
 }
 
 im_sim=function(j,Sim,eq_sim,df2){

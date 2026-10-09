@@ -140,20 +140,7 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
     return(results)
 
   }
-  if(Parallel){
-    n_cores=parallel::detectCores()-2  #number of cores to use
-    `%dopar%` <- foreach::`%dopar%`
-    doParallel::registerDoParallel(n_cores)
-    sim_krig=foreach::foreach(j=1:length(rng_search)) %dopar% {kriging_search(j)}
-    doParallel::stopImplicitCluster()
-    
-  }else{
-    sim_krig=list()
-    environment(kriging_search)=environment()
-    for (j in 1:length(rng_search)){
-      sim_krig[[j]]=kriging_search(j)
-    }
-  }
+  sim_krig=run_sims(length(rng_search),kriging_search,Parallel,fixest_single_thread=FALSE)
   sim_krig=purrr::list_rbind(sim_krig)
   matern_params=sim_krig|> dplyr::arrange(Likelihood) |> dplyr::slice(1)   #Choose MLE params
   #return(matern_params)
@@ -194,26 +181,49 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
 
 ######Calculate p_values for simulated data, using HC standard errors.
 hc_p_values=function(Sim,eq_sim,df,nSim,Parallel){
-  hc_out=list()
-  if(Parallel){
-    n_cores=parallel::detectCores()-2  #number of cores to use
-    fixest::setFixest_nthreads(nthreads=1)
-    `%dopar%` <- foreach::`%dopar%`
-    # cl_k <- parallel::makeForkCluster(n_cores)
-    # doParallel::registerDoParallel(cl_k)
-    # hc_out=foreach::foreach(j=1:nSim) %dopar% {hc_sim(j,Sim,eq_sim,df)}
-    # parallel::stopCluster(cl_k)
-    doParallel::registerDoParallel(n_cores)
-    hc_out=foreach::foreach(j=1:nSim) %dopar% {hc_sim(j,Sim,eq_sim,df)}
-    doParallel::stopImplicitCluster()
-  }else{
-    for (j in 1:nSim){
-      hc_out[[j]]=hc_sim(j,Sim,eq_sim,df)
-    }
-  }
+  hc_out=run_sims(nSim,function(j) hc_sim(j,Sim,eq_sim,df),Parallel,fixest_single_thread=TRUE)
   hc_out=purrr::list_rbind(hc_out)
 
   return(hc_out)
+}
+
+######Run fun(1), ..., fun(n) serially or in parallel and return the results as a list.
+######fixest_single_thread=TRUE sets fixest to one thread before running in parallel.
+run_sims=function(n,fun,Parallel,fixest_single_thread){
+  if(Parallel){
+    n_cores=parallel::detectCores()-2  #number of cores to use
+    if(fixest_single_thread) fixest::setFixest_nthreads(nthreads=1)
+    `%dopar%` <- foreach::`%dopar%`
+    # cl_k <- parallel::makeForkCluster(n_cores)
+    # doParallel::registerDoParallel(cl_k)
+    # out=foreach::foreach(j=1:n) %dopar% {fun(j)}
+    # parallel::stopCluster(cl_k)
+    doParallel::registerDoParallel(n_cores)
+    out=foreach::foreach(j=1:n) %dopar% {fun(j)}
+    doParallel::stopImplicitCluster()
+  }else{
+    out=list()
+    for (j in 1:n){
+      out[[j]]=fun(j)
+    }
+  }
+  return(out)
+}
+
+######p values of simulated regressions for each set of clusters in hold_clus.
+######The clusters are stored in column clust_name, which sim_fun uses.
+cluster_p_values=function(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun,clust_name){
+  clus_p=list()
+  for (l in 1:ncol(hold_clus)){
+    df2=df
+    df2[[clust_name]]=hold_clus[,l]
+    clus_out=run_sims(nSim,function(j) sim_fun(j,Sim,eq_sim,df2),Parallel,fixest_single_thread=TRUE)
+    clus_out=purrr::list_rbind(clus_out)
+    clus_p[[l]]=clus_out
+  }
+  names(clus_p)=paste0("clus_",2:(length(clus_p)+1))
+  clus_p=purrr::list_cbind(clus_p)
+  return(clus_p)
 }
 
 
