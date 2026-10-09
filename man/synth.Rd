@@ -44,7 +44,8 @@ examine with the placebo test. Defaults to 6.}
 \item{Parallel}{Run the simulations in parallel.}
 
 \item{exact_cholesky}{For very large datasets, setting this to F will use the
-BRISC Cholesky approximation.}
+BRISC Cholesky approximation. This requires the
+\code{BRISC} package.}
 
 \item{k_medoids}{For large datasets, set to F to use Clara to generate
 medoids.}

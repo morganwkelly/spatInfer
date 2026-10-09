@@ -108,7 +108,12 @@ hc_sim=function(j,Sim,eq_sim,df){
 
 #############search for mle ests of matern params and generate simulated noise with these parameters.
 #############For large datasets use exact_cholesky=FALSE which uses BRISC.
+has_brisc=function() requireNamespace("BRISC",quietly=TRUE)
+
 Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
+  if(!exact_cholesky&&!has_brisc())
+    stop("exact_cholesky = FALSE needs the BRISC package. Install it with install.packages(\"BRISC\").",
+         call.=FALSE)
   Residuals=lm_res$residuals
   Coords=as.matrix(df |> dplyr::select(X,Y))
   rng_search=seq(0.025,1,by=0.025)*                 #search in increments of 0.025: proportions of

@@ -30,3 +30,9 @@ test_that("optimal_basis() rejects max_splines outside 3 to 12", {
   expect_error(optimal_basis(fixture_fm, fixture_data(), max_splines = 13), "12")
   expect_error(optimal_basis(fixture_fm, fixture_data(), max_splines = 2), "minimum")
 })
+
+test_that("exact_cholesky = FALSE without BRISC gives an informative error", {
+  local_mocked_bindings(has_brisc = function() FALSE)
+  expect_error(run_sim(placebo, Parallel = FALSE, exact_cholesky = FALSE),
+    "needs the BRISC package")
+})

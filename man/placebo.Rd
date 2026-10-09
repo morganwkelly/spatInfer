@@ -46,7 +46,8 @@ with the placebo test. Defaults to 6.}
 which can happen especially with large datasets.}
 
 \item{exact_cholesky}{For very large datasets, setting this to \code{FALSE} will use
-the \code{BRISC} Cholesky approximation.}
+the \code{BRISC} Cholesky approximation. This requires the
+\code{BRISC} package.}
 
 \item{k_medoids}{For large datasets, set to \code{FALSE} to use a faster approximation to generate
 medoids.}

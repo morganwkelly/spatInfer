@@ -24,7 +24,8 @@
 #'   examine with the placebo test. Defaults to 6.
 #' @param Parallel Run the simulations in parallel.
 #' @param exact_cholesky For very large datasets, setting this to F will use the
-#'   BRISC Cholesky approximation.
+#'   BRISC Cholesky approximation. This requires the
+#'   `BRISC` package.
 #' @param k_medoids For large datasets, set to F to use Clara to generate
 #'   medoids.
 #' @param jitter_coords If some sites have identical coordinates, jitter them for the

@@ -30,6 +30,9 @@
   were blanked, which also left the label showing from row 6 when
   `max_clus` is 7 or more. Tables for the default `max_clus = 6` are unchanged.
 
+* `exact_cholesky = FALSE` now stops with an informative error, before any
+  simulation work, when the suggested `BRISC` package is not installed.
+
 * Parallel runs use at least one worker. Previously `detectCores() - 2`
   workers were requested, which fails on machines with two or fewer cores or
   where the number of cores cannot be detected. Machines with three or more

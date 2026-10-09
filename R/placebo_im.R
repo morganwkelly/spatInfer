@@ -29,7 +29,8 @@
 #'   if this creates problems.
 #' @param exact_cholesky Use an exact Cholesky decomposition to generate
 #'   synthetic noise. For very large datasets, setting this to F will use the
-#'   BRISC Cholesky approximation.
+#'   BRISC Cholesky approximation. This requires the
+#'   `BRISC` package.
 #' @param k_medoids Use k-medoids clustering (PAM). For large datasets, set to F
 #'   to use fast approximation to generate medoids.
 #' @param jitter_coords If some sites have identical coordinates, jitter them for the

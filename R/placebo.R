@@ -31,7 +31,8 @@
 #'@param Parallel Run the simulations in parallel. Set to `FALSE` if there are memory problems, 
 #'  which can happen especially with large datasets.
 #'@param exact_cholesky For very large datasets, setting this to `FALSE` will use
-#'  the `BRISC` Cholesky approximation.
+#'  the `BRISC` Cholesky approximation. This requires the
+#'  `BRISC` package.
 #'@param k_medoids For large datasets, set to `FALSE` to use a faster approximation to generate
 #'  medoids.
 #'@param jitter_coords If some sites have identical coordinates, jitter them for the
