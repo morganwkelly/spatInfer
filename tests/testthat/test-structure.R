@@ -72,6 +72,36 @@ test_that("placebo_table() and synth_table() return tinytables", {
     c("Adj", "Clusters", "Est p", "Synth p", "CI Width", "CI"))
 })
 
+# Results objects with the HC row and n_clus cluster rows, as returned by placebo() and synth().
+fake_placebo <- function(n_clus) {
+  n <- n_clus + 1
+  list(
+    Results = data.frame(SE = c("HC", rep("BCH", n_clus)), Clusters = c(".", 2 + seq_len(n_clus)),
+      `Est p` = 0.01, `Plac p` = 0.2, `Plac 5%` = 0.05, `CI Width` = 1, CI = "[-1, 0]",
+      check.names = FALSE),
+    Spatial_Params = data.frame(Moran = 1, R2 = 0.5, Effective_Range = 0.1, Structure = 0.9,
+      N = 99, Splines = 4, PCs = 4)
+  )
+}
+
+test_that("tables show each SE label once and never add rows", {
+  for (n_clus in 1:6) {
+    plbo <- fake_placebo(n_clus)
+    n <- n_clus + 1
+    expected_labels <- c("HC", "BCH", rep("", n - 2))
+    plac_tab <- placebo_table(plbo)
+    expect_identical(plac_tab@data$Adj, expected_labels)
+    expect_false(anyNA(plac_tab@data))
+
+    syn <- plbo
+    names(syn$Results)[4] <- "Synth p"
+    syn$Results$`Plac 5%` <- NULL
+    syn_tab <- synth_table(syn)
+    expect_identical(syn_tab@data$Adj, expected_labels)
+    expect_false(anyNA(syn_tab@data))
+  }
+})
+
 test_that("plot_basis() draws without error", {
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off())

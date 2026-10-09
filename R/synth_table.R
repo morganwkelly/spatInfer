@@ -32,7 +32,7 @@
 
 synth_table=function(syn, caption=""){
   
-syn$Results[3:5,1]=""
+syn$Results=blank_repeated_se(syn$Results)
 rr=syn$Results
 rr=rr |>
   dplyr::rename(Adj=SE) |> 

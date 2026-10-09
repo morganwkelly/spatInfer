@@ -35,7 +35,7 @@
 placebo_table=function(plbo, caption=""){
 ##plbo is output of `placebo()` or `placebo_im()` functions.
 
-plbo$Results[3:5,1]=""
+plbo$Results=blank_repeated_se(plbo$Results)
 
 rr=plbo$Results|>
   dplyr::rename(Adj=SE) |> 
@@ -65,4 +65,11 @@ plac_tab= plac_tab |>
   tinytable::style_tt(j = c("Plac 5%"), color = "orange")
 
 return(plac_tab)
+}
+
+#####Show the standard error label (HC, BCH or IM) only where each block starts, in rows 1 and 2.
+blank_repeated_se=function(results){
+  n=nrow(results)
+  if(n>2) results$SE[3:n]=""
+  return(results)
 }

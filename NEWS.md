@@ -24,6 +24,12 @@
   3x3 results. `max_splines` below 3 is now rejected with an error. Results for
   `max_splines` of 4 or more are unchanged.
 
+* `placebo_table()` and `synth_table()` no longer add rows of `NA` when
+  `max_clus` is below 5, and show the standard error label (HC, BCH or IM) only
+  in the first row of each block for any `max_clus`. Previously rows 3 to 5
+  were blanked, which also left the label showing from row 6 when
+  `max_clus` is 7 or more. Tables for the default `max_clus = 6` are unchanged.
+
 * Parallel runs use at least one worker. Previously `detectCores() - 2`
   workers were requested, which fails on machines with two or fewer cores or
   where the number of cores cannot be detected. Machines with three or more
