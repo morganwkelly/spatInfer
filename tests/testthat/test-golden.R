@@ -1,4 +1,5 @@
-# Characterization tests: outputs must match those recorded from commit ed80437.
+# Characterization tests: outputs must match those recorded from commit ed80437,
+# up to rounding error (see golden_tolerance).
 
 test_that("optimal_basis() BIC/R2 curves and chosen basis are unchanged", {
   expect_golden("optimal_basis")

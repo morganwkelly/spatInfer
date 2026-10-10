@@ -1,7 +1,8 @@
 # Parallel execution must reproduce serial results exactly: the simulated noise
-# is generated serially before any parallel step. Both parallel back ends are
-# tested on every platform that can fork: separate worker processes (used on
-# macOS and Windows) and forked workers (used on Linux).
+# is generated serially before any parallel step. Each parallel run is compared
+# with a serial run in the same session, so the comparison can be exact. Both
+# parallel back ends are tested on every platform that can fork: separate worker
+# processes (used on macOS and Windows) and forked workers (used on Linux).
 
 skip_parallel <- function() {
   skip_on_cran()
@@ -19,13 +20,13 @@ for (fork in c(FALSE, TRUE)) {
   test_that(paste("placebo() gives identical results with", backend), {
     skip_parallel()
     local_backend(fork)
-    expect_identical(run_sim(placebo, Parallel = TRUE), readRDS(golden_path("placebo")))
+    expect_identical(run_sim(placebo, Parallel = TRUE), run_sim(placebo, Parallel = FALSE))
   })
 
   test_that(paste("placebo_im() gives identical results with", backend), {
     skip_parallel()
     local_backend(fork)
-    expect_identical(run_sim(placebo_im, Parallel = TRUE), readRDS(golden_path("placebo_im")))
+    expect_identical(run_sim(placebo_im, Parallel = TRUE), run_sim(placebo_im, Parallel = FALSE))
   })
 
   test_that(paste("errors are raised from", backend), {

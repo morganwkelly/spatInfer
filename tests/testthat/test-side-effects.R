@@ -16,7 +16,7 @@ test_that("preserving the random number state does not change results", {
   set.seed(2)
   second <- run_sim(placebo, Parallel = FALSE)
   expect_identical(first, second)
-  expect_identical(first, readRDS(golden_path("placebo")))
+  expect_matches_golden(first, "placebo")
 })
 
 test_that("plot_basis() restores graphics parameters", {

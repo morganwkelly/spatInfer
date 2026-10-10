@@ -133,8 +133,7 @@ test_that("jitter_coords controls jittering of identical coordinates in the Mora
   expect_no_warning(moran(eqs$eq_est, prep$df, jitter_coords = TRUE))
 
   # Without identical coordinates the setting makes no difference.
-  expect_identical(run_sim(placebo, Parallel = FALSE, jitter_coords = FALSE),
-    readRDS(golden_path("placebo")))
+  expect_matches_golden(run_sim(placebo, Parallel = FALSE, jitter_coords = FALSE), "placebo")
 })
 
 test_that("plot_basis() passes theta and phi to vis.gam()", {

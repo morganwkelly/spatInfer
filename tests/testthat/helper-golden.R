@@ -40,8 +40,14 @@ summarise_basis <- function(ob) {
   )
 }
 
+# The coefficient table is kept as a plain matrix: fixest labels it with attributes
+# whose names change between versions ('type' before 0.14, 'vcov_type' after).
+plain_coeftable <- function(ct) {
+  ct[, , drop = FALSE]
+}
+
 summarise_feols <- function(m) {
-  list(coeftable = m$coeftable, nobs = stats::nobs(m), r2 = fixest::r2(m, "r2"))
+  list(coeftable = plain_coeftable(m$coeftable), nobs = stats::nobs(m), r2 = fixest::r2(m, "r2"))
 }
 
 # Each case returns a plain R object that is compared with its golden file.
@@ -82,8 +88,18 @@ golden_path <- function(name) {
   testthat::test_path("fixtures", "golden", paste0(name, ".rds"))
 }
 
+# Golden comparisons allow for rounding error of about 1e-10 (relative). Updating
+# a dependency can change the last digits of results without any change in the
+# method: fixest 0.14.2, for example, differs from 0.13.2 by about 1e-14 (relative).
+# Any change in a method moves results far more than this.
+golden_tolerance <- 1e-10
+
+expect_matches_golden <- function(object, name) {
+  testthat::expect_equal(object, readRDS(golden_path(name)), tolerance = golden_tolerance)
+}
+
 expect_golden <- function(name) {
   path <- golden_path(name)
   if (!file.exists(path)) testthat::skip(paste("No golden file for", name))
-  testthat::expect_identical(golden_cases[[name]](), readRDS(path))
+  expect_matches_golden(golden_cases[[name]](), name)
 }
