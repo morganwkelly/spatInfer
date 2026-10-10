@@ -29,6 +29,12 @@ for (fork in c(FALSE, TRUE)) {
     expect_identical(run_sim(placebo_im, Parallel = TRUE), run_sim(placebo_im, Parallel = FALSE))
   })
 
+  test_that(paste("placebo_scpc() gives identical results with", backend), {
+    skip_parallel()
+    local_backend(fork)
+    expect_identical(run_scpc(placebo_scpc, Parallel = TRUE), run_scpc(placebo_scpc, Parallel = FALSE))
+  })
+
   test_that(paste("errors are raised from", backend), {
     skip_parallel()
     local_backend(fork)

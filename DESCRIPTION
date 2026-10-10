@@ -33,7 +33,9 @@ Imports:
   tinytable,
   broom,
   purrr,
-  withr
+  withr,
+  scpcR,
+  geodist
 Suggests:
   modelsummary,
   BRISC,
@@ -41,6 +43,8 @@ Suggests:
   rmarkdown,
   testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Remotes:
+  spatial-spur/scpcR
 Roxygen: list(markdown = TRUE)
 License: MIT + file LICENSE
 Config/testthat/edition: 3

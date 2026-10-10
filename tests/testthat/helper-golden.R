@@ -31,6 +31,13 @@ run_sim <- function(fun, ..., data = fixture_data()) {
   quietly(do.call(fun, args))
 }
 
+# The SCPC functions take avc instead of max_clus.
+run_scpc <- function(fun, ..., data = fixture_data()) {
+  args <- utils::modifyList(c(list(fm = fixture_fm, df = data), fixture_args), list(...))
+  args$max_clus <- NULL
+  quietly(do.call(fun, args))
+}
+
 summarise_basis <- function(ob) {
   list(
     title = ob$patches$annotation$title,
@@ -81,7 +88,13 @@ golden_cases <- list(
     run_sim(synth_im, Parallel = FALSE, weights = TRUE, data = fixture_data(TRUE))
   },
   placebo_clara = function() run_sim(placebo, Parallel = FALSE, k_medoids = FALSE),
-  placebo_brisc = function() run_sim(placebo, Parallel = FALSE, exact_cholesky = FALSE)
+  placebo_brisc = function() run_sim(placebo, Parallel = FALSE, exact_cholesky = FALSE),
+  # SCPC cases were recorded when placebo_scpc() and synth_scpc() were added.
+  placebo_scpc = function() run_scpc(placebo_scpc, Parallel = FALSE),
+  synth_scpc = function() run_scpc(synth_scpc, Parallel = FALSE),
+  placebo_scpc_weighted = function() {
+    run_scpc(placebo_scpc, Parallel = FALSE, weights = TRUE, data = fixture_data(TRUE))
+  }
 )
 
 golden_path <- function(name) {

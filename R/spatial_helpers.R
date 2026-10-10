@@ -13,14 +13,14 @@ set_names=function(fm){
   return(list(rhs=rhs,gg=gg,orig_name=orig_name))
 }
 
-#####Shared setup for placebo(), placebo_im(), synth() and synth_im(): check inputs, set weights,
+#####Shared setup for the placebo and synth functions: check inputs, set weights,
 #####rename outcome and treatment to dep_var and explan_var, and add the spatial basis principal components.
-prepare_spatial_data=function(fm,df,splines,pc_num,weights,max_clus){
+prepare_spatial_data=function(fm,df,splines,pc_num,weights,max_clus=NULL){
   if(is.null(df$X)|is.null(df$Y))
     stop("You must have longitude and latitude variables named X and Y")
   if(sum(is.na(df$X))>0|sum(is.na(df$Y))>0)
     stop("You cannot have missing values in longitude and latitude.")
-  if(max_clus<3)
+  if(!is.null(max_clus)&&max_clus<3)
     stop("Your maximum number of clusters max_clus must be greater than 2.")
 
   if(!weights){
