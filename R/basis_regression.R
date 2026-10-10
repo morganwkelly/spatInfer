@@ -43,7 +43,8 @@ basis_regression=function(fm,df,splines,pc_num,clusters,weights=FALSE,cov="BCH")
     stop("There is no variable called weights in your data.")
 
 #regression weights, taken from the weights variable when weights=TRUE
-wts=if(weights) ~weights else NULL
+wts=NULL
+if(weights) wts=~weights
 
 new_names=set_names(fm)
 orig_name= new_names$orig_name  #stringr::str_split_1(new_names$gg[2],"\\+")[1]
