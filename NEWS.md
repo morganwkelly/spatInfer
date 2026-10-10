@@ -14,10 +14,17 @@
 
 * Parallel runs no longer leave global settings changed. The fixest thread
   setting is restored afterwards, and no foreach backend is registered:
-  simulations now run with `parallel::mclapply()` (macOS, Linux) or a temporary
-  PSOCK cluster that is always stopped (Windows). An error in a worker is now
-  raised instead of being lost. `foreach` and `doParallel` are no longer
+  simulations now run with `parallel::mclapply()` (Linux) or a temporary
+  PSOCK cluster that is always stopped (macOS, Windows). An error in a worker is
+  now raised instead of being lost. `foreach` and `doParallel` are no longer
   dependencies; `withr` is new.
+
+* On macOS, parallel runs no longer fork. R on macOS uses Apple's Accelerate
+  BLAS, which is not fork-safe, so forked workers could crash inside
+  `fields::Krig()`, especially under RStudio. Previously the results of
+  crashed workers were silently dropped: the Matern search could skip some
+  ranges, and placebo p values could be computed from fewer than `nSim`
+  simulations. Results from runs where no worker crashed are unchanged.
 
 * `optimal_basis(max_splines = 3)` now examines only the 3x3 tensor.
   Previously its loop ran backwards, adding a 4x4 tensor and duplicating the

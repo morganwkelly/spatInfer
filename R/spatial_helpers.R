@@ -200,6 +200,14 @@ n_workers=function(){
   return(as.integer(max(1,cores-2)))
 }
 
+######Forked workers (mclapply) are used only on Linux and other non-macOS Unix systems.
+######On macOS, the Accelerate BLAS that R uses is not fork-safe: forked workers crash in
+######linear algebra calls such as eigen() inside fields::Krig, especially under RStudio.
+######Windows cannot fork. Both use separate worker processes (a PSOCK cluster) instead.
+use_fork=function(){
+  .Platform$OS.type=="unix"&&Sys.info()[["sysname"]]!="Darwin"
+}
+
 ######Run fun(1), ..., fun(n) serially or in parallel and return the results as a list.
 ######fixest_single_thread=TRUE runs fixest on one thread in each worker; the user's
 ######thread setting is restored afterwards. No parallel backend is left registered.
@@ -219,9 +227,10 @@ run_sims=function(n,fun,Parallel,fixest_single_thread){
     on.exit(fixest::setFixest_nthreads(nthreads=old_threads),add=TRUE)
   }
 
-  if(.Platform$OS.type=="windows"){
+  if(!use_fork()){
     cl=parallel::makePSOCKcluster(n_cores)
     on.exit(parallel::stopCluster(cl),add=TRUE)
+    if(fixest_single_thread) parallel::clusterEvalQ(cl,fixest::setFixest_nthreads(nthreads=1))
     out=parallel::parLapply(cl,1:n,fun)
   }else{
     #mclapply only warns about failed workers; those are raised as errors below
