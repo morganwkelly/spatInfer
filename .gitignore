@@ -8,3 +8,4 @@ spatInfer.Rproj
 .Rbuildignore
 README.Rmd
 .DS_Store
+.Rapp.history
