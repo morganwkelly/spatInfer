@@ -16,6 +16,13 @@
 
 ## Behaviour changes
 
+* Confidence intervals and their widths in the results and tables of all
+  placebo and synthetic outcome functions are now in the units of the
+  treatment coefficient. Previously they were divided by the absolute value of
+  the coefficient. They are given to 3 significant digits instead of 2
+  decimal places, so that intervals of small coefficients do not round to
+  zero. p values are unchanged.
+
 * `synth()` now runs in parallel by default (`Parallel = TRUE`), like the
   other placebo and synthetic outcome functions. Results are unchanged.
 

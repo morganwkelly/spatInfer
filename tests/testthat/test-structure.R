@@ -163,3 +163,26 @@ test_that("plot_basis() draws without error", {
   on.exit(grDevices::dev.off())
   expect_no_error(quietly(plot_basis(fixture_fm, fixture_data(), splines = 4)))
 })
+
+test_that("confidence intervals are in the units of the treatment coefficient", {
+  fmt <- function(ci) paste0("[", signif(ci[1], 3), ", ", signif(ci[2], 3), "]")
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
+  eq <- build_formulas(prep$rhs, prep$pc, "explan_var")$eq_est
+  hc <- quietly(fixest::feols(eq, data = prep$df, weights = ~wts, vcov = "hetero"))
+  hc_ci <- confint(hc)[2, ]
+
+  plbo <- readRDS(golden_path("placebo"))
+  expect_identical(plbo$Results$CI[1], fmt(unlist(hc_ci)))
+  expect_equal(plbo$Results$`CI Width`[1], signif(hc_ci[[2]] - hc_ci[[1]], 3))
+
+  scpc <- readRDS(golden_path("placebo_scpc"))
+  est <- scpc$Estimates
+  expect_identical(scpc$Results$CI[-1], vapply(seq_len(nrow(est)),
+    function(k) fmt(c(est$lower[k], est$upper[k])), character(1)))
+})
+
+test_that("small coefficients keep significant digits in confidence intervals", {
+  row <- ci_summary_row("HC", 0, 0.01, c(0.000123, 0.000456), c(0.5, 0.5))
+  expect_identical(row$CI, "[0.000123, 0.000456]")
+  expect_equal(finish_summary(list(row))$width_ci, 0.000333)
+})

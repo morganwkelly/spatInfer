@@ -40,9 +40,9 @@ scpc_p_values=function(Sim,eq_sim,df,avc,nSim,Parallel){
   return(purrr::list_rbind(scpc_out))
 }
 
-######Results table: an HC row, then one SCPC row for each avc. Confidence intervals are
-######normalized by the coefficient as in the other tables. Pseudo SE is one quarter of the
-######width of the 95% confidence interval, in the units of the coefficient.
+######Results table: an HC row, then one SCPC row for each avc. Confidence intervals and
+######Pseudo SE, one quarter of the width of the 95% confidence interval, are in the units
+######of the coefficient.
 summary_scpc=function(df,eq_est,avc,scpc_out,hc_out){
   n_failed=sum(!stats::complete.cases(scpc_out))
   if(n_failed>0)
@@ -52,11 +52,10 @@ summary_scpc=function(df,eq_est,avc,scpc_out,hc_out){
 
   fit=fixest::feols(eq_est,data=df,weights=~wts)
   est=scpc_stats(fit,df,avc)
-  coef=abs(fit$coeftable[2,1])
   sim_summ=list()
   for(k in seq_along(avc)){
     ci=est[k,c("lower","upper")]
-    sim_summ[[k]]=ci_summary_row("SCPC",avc[k],est[k,"p"],ci/coef,scpc_out[,k])
+    sim_summ[[k]]=ci_summary_row("SCPC",avc[k],est[k,"p"],ci,scpc_out[,k])
     sim_summ[[k]]$pseudo_se=(ci[2]-ci[1])/4
   }
 
@@ -68,7 +67,7 @@ summary_scpc=function(df,eq_est,avc,scpc_out,hc_out){
   Results=purrr::list_rbind(c(list(hc_row),sim_summ)) |>
     dplyr::rename(avc=Clusters) |>
     dplyr::mutate(avc=ifelse(SE=="HC",".",as.character(avc)),
-                  dplyr::across(c(est_p,sim_p,sim_05,width_ci),\(x) round(x,3)),
+                  dplyr::across(c(est_p,sim_p,sim_05),\(x) round(x,3)),
                   pseudo_se=signif(pseudo_se,3))
   rownames(Results)=NULL
   return(list(Results=Results,Estimates=data.frame(avc=avc,est,row.names=NULL)))

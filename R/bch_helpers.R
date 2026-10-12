@@ -25,7 +25,7 @@ summary_bch=function(df,eq_est,hold_clus,max_clus,bch_out,hc_out){
     estimate=fixest::feols(eq_est,data=df1,             #baseline estimate with real variables
                            weights = ~wts,
                            vcov=fixest::vcov_cluster(cluster=~clust))
-    sim_summ[[k]]=ci_summary_row("BCH",k+1,estimate$coeftable[2,4],normalized_ci(estimate),bch_out[,k])
+    sim_summ[[k]]=ci_summary_row("BCH",k+1,estimate$coeftable[2,4],coef_ci(estimate),bch_out[,k])
   }
   sim_summ[[max_clus]]=hc_summary_row(df,eq_est,hc_out)
   return(finish_summary(sim_summ))

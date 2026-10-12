@@ -270,18 +270,18 @@ cluster_p_values=function(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun,clust_na
 
 
 ######Summary rows shared by summary_bch() and summary_im().
-######Confidence interval of the treatment coefficient, normalized by the coefficient.
-######No longer normalizes by coefficient. Just returns original CI for estimate
-normalized_ci=function(estimate){
-  ci=confint(estimate)/abs(estimate$coeftable[2,1])     #normalize by coef
+######Confidence interval of the treatment coefficient, in the units of the coefficient.
+coef_ci=function(estimate){
+  ci=confint(estimate)
   return(c(ci[2,1],ci[2,2]))
 }
 
 ######One row of results: estimated p value, share of simulated p values below it and below 0.05,
-######and the normalized confidence interval.
+######and the confidence interval. The interval is in the units of the coefficient, so it and
+######its width are kept to 3 significant digits rather than rounded to a fixed number of decimals.
 ci_summary_row=function(SE,Clusters,est_p,ci,sim_p_values){
-  width_ci=round(ci[2]-ci[1],2)
-  conf_int=paste0("[",round(ci[1],2),", ",round(ci[2],2),"]")
+  width_ci=signif(ci[2]-ci[1],3)
+  conf_int=paste0("[",signif(ci[1],3),", ",signif(ci[2],3),"]")
   sim_p=mean(sim_p_values<est_p)
   sim_05=mean(sim_p_values<0.05)
   return(data.frame(SE=SE,Clusters=Clusters,est_p,sim_p,sim_05,width_ci,CI=conf_int))
@@ -292,16 +292,16 @@ hc_summary_row=function(df,eq_est,hc_out){
   estimate=fixest::feols(eq_est,data=df,
                          weights = ~wts,
                          vcov="hetero")
-  return(ci_summary_row("HC",0,estimate$coeftable[2,4],normalized_ci(estimate),hc_out[,1]))
+  return(ci_summary_row("HC",0,estimate$coeftable[2,4],coef_ci(estimate),hc_out[,1]))
 }
 
-######Drop the two cluster row, put HC first, and round.
+######Drop the two cluster row, put HC first, and round. CI widths keep their significant digits.
 finish_summary=function(sim_summ){
   sim_summ=purrr::list_rbind(sim_summ) |>
     dplyr::filter(Clusters!=2) |>
     dplyr::arrange(Clusters) |>
     dplyr::mutate(Clusters=ifelse(Clusters==0,".",Clusters)) |>
-    dplyr::mutate(dplyr::across(dplyr::where(is.numeric), \(x) round(x, 3)))
+    dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("width_ci"), \(x) round(x, 3)))
   return(sim_summ)
 }
 

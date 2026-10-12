@@ -40,7 +40,7 @@ plbo$Results=blank_repeated_se(plbo$Results)
 rr=plbo$Results|>
   dplyr::rename(Adj=SE) |> 
   dplyr::select(-dplyr::any_of("Pseudo SE")) |>   #pseudo SEs are in Results but not the table
-  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,3)}))
+  dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("CI Width"),~{round(.x,3)}))   #CI widths keep their significant digits
 ss=plbo$Spatial_Params|>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
 

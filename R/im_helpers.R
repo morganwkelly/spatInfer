@@ -39,7 +39,7 @@ summary_im=function(df,eq_est,hold_clus,max_clus,im_out,hc_out){
       warning("IM with ",k+1," clusters: the treatment coefficient could not be estimated in ",
               n_missing," cluster(s), which are left out of the t-test.",call.=FALSE)
     im=im_t_test(im_coefs)
-    ci=im$conf.int[1:2]/abs(im$estimate)    #normalize by coef
+    ci=im$conf.int[1:2]
     sim_summ[[k]]=ci_summary_row("IM",k+1,im$p.value,ci,im_out[,k])
   }
   sim_summ[[max_clus]]=hc_summary_row(df,eq_est,hc_out)

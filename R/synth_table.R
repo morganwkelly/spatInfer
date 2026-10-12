@@ -38,7 +38,7 @@ rr=rr |>
   dplyr::rename(Adj=SE) |> 
   dplyr::select(-dplyr::contains("_05"))|>
   dplyr::select(-dplyr::any_of("Pseudo SE")) |>   #pseudo SEs are in Results but not the table
-  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,3)}))
+  dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("CI Width"),~{round(.x,3)}))   #CI widths keep their significant digits
 ss=syn$Spatial_Params
 ss=ss |>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
