@@ -16,6 +16,13 @@
 
 ## Behaviour changes
 
+* Parallel runs no longer stall on Linux systems with a multithreaded BLAS
+  such as OpenBLAS, the Ubuntu default. Each worker started a BLAS thread per
+  core, and the oversubscribed workers ran so slowly that `placebo()`,
+  `placebo_im()`, `synth_im()` and the SCPC functions appeared to hang. Workers
+  now use one BLAS thread, and the user's setting is restored afterwards.
+  RhpcBLASctl is a new dependency.
+
 * The `jitter_coords` argument of `placebo()`, `placebo_im()`, `placebo_scpc()`,
   `synth()`, `synth_im()` and `synth_scpc()` is removed. The Moran test no
   longer jitters identical coordinates, which it does not need, so with

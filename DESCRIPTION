@@ -34,6 +34,7 @@ Imports:
   broom,
   purrr,
   withr,
+  RhpcBLASctl,
   scpcR,
   geodist
 Suggests:

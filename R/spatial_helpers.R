@@ -211,6 +211,9 @@ use_fork=function(){
 ######Run fun(1), ..., fun(n) serially or in parallel and return the results as a list.
 ######fixest_single_thread=TRUE runs fixest on one thread in each worker; the user's
 ######thread setting is restored afterwards. No parallel backend is left registered.
+######Parallel workers use one BLAS thread each. A multithreaded BLAS such as OpenBLAS
+######(the default on Ubuntu) otherwise starts a thread per core in every worker, and the
+######oversubscribed workers run so slowly that the simulations appear to hang.
 run_sims=function(n,fun,Parallel,fixest_single_thread){
   if(!Parallel){
     out=list()
@@ -221,6 +224,9 @@ run_sims=function(n,fun,Parallel,fixest_single_thread){
   }
 
   n_cores=n_workers()
+  old_blas=RhpcBLASctl::blas_get_num_procs()
+  RhpcBLASctl::blas_set_num_threads(1)    #inherited by forked workers
+  on.exit(RhpcBLASctl::blas_set_num_threads(old_blas),add=TRUE)
   if(fixest_single_thread){
     old_threads=fixest::getFixest_nthreads()
     fixest::setFixest_nthreads(nthreads=1)
@@ -230,6 +236,7 @@ run_sims=function(n,fun,Parallel,fixest_single_thread){
   if(!use_fork()){
     cl=parallel::makePSOCKcluster(n_cores)
     on.exit(parallel::stopCluster(cl),add=TRUE)
+    parallel::clusterEvalQ(cl,RhpcBLASctl::blas_set_num_threads(1))
     if(fixest_single_thread) parallel::clusterEvalQ(cl,fixest::setFixest_nthreads(nthreads=1))
     out=parallel::parLapply(cl,1:n,fun)
   }else{
