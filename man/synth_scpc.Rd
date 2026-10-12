@@ -13,8 +13,7 @@ synth_scpc(
   weights = FALSE,
   avc = seq(0.02, 0.1, by = 0.02),
   Parallel = TRUE,
-  exact_cholesky = TRUE,
-  jitter_coords = TRUE
+  exact_cholesky = TRUE
 )
 }
 \arguments{
@@ -45,11 +44,6 @@ correlation to examine. Each must lie between 0.001 and 0.99. Defaults to
 
 \item{exact_cholesky}{For very large datasets, setting this to \code{FALSE} will
 use the BRISC Cholesky approximation. This requires the \code{BRISC} package.}
-
-\item{jitter_coords}{If some sites have identical coordinates, jitter them for the
-Moran test by adding Gaussian noise with standard deviation 0.01 degrees
-(about 1 km). Set to \code{FALSE} to use the coordinates as they are, in which
-case spdep warns about identical points. Only the Moran test is affected.}
 }
 \value{
 Returns a list of synthetic outcome p values, spatial parameters,

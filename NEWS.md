@@ -16,6 +16,11 @@
 
 ## Behaviour changes
 
+* The `jitter_coords` argument of `placebo()`, `placebo_im()`, `placebo_scpc()`,
+  `synth()`, `synth_im()` and `synth_scpc()` is removed. The Moran test no
+  longer jitters identical coordinates, which it does not need, so with
+  duplicated sites its value differs slightly from before.
+
 * `basis_regression()` now applies regression weights when `weights = TRUE`.
   Previously the argument was ignored and the regression was unweighted. It
   now also stops with an error if there is no `weights` variable, as the other
@@ -63,12 +68,6 @@
   workers were requested, which fails on machines with two or fewer cores or
   where the number of cores cannot be detected. Machines with three or more
   cores use the same number of workers as before.
-
-* `jitter_coords = FALSE` now turns off jittering of identical coordinates
-  in the Moran test of `placebo()`, `placebo_im()`, `synth()` and `synth_im()`.
-  Previously the argument was ignored and identical coordinates were always
-  jittered. The default, `TRUE`, is unchanged. The documentation now gives the
-  jitter as about 1 km (0.01 degrees), not 10 km.
 
 * `placebo_im()` and `synth_im()` now warn when the treatment coefficient
   cannot be estimated in some clusters of the regression on the actual data.

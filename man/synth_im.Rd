@@ -14,8 +14,7 @@ synth_im(
   max_clus = 6,
   Parallel = TRUE,
   exact_cholesky = TRUE,
-  k_medoids = TRUE,
-  jitter_coords = TRUE
+  k_medoids = TRUE
 )
 }
 \arguments{
@@ -49,11 +48,6 @@ BRISC Cholesky approximation. This requires the
 
 \item{k_medoids}{For large datasets, set to F to use Clara to generate
 medoids.}
-
-\item{jitter_coords}{If some sites have identical coordinates, jitter them for the
-Moran test by adding Gaussian noise with standard deviation 0.01 degrees
-(about 1 km). Set to \code{FALSE} to use the coordinates as they are, in which
-case spdep warns about identical points. Only the Moran test is affected.}
 }
 \value{
 Returns a list of synthetic outcome p values and spatial parameters.

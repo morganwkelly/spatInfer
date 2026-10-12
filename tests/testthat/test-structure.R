@@ -114,26 +114,17 @@ test_that("tables show each SE label once and never add rows", {
   }
 })
 
-test_that("jitter_coords controls jittering of identical coordinates in the Moran test", {
+test_that("the Moran test handles identical coordinates without jittering", {
   dup <- fixture_data()
   dup$X[2:6] <- dup$X[1]
   dup$Y[2:6] <- dup$Y[1]
 
-  jittered <- run_sim(placebo, Parallel = FALSE, data = dup, jitter_coords = TRUE)
-  unjittered <- run_sim(placebo, Parallel = FALSE, data = dup, jitter_coords = FALSE)
-  expect_false(identical(jittered$Spatial_Params$Moran, unjittered$Spatial_Params$Moran))
-  # Only the Moran test uses the jittered coordinates.
-  expect_identical(jittered$Results, unjittered$Results)
-  expect_identical(jittered$Spatial_Params[-1], unjittered$Spatial_Params[-1])
-
   prep <- prepare_spatial_data(fixture_fm, dup, 4, 4, FALSE, 5)
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
-  warnings <- capture_warnings(moran(eqs$eq_est, prep$df, jitter_coords = FALSE))
-  expect_match(warnings, "identical points", all = FALSE)
-  expect_no_warning(moran(eqs$eq_est, prep$df, jitter_coords = TRUE))
-
-  # Without identical coordinates the setting makes no difference.
-  expect_matches_golden(run_sim(placebo, Parallel = FALSE, jitter_coords = FALSE), "placebo")
+  expect_no_warning(m1 <- moran(eqs$eq_est, prep$df))
+  expect_true(is.finite(m1))
+  # No random noise is added, so the statistic is reproducible.
+  expect_identical(moran(eqs$eq_est, prep$df), m1)
 })
 
 test_that("plot_basis() passes theta and phi to vis.gam()", {

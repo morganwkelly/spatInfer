@@ -28,11 +28,6 @@
 #'   `BRISC` package.
 #' @param k_medoids For large datasets, set to F to use Clara to generate
 #'   medoids.
-#' @param jitter_coords If some sites have identical coordinates, jitter them for the
-#'   Moran test by adding Gaussian noise with standard deviation 0.01 degrees
-#'   (about 1 km). Set to `FALSE` to use the coordinates as they are, in which
-#'   case spdep warns about identical points. Only the Moran test is affected.
-#'
 #'
 #' @details In IM inference the treatment coefficient is estimated separately in
 #'   each cluster. Clusters where it cannot be estimated, for example because the
@@ -62,7 +57,7 @@
 
 synth_im=function(fm,df,splines,pc_num,
                      nSim=1000,weights=FALSE,max_clus=6,
-                     Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE,jitter_coords=TRUE){
+                     Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
   prep=prepare_spatial_data(fm,df,splines,pc_num,weights,max_clus)
@@ -91,7 +86,7 @@ noise_sim=Noise_Sim(df,lm_res,nSim,exact_cholesky,Parallel)
 #Collect Output
 
 #Moran test using 5 nearest neighbours
-Moran=moran(eq_est,df,jitter_coords=jitter_coords)
+Moran=moran(eq_est,df)
 
 Spatial_Params=data.frame(Moran,R2=summary(lm_res)$r.squared,   #explanatory power of principal components for x
                           Effective_Range=noise_sim$matern_params$Effective_Range,   #fraction of 95th perc distance bw coords
