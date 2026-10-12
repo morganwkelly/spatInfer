@@ -9,7 +9,7 @@
   include a `Pseudo SE` column, one quarter of the width of the 95% confidence
   interval in the units of the coefficient, and an `Estimates` component with
   the full SCPC output for each `avc`. `placebo_table()` and `synth_table()`
-  accept their output.
+  accept their output; the tables leave out `Pseudo SE`.
 
 * scpcR (installed from GitHub with `remotes::install_github("spatial-spur/scpcR")`)
   and geodist are new dependencies. scpcR requires fixest 0.14.0 or later.

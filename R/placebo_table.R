@@ -39,7 +39,8 @@ plbo$Results=blank_repeated_se(plbo$Results)
 
 rr=plbo$Results|>
   dplyr::rename(Adj=SE) |> 
-  dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("Pseudo SE"),~{round(.x,3)}))   #pseudo SEs are kept to 3 significant digits
+  dplyr::select(-dplyr::any_of("Pseudo SE")) |>   #pseudo SEs are in Results but not the table
+  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,3)}))
 ss=plbo$Spatial_Params|>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
 
@@ -56,7 +57,6 @@ plac_tab=tinytable::tt(rr,theme="striped",align="r",digits=3,
                 if("avc" %in% names(rr))
                   "Estimated and placebo p values and proportion of placebo regressions significant at 5%, along
                 with confidence intervals, for different values of the SCPC average correlation bound avc.
-                Pseudo SE is one quarter of the width of the confidence interval.
                 R2 gives the explanatory power of a regression of the treatment on the principal components."
                 else
                 "Estimated and placebo p values and proportion of placebo regressions significant at 5%, along

@@ -88,19 +88,17 @@ test_that("simulations where SCPC fails are left out, with a warning", {
   expect_error(scpc_stats(fit, prep$df, avc), "dropped from the regression")
 })
 
-test_that("tables of SCPC results keep small pseudo SEs and describe avc", {
-  plbo <- readRDS(golden_path("placebo_scpc"))
-  plbo$Results$`Pseudo SE` <- c(0.000123, 0.000456, rep(0.001, 4))
-  plac_tab <- placebo_table(plbo)
+test_that("tables of SCPC results leave out pseudo SEs and describe avc", {
+  plac_tab <- placebo_table(readRDS(golden_path("placebo_scpc")))
   expect_identical(names(plac_tab@data),
-    c("Adj", "avc", "Est p", "Plac p", "Plac 5%", "CI Width", "CI", "Pseudo SE"))
+    c("Adj", "avc", "Est p", "Plac p", "Plac 5%", "CI Width", "CI"))
   expect_identical(plac_tab@data$Adj, c("HC", "SCPC", rep("", 4)))
-  expect_identical(plac_tab@data$`Pseudo SE`[1:2], c(0.000123, 0.000456))
+  expect_no_match(unlist(plac_tab@notes), "Pseudo SE")
   expect_match(unlist(plac_tab@notes), "average correlation bound avc", all = FALSE)
 
   syn_tab <- synth_table(readRDS(golden_path("synth_scpc")))
   expect_identical(names(syn_tab@data),
-    c("Adj", "avc", "Est p", "Synth p", "CI Width", "CI", "Pseudo SE"))
+    c("Adj", "avc", "Est p", "Synth p", "CI Width", "CI"))
   expect_match(unlist(syn_tab@notes), "average correlation bound avc", all = FALSE)
 
   # Tables of cluster results keep their original note.

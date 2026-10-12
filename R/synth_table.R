@@ -37,7 +37,8 @@ rr=syn$Results
 rr=rr |>
   dplyr::rename(Adj=SE) |> 
   dplyr::select(-dplyr::contains("_05"))|>
-  dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("Pseudo SE"),~{round(.x,3)}))   #pseudo SEs are kept to 3 significant digits
+  dplyr::select(-dplyr::any_of("Pseudo SE")) |>   #pseudo SEs are in Results but not the table
+  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,3)}))
 ss=syn$Spatial_Params
 ss=ss |>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
@@ -56,7 +57,6 @@ syn_tab=tinytable::tt(rr,theme="striped",align="r",digits=3 ,
                 ),
                 if("avc" %in% names(rr))
                   "Estimated and synthetic outcome p values for different values of the SCPC average correlation bound avc.
-                Pseudo SE is one quarter of the width of the confidence interval.
                 R2 gives the explanatory power of a regression of the outcome on a quadratic in longitude and latitude."
                 else
                 "Estimated and synthetic outcome p values for different cluster numbers.
