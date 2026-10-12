@@ -16,6 +16,9 @@
 
 ## Behaviour changes
 
+* `synth()` now runs in parallel by default (`Parallel = TRUE`), like the
+  other placebo and synthetic outcome functions. Results are unchanged.
+
 * Parallel runs no longer stall on Linux systems with a multithreaded BLAS
   such as OpenBLAS, the Ubuntu default. Each worker started a BLAS thread per
   core, and the oversubscribed workers ran so slowly that `placebo()`,
