@@ -273,7 +273,7 @@ cluster_p_values=function(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun,clust_na
 ######Confidence interval of the treatment coefficient, normalized by the coefficient.
 ######No longer normalizes by coefficient. Just returns original CI for estimate
 normalized_ci=function(estimate){
-  ci=confint(estimate)  #/abs(estimate$coeftable[2,1])     #normalize by coef
+  ci=confint(estimate)/abs(estimate$coeftable[2,1])     #normalize by coef
   return(c(ci[2,1],ci[2,2]))
 }
 
