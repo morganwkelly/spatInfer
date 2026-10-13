@@ -31,6 +31,8 @@ test_that("parallel workers use one BLAS thread and the user's setting is restor
   old <- RhpcBLASctl::blas_get_num_procs()
   on.exit(RhpcBLASctl::blas_set_num_threads(old))
   RhpcBLASctl::blas_set_num_threads(2)
+  # R's reference BLAS is single threaded and ignores the setting.
+  if (RhpcBLASctl::blas_get_num_procs() != 2L) skip("BLAS thread count cannot be set")
   for (fork in c(FALSE, if (.Platform$OS.type == "unix") TRUE)) {
     local_mocked_bindings(use_fork = function() fork)
     threads <- run_sims(2, function(j) RhpcBLASctl::blas_get_num_procs(), TRUE, FALSE)

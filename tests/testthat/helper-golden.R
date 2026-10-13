@@ -116,3 +116,30 @@ expect_golden <- function(name) {
   if (!file.exists(path)) testthat::skip(paste("No golden file for", name))
   expect_matches_golden(golden_cases[[name]](), name)
 }
+
+# With 99 observations, the 5x5 tensor with 23 or more PCs is nearly saturated, and
+# which near-collinear columns are dropped depends on the BLAS and package versions:
+# its BIC and R2 have moved by about 0.5% between installations (316.37, 316.77 and
+# 317.22 for the BIC with 23 PCs) while every other value agreed to 1e-12. Those rows
+# are compared with a 1% tolerance and everything else, including the chosen basis,
+# with golden_tolerance.
+saturated_tolerance <- 0.01
+
+expect_basis_golden <- function(name, saturated_splines = 5, saturated_pcs = 23) {
+  path <- golden_path(name)
+  if (!file.exists(path)) testthat::skip(paste("No golden file for", name))
+  object <- golden_cases[[name]]()
+  expected <- readRDS(path)
+  for (curve in c("bic", "r2")) {
+    saturated <- object[[curve]]$index >= saturated_pcs &
+      grepl(paste0("_", saturated_splines, "$"), object[[curve]]$name)
+    testthat::expect_identical(saturated,
+      expected[[curve]]$index >= saturated_pcs &
+        grepl(paste0("_", saturated_splines, "$"), expected[[curve]]$name))
+    testthat::expect_equal(object[[curve]][saturated, ], expected[[curve]][saturated, ],
+                           tolerance = saturated_tolerance)
+    object[[curve]] <- object[[curve]][!saturated, ]
+    expected[[curve]] <- expected[[curve]][!saturated, ]
+  }
+  testthat::expect_equal(object, expected, tolerance = golden_tolerance)
+}
