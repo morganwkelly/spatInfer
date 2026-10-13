@@ -36,6 +36,7 @@ Imports:
   withr,
   RhpcBLASctl,
   scpcR,
+  sandwich,
   geodist
 Suggests:
   modelsummary,

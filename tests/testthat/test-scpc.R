@@ -111,3 +111,26 @@ test_that("SCPC functions do not change the user's random number state", {
   run_scpc(placebo_scpc, Parallel = FALSE, nSim = 5)
   expect_identical(.Random.seed, before)
 })
+
+test_that("SCPC with saved spatial weights matches scpcR::scpc() in simulated regressions", {
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(TRUE), 4, 4, TRUE)
+  eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
+  set.seed(1)
+  df1 <- cbind.data.frame(sim = rnorm(nrow(prep$df)), prep$df)
+  fit <- quietly(fixest::feols(eqs$eq_sim, data = df1, weights = ~wts))
+  treat <- which(names(coef(fit)) == "sim")
+  avc <- c(0.02, 0.1)
+  direct <- t(sapply(avc, function(a)
+    scpcR::scpc(fit, data = df1, lon = "X", lat = "Y", avc = a, ncoef = treat)$scpcstats[treat, ]))
+  expect_equal(unname(scpc_stats(fit, df1, avc)), unname(direct), tolerance = 1e-12)
+  expect_equal(unname(unlist(scpc_sim(1, matrix(df1$sim), eqs$eq_sim, prep$df, avc))), direct[, 4],
+               tolerance = 1e-12)
+
+  # The approximate method, used by scpcR above 4500 observations.
+  spc <- scpc_internal(".setOmsWfin")(as.matrix(df1[, c("X", "Y")]), avc0 = 0.04,
+                                      latlong = TRUE, method = "approx")
+  expect_true(spc$large_n)
+  direct <- scpcR::scpc(fit, data = df1, lon = "X", lat = "Y", avc = 0.04, ncoef = treat,
+                        method = "approx")$scpcstats[treat, ]
+  expect_equal(scpc_treat_stats(fit, spc, treat), unname(direct), tolerance = 1e-12)
+})
