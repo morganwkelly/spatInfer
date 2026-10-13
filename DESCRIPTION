@@ -49,4 +49,4 @@ Remotes:
 Roxygen: list(markdown = TRUE)
 License: MIT + file LICENSE
 Config/testthat/edition: 3
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1

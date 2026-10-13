@@ -81,3 +81,22 @@ test_that("regression_table() combines BCH, IM and SCPC with notes", {
   expect_error(regression_table(), "at least one")
   expect_error(regression_table(im = bch), "im_regression")
 })
+
+test_that("regression_table() shows confidence intervals, not standard errors", {
+  skip_if_not_installed("modelsummary")
+  tab <- regression_table(im = fit_im(), scpc = fit_scpc(), output = "data.frame")
+  expect_true(all(tab$statistic[tab$part == "estimates"] %in% c("estimate", "conf.int")))
+  expect_error(regression_table(im = fit_im(), statistic = "std.error", output = "data.frame"))
+})
+
+test_that("regression_plot() plots BCH, IM and SCPC with notes", {
+  skip_if_not_installed("modelsummary")
+  bch <- quietly(basis_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4))
+  p <- regression_plot(bch = bch, im = fit_im(), scpc = fit_scpc())
+  expect_s3_class(p, "ggplot")
+  expect_identical(p$labels$caption, "BCH: 4 clusters. IM: 4 clusters. SCPC: avc = 0.04.")
+  dat <- regression_plot(bch = bch, im = fit_im(), scpc = fit_scpc(), draw = FALSE)
+  expect_setequal(as.character(dat$model), c("BCH", "IM", "SCPC"))
+  expect_false(any(grepl("^PC|Intercept", dat$term)))
+  expect_error(regression_plot(), "at least one")
+})

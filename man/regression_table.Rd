@@ -9,7 +9,7 @@ regression_table(
   bch = NULL,
   im = NULL,
   scpc = NULL,
-  statistic = "std.error",
+  statistic = "conf.int",
   coef_omit = "Intercept|^PC[0-9]+$",
   gof_map = "nobs",
   notes = NULL,
@@ -19,7 +19,7 @@ regression_table(
 \arguments{
 \item{orig}{An optional \code{\link[fixest:feols]{fixest::feols()}} regression, typically the original
 regression without a spatial basis, shown in a first column labelled "Original"
-with the standard errors it was estimated with.}
+with the confidence intervals of the standard errors it was estimated with.}
 
 \item{bch}{Output of \code{\link[=basis_regression]{basis_regression()}} with BCH standard errors.}
 
@@ -27,9 +27,10 @@ with the standard errors it was estimated with.}
 
 \item{scpc}{Output of \code{\link[=scpc_regression]{scpc_regression()}}.}
 
-\item{statistic}{Passed to \code{\link[modelsummary:modelsummary]{modelsummary::modelsummary()}}. Defaults to standard
-errors; use for example \code{c("conf.int","p = {p.value}")} for confidence
-intervals and p values.}
+\item{statistic}{Passed to \code{\link[modelsummary:modelsummary]{modelsummary::modelsummary()}}. Defaults to 95\%
+confidence intervals; use for example \code{c("conf.int","p = {p.value}")} to add
+p values. Standard errors are not available, since IM gives only pseudo
+standard errors.}
 
 \item{coef_omit}{Coefficients to leave out, as a regular expression. Defaults to
 the intercept and the principal components of the spatial basis.}
@@ -47,17 +48,15 @@ A modelsummary table, by default a tinytable object.
 \description{
 \code{regression_table()} makes a \code{\link[modelsummary:modelsummary]{modelsummary::modelsummary()}} table with a
 column for each of the BCH, IM and SCPC results supplied, giving coefficients
-and standard errors, optionally preceded by a column for the original
+and 95\% confidence intervals, optionally preceded by a column for the original
 regression. Notes give the number of clusters used for BCH and IM and
 the value of the SCPC average correlation bound \code{avc}.
 }
 \details{
-At least one of \code{orig}, \code{bch}, \code{im} and \code{scpc} must be given. IM
-standard errors are pseudo standard errors, one quarter of the width of the
-95\% confidence interval. The IM estimate
+At least one of \code{orig}, \code{bch}, \code{im} and \code{scpc} must be given. The IM estimate
 is the mean of the coefficients estimated in each cluster, so it differs from
-the BCH and SCPC estimates, which come from the full sample. Requires the
-modelsummary package.
+the BCH and SCPC estimates, which come from the full sample. Use
+\code{\link[=regression_plot]{regression_plot()}} to plot the same results. Requires the modelsummary package.
 }
 \examples{
 library(spatInfer)
