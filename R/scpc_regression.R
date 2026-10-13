@@ -1,0 +1,59 @@
+#' Spatial basis regression with SCPC inference on every coefficient.
+#'
+#' @description
+#' `scpc_regression()` runs the spatial basis regression of [basis_regression()]
+#' with SCPC inference (Mueller and Watson 2022, 2023) from the scpcR package on
+#' every coefficient.
+#'
+#' @param fm  The equation formula. The variable of interest is the first one on the right hand side.
+#' @param df  The name of the dataset use. Longitude and latitude must be named X and Y and have no missing values.
+#' @param splines The dimension of the linear tensor used, from optimal_basis function.
+#' @param pc_num The number of principal component to include, again from optimal_basis.
+#' @param avc The SCPC upper bound on the average pairwise correlation, based on
+#'   the placebo test of [placebo_scpc()]. It must lie between 0.001 and 0.99.
+#' @param weights Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.
+#'
+#' @return An object of class `scpc_regression`, a list containing `Coefs`, a
+#'   data frame with one row for each coefficient giving the estimate, SCPC
+#'   standard error, t statistic, p value and 95% confidence interval, and `avc`,
+#'   `N`, `Splines` and `PCs`. The principal components of the spatial basis are
+#'   left out of `Coefs`. Use [regression_table()] to compare the results with
+#'   BCH and IM results.
+#' @export
+#'
+#' @examples
+#' library(spatInfer)
+#' data(opportunity)
+#' set.seed(123)
+#' opportunity=opportunity |> dplyr::slice_sample(n=250)
+#' sc=scpc_regression(mobility~single_mothers+short_commute+gini+dropout_rate+social_cap,
+#' opportunity,splines=4,pc_num=3,avc=0.04)
+#' sc
+
+scpc_regression=function(fm,df,splines,pc_num,avc,weights=FALSE){
+  if(length(avc)!=1)
+    stop("avc must be a single number between 0.001 and 0.99.",call.=FALSE)
+  avc=check_avc(avc)
+  basis=basis_data(fm,df,splines,pc_num,weights)
+  fit=fixest::feols(basis$eq_est,data=basis$df,weights=~wts)
+  stats=scpcR::scpc(fit,data=basis$df,lon="X",lat="Y",avc=avc)$scpcstats
+  stats=stats[!rownames(stats)%in%names(basis$pc),,drop=FALSE]
+  Coefs=data.frame(term=rownames(stats),
+                   estimate=stats[,1],
+                   std.error=stats[,2],
+                   statistic=stats[,3],
+                   p.value=stats[,4],
+                   conf.low=stats[,5],
+                   conf.high=stats[,6],
+                   row.names=NULL)
+  obj=list(Coefs=Coefs,avc=avc,N=stats::nobs(fit),Splines=splines,PCs=pc_num)
+  class(obj)="scpc_regression"
+  return(obj)
+}
+
+#' @export
+print.scpc_regression=function(x,...){
+  cat("SCPC inference with avc =",x$avc,",",x$N,"observations.\n\n")
+  print(x$Coefs,digits=3,row.names=FALSE)
+  invisible(x)
+}

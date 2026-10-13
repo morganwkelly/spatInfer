@@ -2,6 +2,25 @@
 
 ## New features
 
+* `im_regression()` runs the spatial basis regression with IM inference on
+  every coefficient: each is estimated separately in k-medoids clusters (the
+  same clusters `basis_regression()` uses for BCH) and tested with a t-test of
+  its cluster estimates. Standard errors are pseudo standard errors, one
+  quarter of the width of the 95% confidence interval, and t statistics are
+  the estimates divided by these. `Cluster_Coefs` has one row per cluster and
+  one column per coefficient. `im_table()` gives a coefficient table of the results
+  (`type = "coefs"`) or the estimate of each coefficient in each cluster
+  (`type = "clusters"`).
+
+* `scpc_regression()` runs the spatial basis regression with SCPC inference on
+  every coefficient for a chosen value of `avc`.
+
+* `regression_table()` makes a modelsummary table comparing BCH, IM and SCPC
+  coefficients and standard errors, with notes giving the number of BCH and IM
+  clusters and the SCPC `avc`. An optional `orig` argument adds a first
+  column, "Original", for a `fixest::feols()` regression such as the original
+  regression without a spatial basis.
+
 * `placebo_scpc()` and `synth_scpc()` run the placebo and synthetic outcome
   tests with SCPC inference (Mueller and Watson 2022, 2023) from the scpcR
   package. Instead of numbers of clusters they examine values of the average
