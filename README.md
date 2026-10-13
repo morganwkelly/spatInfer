@@ -4,6 +4,7 @@
 # spatInfer
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 Strong autocorrelation and directional trends mean that regressions
@@ -16,6 +17,9 @@ workflow is used to carry out spatial noise placebo and synthetic
 outcome tests, and to estimate a spatial basis regression using large
 cluster inference.
 
+It is implemented for three estimators: Bester-Conley-Hansen,
+Ibragimov-Mueller, and Mueller-Watson.
+
 ## Workflow.
 
 `spatInfer` is based on a sequence of four commands.
@@ -24,7 +28,8 @@ cluster inference.
 
 2.  `placebo()` estimates treatment significance from spatial noise
     placebos and chooses the optimal number of large clusters for
-    standard error estimation.
+    standard error estimation or the level of the avc parameter for
+    Mueller-Watson.
 
 3.  `synth()` tests the null hypothesis that the outcome is trending
     spatial noise, and therefore independent of the treatment.
