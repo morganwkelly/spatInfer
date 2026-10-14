@@ -2,8 +2,8 @@
 #'
 #' @description
 #' `scpc_regression()` runs the spatial basis regression of [basis_regression()]
-#' with SCPC inference (Mueller and Watson 2022, 2023) from the scpcR package on
-#' every coefficient.
+#' with SCPC inference (Mueller and Watson 2022, 2023) on every coefficient. The
+#' SCPC code is ported from the scpcR package, and gives the same results.
 #'
 #' @param fm  The equation formula. The variable of interest is the first one on the right hand side.
 #' @param df  The name of the dataset use. Longitude and latitude must be named X and Y and have no missing values.
@@ -36,7 +36,9 @@ scpc_regression=function(fm,df,splines,pc_num,avc,weights=FALSE){
   avc=check_avc(avc)
   basis=basis_data(fm,df,splines,pc_num,weights)
   fit=fixest::feols(basis$eq_est,data=basis$df,weights=~wts)
-  stats=scpcR::scpc(fit,data=basis$df,lon="X",lat="Y",avc=avc)$scpcstats
+  obs=fixest::obs(fit)
+  stats=scpc_coef_stats(fit,scpc_spatial(as.matrix(basis$df[obs,c("X","Y")]),avc),
+                        seq_along(stats::coef(fit)))
   stats=stats[!rownames(stats)%in%names(basis$pc),,drop=FALSE]
   Coefs=data.frame(term=rownames(stats),
                    estimate=stats[,1],

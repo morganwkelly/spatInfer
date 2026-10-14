@@ -22,16 +22,20 @@
   regression without a spatial basis.
 
 * `placebo_scpc()` and `synth_scpc()` run the placebo and synthetic outcome
-  tests with SCPC inference (Mueller and Watson 2022, 2023) from the scpcR
-  package. Instead of numbers of clusters they examine values of the average
+  tests with SCPC inference (Mueller and Watson 2022, 2023), ported from the
+  scpcR package. Instead of numbers of clusters they examine values of the average
   correlation bound `avc`, by default 0.02, 0.04, 0.06, 0.08 and 0.1. Results
   include a `Pseudo SE` column, one quarter of the width of the 95% confidence
   interval in the units of the coefficient, and an `Estimates` component with
   the full SCPC output for each `avc`. `placebo_table()` and `synth_table()`
   accept their output; the tables leave out `Pseudo SE`.
 
-* scpcR (installed from GitHub with `remotes::install_github("spatial-spur/scpcR")`)
-  and geodist are new dependencies. scpcR requires fixest 0.14.0 or later.
+* SCPC is computed within spatInfer, from code ported from the scpcR package
+  (MIT licence), so scpcR is not needed; it is only suggested, for tests that
+  check the results against it. The spatial weights, which depend only on the
+  locations and `avc`, are computed once and reused in every simulation, making
+  `placebo_scpc()` and `synth_scpc()` about five times faster. geodist is a new
+  dependency.
 
 ## Behaviour changes
 

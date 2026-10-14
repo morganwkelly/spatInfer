@@ -6,7 +6,6 @@ utils::globalVariables(c("X", "Y",
                          "clusters", "Estimate", "Std. Error", "p", "CI",
                          "cluster", "Pseudo SE", "Pseudo t")
                        )
-# scpcR::scpc() needs geodist for great-circle distances between longitude and latitude
-# coordinates, but only suggests it; importing it here makes sure it is installed.
+# SCPC uses geodist for great-circle distances between longitude and latitude coordinates.
 #' @importFrom geodist geodist
 NULL

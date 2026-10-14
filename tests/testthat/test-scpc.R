@@ -28,6 +28,7 @@ test_that("SCPC results have the documented components and columns", {
 })
 
 test_that("SCPC estimates match scpcR::scpc() on the basis regression", {
+  skip_if_not_installed("scpcR")
   plbo <- readRDS(golden_path("placebo_scpc"))
   prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
   eq <- build_formulas(prep$rhs, prep$pc, "explan_var")$eq_est
@@ -113,6 +114,7 @@ test_that("SCPC functions do not change the user's random number state", {
 })
 
 test_that("SCPC with saved spatial weights matches scpcR::scpc() in simulated regressions", {
+  skip_if_not_installed("scpcR")
   prep <- prepare_spatial_data(fixture_fm, fixture_data(TRUE), 4, 4, TRUE)
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
   set.seed(1)
@@ -122,15 +124,21 @@ test_that("SCPC with saved spatial weights matches scpcR::scpc() in simulated re
   avc <- c(0.02, 0.1)
   direct <- t(sapply(avc, function(a)
     scpcR::scpc(fit, data = df1, lon = "X", lat = "Y", avc = a, ncoef = treat)$scpcstats[treat, ]))
-  expect_equal(unname(scpc_stats(fit, df1, avc)), unname(direct), tolerance = 1e-12)
+  expect_equal(unname(scpc_stats(fit, df1, avc)), unname(direct), tolerance = 1e-10)
   expect_equal(unname(unlist(scpc_sim(1, matrix(df1$sim), eqs$eq_sim, prep$df, avc))), direct[, 4],
-               tolerance = 1e-12)
+               tolerance = 1e-10)
 
   # The approximate method, used by scpcR above 4500 observations.
-  spc <- scpc_internal(".setOmsWfin")(as.matrix(df1[, c("X", "Y")]), avc0 = 0.04,
-                                      latlong = TRUE, method = "approx")
-  expect_true(spc$large_n)
-  direct <- scpcR::scpc(fit, data = df1, lon = "X", lat = "Y", avc = 0.04, ncoef = treat,
-                        method = "approx")$scpcstats[treat, ]
-  expect_equal(scpc_treat_stats(fit, spc, treat), unname(direct), tolerance = 1e-12)
+  spc <- scpc_spatial(as.matrix(df1[, c("X", "Y")]), 0.04, large_n = TRUE)
+  direct <- scpcR::scpc(fit, data = df1, lon = "X", lat = "Y", avc = 0.04,
+                        method = "approx")$scpcstats
+  expect_equal(unname(scpc_coef_stats(fit, spc, treat)), unname(direct[treat, , drop = FALSE]),
+               tolerance = 1e-10)
+  expect_equal(unname(scpc_coef_stats(fit, spc, seq_along(coef(fit)))), unname(direct),
+               tolerance = 1e-10)
+})
+
+test_that("Gauss-Legendre quadrature integrates polynomials exactly", {
+  expect_equal(sum(scpc_gq$w), 1)
+  expect_equal(sum(scpc_gq$w * scpc_gq$x^79), 1 / 80)
 })

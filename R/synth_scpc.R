@@ -26,7 +26,7 @@
 #' @param Parallel Run the simulations in parallel.
 #' @param exact_cholesky For very large datasets, setting this to `FALSE` will
 #'   use the BRISC Cholesky approximation. This requires the `BRISC` package.
-#' @details SCPC inference uses [scpcR::scpc()] with X and Y as longitude and
+#' @details SCPC inference, ported from the scpcR package, uses X and Y as longitude and
 #'   latitude, so distances are great-circle distances. `Pseudo SE` is one
 #'   quarter of the width of the 95% confidence interval, in the units of the
 #'   treatment coefficient. A simulation where SCPC cannot be computed is left
