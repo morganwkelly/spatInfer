@@ -31,8 +31,8 @@
   accept their output; the tables leave out `Pseudo SE`.
 
 * SCPC is computed within spatInfer, from code ported from the scpcR package
-  (MIT licence), so scpcR is not needed; it is only suggested, for tests that
-  check the results against it. The spatial weights, which depend only on the
+  (MIT licence), so scpcR is not needed. Tests check the results against saved
+  output of scpcR 0.1.3. The spatial weights, which depend only on the
   locations and `avc`, are computed once and reused in every simulation, making
   `placebo_scpc()` and `synth_scpc()` about five times faster. geodist is a new
   dependency.

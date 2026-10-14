@@ -27,16 +27,13 @@ test_that("SCPC results have the documented components and columns", {
     c("Moran", "R2", "Effective_Range", "Structure", "N", "Splines", "PCs"))
 })
 
-test_that("SCPC estimates match scpcR::scpc() on the basis regression", {
-  skip_if_not_installed("scpcR")
+# The SCPC code is ported from scpcR 0.1.3. scpcR_reference.rds holds the results that
+# scpcR::scpc() gave for the regressions below, so that they can be checked without scpcR.
+scpcR_reference <- function() readRDS(golden_path("scpcR_reference"))
+
+test_that("SCPC estimates match scpcR on the basis regression", {
   plbo <- readRDS(golden_path("placebo_scpc"))
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
-  eq <- build_formulas(prep$rhs, prep$pc, "explan_var")$eq_est
-  fit <- quietly(fixest::feols(eq, data = prep$df, weights = ~wts))
-  for (k in seq_along(default_avc)) {
-    direct <- scpcR::scpc(fit, data = prep$df, lon = "X", lat = "Y", avc = default_avc[k])
-    expect_equal(unname(unlist(plbo$Estimates[k, -1])), unname(direct$scpcstats["explan_var", ]))
-  }
+  expect_equal(unname(as.matrix(plbo$Estimates[, -1])), scpcR_reference()$basis, tolerance = 1e-10)
   expect_equal(plbo$Results$`Est p`[-1], round(plbo$Estimates$p, 3))
 })
 
@@ -113,8 +110,7 @@ test_that("SCPC functions do not change the user's random number state", {
   expect_identical(.Random.seed, before)
 })
 
-test_that("SCPC with saved spatial weights matches scpcR::scpc() in simulated regressions", {
-  skip_if_not_installed("scpcR")
+test_that("SCPC with saved spatial weights matches scpcR in simulated regressions", {
   prep <- prepare_spatial_data(fixture_fm, fixture_data(TRUE), 4, 4, TRUE)
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
   set.seed(1)
@@ -122,20 +118,17 @@ test_that("SCPC with saved spatial weights matches scpcR::scpc() in simulated re
   fit <- quietly(fixest::feols(eqs$eq_sim, data = df1, weights = ~wts))
   treat <- which(names(coef(fit)) == "sim")
   avc <- c(0.02, 0.1)
-  direct <- t(sapply(avc, function(a)
-    scpcR::scpc(fit, data = df1, lon = "X", lat = "Y", avc = a, ncoef = treat)$scpcstats[treat, ]))
+  direct <- scpcR_reference()$sim_exact
   expect_equal(unname(scpc_stats(fit, df1, avc)), unname(direct), tolerance = 1e-10)
   expect_equal(unname(unlist(scpc_sim(1, matrix(df1$sim), eqs$eq_sim, prep$df, avc))), direct[, 4],
                tolerance = 1e-10)
 
   # The approximate method, used by scpcR above 4500 observations.
   spc <- scpc_spatial(as.matrix(df1[, c("X", "Y")]), 0.04, large_n = TRUE)
-  direct <- scpcR::scpc(fit, data = df1, lon = "X", lat = "Y", avc = 0.04,
-                        method = "approx")$scpcstats
-  expect_equal(unname(scpc_coef_stats(fit, spc, treat)), unname(direct[treat, , drop = FALSE]),
+  direct <- scpcR_reference()$approx
+  expect_equal(unname(scpc_coef_stats(fit, spc, treat)), direct[treat, , drop = FALSE],
                tolerance = 1e-10)
-  expect_equal(unname(scpc_coef_stats(fit, spc, seq_along(coef(fit)))), unname(direct),
-               tolerance = 1e-10)
+  expect_equal(unname(scpc_coef_stats(fit, spc, seq_along(coef(fit)))), direct, tolerance = 1e-10)
 })
 
 test_that("Gauss-Legendre quadrature integrates polynomials exactly", {

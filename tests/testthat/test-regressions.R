@@ -50,16 +50,13 @@ test_that("im_table() makes coefficient and cluster tables", {
   expect_error(im_table(list()), "im_regression")
 })
 
-test_that("scpc_regression() matches scpcR::scpc() for every coefficient", {
+test_that("scpc_regression() matches scpcR for every coefficient", {
   sc <- fit_scpc()
   expect_identical(sc$Coefs$term, fixture_terms)
   expect_error(scpc_regression(fixture_fm, fixture_data(), 4, 4, avc = c(0.02, 0.04)), "single number")
-  skip_if_not_installed("scpcR")
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
-  eq <- build_formulas(prep$rhs, prep$pc, "explan_var")$eq_est
-  fit <- quietly(fixest::feols(eq, data = prep$df, weights = ~wts))
-  direct <- scpcR::scpc(fit, data = prep$df, lon = "X", lat = "Y", avc = 0.04)$scpcstats
-  expect_equal(unname(as.matrix(sc$Coefs[, -1])), unname(direct[1:7, ]))
+  # Results of scpcR::scpc() (version 0.1.3) for this regression; see test-scpc.R.
+  direct <- readRDS(golden_path("scpcR_reference"))$regression
+  expect_equal(unname(as.matrix(sc$Coefs[, -1])), direct[1:7, ], tolerance = 1e-10)
 })
 
 test_that("regression_table() combines BCH, IM and SCPC with notes", {

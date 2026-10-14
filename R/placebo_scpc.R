@@ -31,7 +31,10 @@
 #' @param exact_cholesky Use an exact Cholesky decomposition to generate
 #'   synthetic noise. For very large datasets, setting this to `FALSE` will use
 #'   the BRISC Cholesky approximation. This requires the `BRISC` package.
-#' @details SCPC inference, ported from the scpcR package, uses X and Y as longitude and
+#' @details The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
+#'   and Hans-Joachim Voth (<https://github.com/spatial-spur/scpcR>, MIT licence),
+#'   ported into spatInfer so that scpcR is not needed; it gives the same results.
+#'   SCPC inference uses X and Y as longitude and
 #'   latitude, so distances are great-circle distances. Larger values of `avc`
 #'   allow for stronger spatial correlation and give wider confidence intervals.
 #'   `Pseudo SE` is one quarter of the width of the 95% confidence interval, in

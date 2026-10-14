@@ -66,7 +66,10 @@ regression. For each value of \code{avc} it gives the regression and placebo
 significance levels.
 }
 \details{
-SCPC inference, ported from the scpcR package, uses X and Y as longitude and
+The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
+and Hans-Joachim Voth (\url{https://github.com/spatial-spur/scpcR}, MIT licence),
+ported into spatInfer so that scpcR is not needed; it gives the same results.
+SCPC inference uses X and Y as longitude and
 latitude, so distances are great-circle distances. Larger values of \code{avc}
 allow for stronger spatial correlation and give wider confidence intervals.
 \verb{Pseudo SE} is one quarter of the width of the 95\% confidence interval, in
