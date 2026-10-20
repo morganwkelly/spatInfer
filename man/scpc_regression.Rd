@@ -33,7 +33,8 @@ BCH and IM results.
 \description{
 \code{scpc_regression()} runs the spatial basis regression of \code{\link[=basis_regression]{basis_regression()}}
 with SCPC inference (Mueller and Watson 2022, 2023) on every coefficient. The
-SCPC code is ported from the scpcR package, and gives the same results.
+SCPC code is ported from the scpcR package, and gives the same results for
+unweighted regressions; see Details for weighted ones.
 }
 \details{
 With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
@@ -44,6 +45,10 @@ distance is calibrated on great-circle distances in fractions of the earth's
 circumference. The weights therefore decay faster with distance than intended, and
 results can differ from the exact calculation used for smaller samples. The
 calculation is left unchanged so that results match scpcR.
+
+With \code{weights}, conditional SCPC is computed for the regression rescaled by
+the square root of the weights, the least squares regression equivalent to
+weighted least squares, whereas scpcR leaves the regressors unweighted.
 }
 \examples{
 library(spatInfer)

@@ -3,7 +3,8 @@
 #' @description
 #' `scpc_regression()` runs the spatial basis regression of [basis_regression()]
 #' with SCPC inference (Mueller and Watson 2022, 2023) on every coefficient. The
-#' SCPC code is ported from the scpcR package, and gives the same results.
+#' SCPC code is ported from the scpcR package, and gives the same results for
+#' unweighted regressions; see Details for weighted ones.
 #'
 #' @param fm  The equation formula. The variable of interest is the first one on the right hand side.
 #' @param df  The name of the dataset use. Longitude and latitude must be named X and Y and have no missing values.
@@ -23,6 +24,10 @@
 #'   circumference. The weights therefore decay faster with distance than intended, and
 #'   results can differ from the exact calculation used for smaller samples. The
 #'   calculation is left unchanged so that results match scpcR.
+#'
+#'   With `weights`, conditional SCPC is computed for the regression rescaled by
+#'   the square root of the weights, the least squares regression equivalent to
+#'   weighted least squares, whereas scpcR leaves the regressors unweighted.
 #'
 #' @return An object of class `scpc_regression`, a list containing `Coefs`, a
 #'   data frame with one row for each coefficient giving the estimate, SCPC

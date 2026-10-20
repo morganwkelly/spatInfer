@@ -111,6 +111,9 @@ test_that("SCPC functions do not change the user's random number state", {
 })
 
 test_that("SCPC with saved spatial weights matches scpcR in simulated regressions", {
+  # This regression is weighted, where spatInfer departs from scpcR only through
+  # scpc_cond_weights(); with scpcR's choice everything else must match.
+  local_mocked_bindings(scpc_cond_weights = function(w) rep(1, length(w)))
   prep <- prepare_spatial_data(fixture_fm, fixture_data(TRUE), 4, 4, "wt")
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
   set.seed(1)
@@ -129,6 +132,28 @@ test_that("SCPC with saved spatial weights matches scpcR in simulated regression
   expect_equal(unname(scpc_coef_stats(fit, spc, treat)), direct[treat, , drop = FALSE],
                tolerance = 1e-10)
   expect_equal(unname(scpc_coef_stats(fit, spc, seq_along(coef(fit)))), direct, tolerance = 1e-10)
+})
+
+test_that("weighted conditional SCPC rescales the regressors by the square root of the weights", {
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(TRUE), 4, 4, "wt")
+  eq <- build_formulas(prep$rhs, prep$pc, "explan_var")$eq_est
+  avc <- c(0.02, 0.1)
+  fit_w <- quietly(fixest::feols(eq, data = prep$df, weights = ~wts))
+  weighted <- scpc_stats(fit_w, prep$df, avc)
+  expect_false(isTRUE(all.equal(weighted, scpcR_reference()$sim_exact)))
+
+  # The rescaling is applied: replacing it with scpcR's gives scpcR's results instead.
+  local({
+    local_mocked_bindings(scpc_cond_weights = function(w) rep(1, length(w)))
+    expect_false(isTRUE(all.equal(scpc_stats(fit_w, prep$df, avc), weighted)))
+  })
+
+  # Equal weights give the unweighted results.
+  df2 <- prep$df
+  df2$wts <- 2
+  fit_2 <- quietly(fixest::feols(eq, data = df2, weights = ~wts))
+  fit_1 <- quietly(fixest::feols(eq, data = df2))
+  expect_equal(scpc_stats(fit_2, df2, avc), scpc_stats(fit_1, df2, avc), tolerance = 1e-10)
 })
 
 test_that("Gauss-Legendre quadrature integrates polynomials exactly", {

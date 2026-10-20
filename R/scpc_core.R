@@ -315,6 +315,11 @@ scpc_ln_Oms=function(S,c0,cmax,W,random_t,capM=1000000L){
   return(list(Oms=Oms,state=inds_res$state))
 }
 
+######Weighted least squares is least squares on the data multiplied by the square root of the
+######weights, so conditional SCPC uses the regressors rescaled in this way. scpcR leaves them
+######unweighted (all ones here), which gives the same results only in unweighted regressions.
+scpc_cond_weights=function(w) sqrt(w)
+
 ######SCPC estimate, standard error, t statistic, p value and 95% confidence interval of the
 ######coefficients coefs (positions in coef(fit)) of a feols regression, given the spatial
 ######weights spc from scpc_spatial() for the same observations. The approximate method for
@@ -328,17 +333,18 @@ scpc_coef_stats=function(fit,spc,coefs){
   w=stats::weights(fit)
   if(is.null(w)) w=rep(1,n)
   ##Influence of each observation on the coefficients, and the coefficients' weights on
-  ##the regressors.
+  ##the regressors. Conditional SCPC uses the regression rescaled by scpc_cond_weights(w).
   XWXinv=solve(crossprod(X,w*X))
   infl=n*XWXinv%*%t(X*(w*stats::resid(fit)))
-  xw=n*XWXinv%*%t(X)
+  cw=scpc_cond_weights(w)
+  xw=n*XWXinv%*%t(X*cw)
 
   Wfin=spc$Wfin
   q=ncol(Wfin)-1
   perm=spc$perm
   random_state=spc$random_state
   Xr=if("(Intercept)"%in%colnames(X)) X else cbind(`(Intercept)`=1,X)
-  qrX=qr(Xr[perm,,drop=FALSE],tol=1e-10)
+  qrX=qr((cw*Xr)[perm,,drop=FALSE],tol=1e-10)
   if(qrX$rank<ncol(X)) stop("SCPC regressors are collinear.",call.=FALSE)
 
   out=matrix(NA_real_,length(coefs),6)

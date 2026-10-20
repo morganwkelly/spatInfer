@@ -109,6 +109,13 @@
   clusters from that fit, instead of re-estimating it for each. Results are
   unchanged.
 
+* Weighted SCPC: conditional SCPC is now computed for the regression rescaled
+  by the square root of the weights, the least squares regression equivalent
+  to weighted least squares. Previously, as in scpcR, the conditioning used
+  the unweighted regressors, which does not correspond to a weighted model.
+  SCPC p values and confidence intervals of weighted regressions change;
+  estimates and standard errors, and all unweighted results, are unchanged.
+
 * The help pages of `placebo_scpc()`, `synth_scpc()` and `scpc_regression()`
   note that with 4,500 or more observations SCPC, as in scpcR, uses distances
   in degrees where great-circle distances are intended. The calculation is

@@ -69,7 +69,11 @@ significance levels.
 \details{
 The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
 and Hans-Joachim Voth (\url{https://github.com/spatial-spur/scpcR}, MIT licence),
-ported into spatInfer so that scpcR is not needed; it gives the same results.
+ported into spatInfer so that scpcR is not needed. It gives the same results
+as scpcR for unweighted regressions. With \code{weights}, conditional SCPC is
+computed for the regression rescaled by the square root of the weights, the
+least squares regression equivalent to weighted least squares, whereas scpcR
+leaves the regressors unweighted.
 
 With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
 computes the spatial weights from random subsets of 1,000 locations and extends them
