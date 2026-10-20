@@ -13,6 +13,9 @@
 #'  placebo test. Not used with HC.
 #'@param cov `"BCH"` (the default) for clustered standard errors, or `"HC"`
 #'  for heteroskedasticity robust standard errors.
+#'@param k_medoids Use k-medoids clustering (PAM), the default. Set to `FALSE`
+#'  to use Clara, as for large datasets: use the same setting as in
+#'  [iv_placebo()] so that the clusters are the same.
 #'@details The AR confidence set contains the treatment effects `b` where the
 #'  instrument is not significant at 5% in a regression of
 #'  `outcome - b*treatment`, and can be unbounded when the instrument is weak:
@@ -37,9 +40,9 @@
 #' iv_bch=iv_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
 #' iv_bch
 
-iv_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BCH","HC")){
+iv_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BCH","HC"),k_medoids=TRUE){
   cov=match.arg(cov)
-  return(iv_basis_regression(fm,df,splines,pc_num,clusters,weights,cov))
+  return(iv_basis_regression(fm,df,splines,pc_num,clusters,weights,cov,k_medoids))
 }
 
 #' Spatial basis instrumental variable regressions with IM inference.
@@ -75,14 +78,14 @@ iv_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BC
 #' iv_im
 #' im_table(iv_im,type="clusters")
 
-iv_im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL){
-  obj=iv_basis_regression(fm,df,splines,pc_num,clusters,weights,"IM")
+iv_im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,k_medoids=TRUE){
+  obj=iv_basis_regression(fm,df,splines,pc_num,clusters,weights,"IM",k_medoids)
   class(obj)=c("iv_im_regression","iv_regression")
   return(obj)
 }
 
 ######2SLS with the spatial basis and BCH, HC or IM inference, for iv_regression() and iv_im_regression().
-iv_basis_regression=function(fm,df,splines,pc_num,clusters,weights,cov){
+iv_basis_regression=function(fm,df,splines,pc_num,clusters,weights,cov,k_medoids=TRUE){
   if(cov!="HC"&&(!is.numeric(clusters)||length(clusters)!=1||clusters<2||clusters!=round(clusters)))
     stop("clusters must be a whole number of at least 2 for BCH and IM.",call.=FALSE)
   if(cov=="HC") clusters=NULL
@@ -101,7 +104,7 @@ iv_basis_regression=function(fm,df,splines,pc_num,clusters,weights,cov){
   clust=NULL
   if(!is.null(clusters)){
     Coords=as.matrix(df1 |> dplyr::select(X,Y))
-    clust=factor(cluster::pam(Coords,k=clusters)$clustering)   #same clusters as iv_placebo()
+    clust=make_clusters(Coords,clusters,k_medoids)   #same clusters as iv_placebo()
   }
 
   obj=list()

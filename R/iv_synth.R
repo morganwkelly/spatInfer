@@ -11,6 +11,7 @@
 #'  inference, for each number of large clusters.
 #'
 #'@inheritParams iv_placebo
+#'@inheritParams synth
 #'@param nSim The number of synthetic outcomes to generate. Defaults to 1000
 #'  but lower values should be used first to get an idea of how the regression
 #'  is behaving.
@@ -46,7 +47,7 @@
 
 iv_synth=function(fm,df,splines,pc_num,
                   nSim=1000,weights=NULL,max_clus=6,
-                  Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE){
+                  Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE,xy_interaction=FALSE){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
   prep=prepare_iv_data(fm,df,splines,pc_num,weights,max_clus)
@@ -61,8 +62,7 @@ eqs=build_iv_formulas(rhs,pc,sim_replaces="dep_var")
 rm(pc)
 
 # Regress outcome on quadratic in longitude and latitude to generate synthetic outcomes.
-lm_res=lm(dep_var~poly(X,2)+poly(Y,2),
-          data=df)
+lm_res=synth_trend(df,xy_interaction)
 
 # Synthetic outcomes: trend plus noise with the spatial correlation of the residuals.
 noise_sim=Noise_Sim(df,lm_res,nSim,exact_cholesky,Parallel)

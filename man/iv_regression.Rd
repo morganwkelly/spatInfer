@@ -11,7 +11,8 @@ iv_regression(
   pc_num,
   clusters = NULL,
   weights = NULL,
-  cov = c("BCH", "HC")
+  cov = c("BCH", "HC"),
+  k_medoids = TRUE
 )
 }
 \arguments{
@@ -37,6 +38,10 @@ regression.}
 
 \item{cov}{\code{"BCH"} (the default) for clustered standard errors, or \code{"HC"}
 for heteroskedasticity robust standard errors.}
+
+\item{k_medoids}{Use k-medoids clustering (PAM), the default. Set to \code{FALSE}
+to use Clara, as for large datasets: use the same setting as in
+\code{\link[=iv_placebo]{iv_placebo()}} so that the clusters are the same.}
 }
 \value{
 An object of class \code{iv_regression}: a list containing \code{Coefs}, the

@@ -29,6 +29,9 @@
 #'   `BRISC` package.
 #' @param k_medoids For large datasets, set to F to use Clara to generate
 #'   medoids.
+#' @param xy_interaction Add the product of longitude and latitude to the
+#'   quadratic trend in them that generates the synthetic outcome. Defaults to
+#'   `FALSE`, where the trend is a quadratic in each separately.
 #'
 #' @details In IM inference the treatment coefficient is estimated separately in
 #'   each cluster. Clusters where it cannot be estimated, for example because the
@@ -58,7 +61,7 @@
 
 synth_im=function(fm,df,splines,pc_num,
                      nSim=1000,weights=NULL,max_clus=6,
-                     Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE){
+                     Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE,xy_interaction=FALSE){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
   prep=prepare_spatial_data(fm,df,splines,pc_num,weights,max_clus)
@@ -77,8 +80,7 @@ eq_sim=eqs$eq_sim
 rm(eqs)
 
 # Regress dep_var on quadratic in long and lat to generate syn outcomes.
-lm_res=lm(dep_var~poly(X,2)+poly(Y,2),
-          data=df)
+lm_res=synth_trend(df,xy_interaction)
 
 rm(pc)
 

@@ -15,6 +15,15 @@
 #'   string, for example `weights="pop"`. Leave it out for an unweighted
 #'   regression.
 #'
+#' @details With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
+#'   computes the spatial weights from random subsets of 1,000 locations and extends them
+#'   to the rest. As in scpcR, this extension measures the distance between locations in
+#'   degrees of longitude and latitude, whereas the rate at which correlation decays with
+#'   distance is calibrated on great-circle distances in fractions of the earth's
+#'   circumference. The weights therefore decay faster with distance than intended, and
+#'   results can differ from the exact calculation used for smaller samples. The
+#'   calculation is left unchanged so that results match scpcR.
+#'
 #' @return An object of class `scpc_regression`, a list containing `Coefs`, a
 #'   data frame with one row for each coefficient giving the estimate, SCPC
 #'   standard error, t statistic, p value and 95% confidence interval, and `avc`,

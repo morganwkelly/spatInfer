@@ -14,7 +14,8 @@ synth(
   max_clus = 6,
   Parallel = TRUE,
   exact_cholesky = TRUE,
-  k_medoids = TRUE
+  k_medoids = TRUE,
+  xy_interaction = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,10 @@ BRISC Cholesky approximation. This requires the
 
 \item{k_medoids}{For large datasets, set to F to use Clara to generate
 medoids.}
+
+\item{xy_interaction}{Add the product of longitude and latitude to the
+quadratic trend in them that generates the synthetic outcome. Defaults to
+\code{FALSE}, where the trend is a quadratic in each separately.}
 }
 \value{
 A list containing Results which summarizes the placebo values and

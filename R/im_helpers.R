@@ -52,7 +52,7 @@ coef_im=function(df,eq_est,hold_clus,max_clus){
   estimate=fixest::feols(eq_est,data=df,             #baseline estimate with real variables
                          weights = ~wts,
                          vcov="hetero")
-  coef_orig=estimate$coeftable[2,1]
+  coef_orig=estimate$coeftable[treatment_term(estimate),1]
   
   im_coef=list()
   for(k in 1:(max_clus-1)){

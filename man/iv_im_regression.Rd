@@ -4,7 +4,15 @@
 \alias{iv_im_regression}
 \title{Spatial basis instrumental variable regressions with IM inference.}
 \usage{
-iv_im_regression(fm, df, splines, pc_num, clusters, weights = NULL)
+iv_im_regression(
+  fm,
+  df,
+  splines,
+  pc_num,
+  clusters,
+  weights = NULL,
+  k_medoids = TRUE
+)
 }
 \arguments{
 \item{fm}{The equation formula, written as in \code{\link[fixest:feols]{fixest::feols()}}:
@@ -25,6 +33,10 @@ and the variables in the formula cannot have missing values.}
 \item{weights}{The name of the weighting variable in the dataset, as a
 string, for example \code{weights="pop"}. Leave it out for an unweighted
 regression.}
+
+\item{k_medoids}{Use k-medoids clustering (PAM), the default. Set to \code{FALSE}
+to use Clara, as for large datasets: use the same setting as in
+\code{\link[=iv_placebo]{iv_placebo()}} so that the clusters are the same.}
 }
 \value{
 An object of class \code{iv_im_regression}, which is also an

@@ -74,17 +74,28 @@ generate_clusters=function(df,k_medoids,max_clus){
   hold_clus=matrix(NA,nrow=nrow(Coords),ncol=(max_clus-1))
   hold_clus=as.data.frame(hold_clus)
   for(m in 1:(max_clus-1)){
-    if(k_medoids){
-      hold_clus[,m]=factor(cluster::pam(Coords,k=m+1)$clustering ) #k-medoids clusters
-    }else{
-      set.seed(321)
-      hold_clus[,m]=factor(cluster::clara(Coords,k=m+1,samples=50)$clustering ) #use clara for large datasets
-     # hold_clus[,m]=factor(kmeans(Coords,m+1)$cluster)
-    }
+    hold_clus[,m]=make_clusters(Coords,m+1,k_medoids)
   }
 
   names(hold_clus)=paste0("clust_",2:(max_clus))
   return(hold_clus)
+}
+
+######Spatial trend of the outcome for synthetic outcome tests: a quadratic in longitude and
+######latitude, with their product added when xy_interaction is TRUE.
+synth_trend=function(df,xy_interaction){
+  fm=if(xy_interaction) dep_var~poly(X,2)+poly(Y,2)+X:Y else dep_var~poly(X,2)+poly(Y,2)
+  return(lm(fm,data=df))
+}
+
+######k clusters of the coordinates: k-medoids (pam), or clara for large datasets. The placebo
+######tests and the final regressions both use this, so their clusters are the same. clara
+######uses a fixed seed and leaves the user's random numbers unchanged.
+make_clusters=function(Coords,k,k_medoids){
+  if(k_medoids) return(factor(cluster::pam(Coords,k=k)$clustering))
+  withr::local_preserve_seed()
+  set.seed(321)
+  return(factor(cluster::clara(Coords,k=k,samples=50)$clustering))
 }
 
 #####Get BIC minimizing set of principal components of tensor spline.
@@ -113,7 +124,7 @@ hc_sim=function(j,Sim,eq_sim,df){
                        vcov="hetero")
 
   sim_res2=data.frame(
-    hc_p=rob_hc$coeftable[2,4]
+    hc_p=rob_hc$coeftable[treatment_term(rob_hc),4]
   )
   return(sim_res2)
 }
@@ -165,6 +176,10 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel,seeds=c(1234,123),tren
   #return(matern_params)
   Range=matern_params$Range
   Structure=matern_params$Structure
+  if(Range>=max(rng_search))
+    warning("The estimated range of spatial correlation is at the upper limit of the search, ",
+            "the 95th percentile of distances between points, so the true range may be longer.",
+            call.=FALSE)
   Effective_Range=2*Range/quantile(fields::rdist(x1=Coords),probs=0.95)   #fraction of 95th distance bw points
 
 
@@ -288,7 +303,17 @@ cluster_p_values=function(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun,clust_na
 ######Confidence interval of the treatment coefficient, in the units of the coefficient.
 coef_ci=function(estimate){
   ci=confint(estimate)
-  return(c(ci[2,1],ci[2,2]))
+  term=treatment_term(estimate)
+  return(c(ci[term,1],ci[term,2]))
+}
+
+######Name of the treatment in a fit: explan_var, or the placebo sim. Coefficients are found by
+######name, not position, because feols drops collinear variables.
+treatment_term=function(fit){
+  term=intersect(c("sim","explan_var"),names(stats::coef(fit)))
+  if(length(term)!=1)
+    stop("The treatment variable was dropped from the regression because of collinearity.",call.=FALSE)
+  return(term)
 }
 
 ######One row of results: estimated p value, share of simulated p values below it and below 0.05,
@@ -307,7 +332,7 @@ hc_summary_row=function(df,eq_est,hc_out){
   estimate=fixest::feols(eq_est,data=df,
                          weights = ~wts,
                          vcov="hetero")
-  return(ci_summary_row("HC",0,estimate$coeftable[2,4],coef_ci(estimate),hc_out[,1]))
+  return(ci_summary_row("HC",0,estimate$coeftable[treatment_term(estimate),4],coef_ci(estimate),hc_out[,1]))
 }
 
 ######Drop the two cluster row, put HC first, and round. CI widths keep their significant digits.

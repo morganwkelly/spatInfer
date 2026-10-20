@@ -27,9 +27,21 @@
 #' @param Parallel Run the simulations in parallel.
 #' @param exact_cholesky For very large datasets, setting this to `FALSE` will
 #'   use the BRISC Cholesky approximation. This requires the `BRISC` package.
+#' @param xy_interaction Add the product of longitude and latitude to the
+#'   quadratic trend in them that generates the synthetic outcome. Defaults to
+#'   `FALSE`, where the trend is a quadratic in each separately.
 #' @details The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
 #'   and Hans-Joachim Voth (<https://github.com/spatial-spur/scpcR>, MIT licence),
 #'   ported into spatInfer so that scpcR is not needed; it gives the same results.
+#'
+#'   With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
+#'   computes the spatial weights from random subsets of 1,000 locations and extends them
+#'   to the rest. As in scpcR, this extension measures the distance between locations in
+#'   degrees of longitude and latitude, whereas the rate at which correlation decays with
+#'   distance is calibrated on great-circle distances in fractions of the earth's
+#'   circumference. The weights therefore decay faster with distance than intended, and
+#'   results can differ from the exact calculation used for smaller samples. The
+#'   calculation is left unchanged so that results match scpcR.
 #'   SCPC inference uses X and Y as longitude and
 #'   latitude, so distances are great-circle distances. `Pseudo SE` is one
 #'   quarter of the width of the 95% confidence interval, in the units of the
@@ -61,7 +73,7 @@
 
 synth_scpc=function(fm,df,splines,pc_num,
                     nSim=1000,weights=NULL,avc=seq(0.02,0.1,by=0.02),
-                    Parallel=TRUE,exact_cholesky=TRUE){
+                    Parallel=TRUE,exact_cholesky=TRUE,xy_interaction=FALSE){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
   avc=check_avc(avc)
@@ -81,8 +93,7 @@ eq_sim=eqs$eq_sim
 rm(eqs)
 
 # Regress dep_var on quadratic in long and lat to generate syn outcomes.
-lm_res=lm(dep_var~poly(X,2)+poly(Y,2),
-          data=df)
+lm_res=synth_trend(df,xy_interaction)
 
 rm(pc)
 

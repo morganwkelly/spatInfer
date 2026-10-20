@@ -9,6 +9,9 @@
 #'   string, for example `weights="pop"`. Leave it out for an unweighted
 #'   regression.
 #' @param cov Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.
+#' @param k_medoids Use k-medoids clustering (PAM), the default. Set to `FALSE`
+#'   to use Clara, as for large datasets: use the same setting as in the placebo
+#'   test so that the clusters are the same.
 #'
 #' @return feols object that can be printed and exported using the modelsummary package.
 #' Given that t-statistics from large cluster regressions are not immediately interpretable due to their low degrees
@@ -35,7 +38,7 @@
 #' coef_omit = c("Intercept|PC*"), #omit basis and intercept
 #' gof_map = c("nobs", "r.squared"),fmt=2)
 
-basis_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,cov="BCH"){
+basis_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,cov="BCH",k_medoids=TRUE){
 
   if(is.null(df$X)|is.null(df$Y))
     stop("You must have longitude and latitude variables named X and Y")
@@ -70,7 +73,7 @@ eq_est=as.formula(paste(eq_est,paste(names(pc),collapse="+"),sep="+"))
 
 if(cov=="BCH"){
   Coords=as.matrix(df |> dplyr::select(X,Y))
-  clust_bch=factor(cluster::pam(Coords,k=clusters)$clustering)    #BCH clusters
+  clust_bch=make_clusters(Coords,clusters,k_medoids)    #BCH clusters, as in placebo()
   CK=fixest::feols(eq_est,
                    data=df1,
                    weights=wts,

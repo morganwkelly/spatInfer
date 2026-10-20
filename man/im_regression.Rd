@@ -4,7 +4,15 @@
 \alias{im_regression}
 \title{Spatial basis regression with IM inference on every coefficient.}
 \usage{
-im_regression(fm, df, splines, pc_num, clusters, weights = NULL)
+im_regression(
+  fm,
+  df,
+  splines,
+  pc_num,
+  clusters,
+  weights = NULL,
+  k_medoids = TRUE
+)
 }
 \arguments{
 \item{fm}{The equation formula. The variable of interest is the first one on the right hand side.}
@@ -20,6 +28,10 @@ im_regression(fm, df, splines, pc_num, clusters, weights = NULL)
 \item{weights}{The name of the weighting variable in the dataset, as a
 string, for example \code{weights="pop"}. Leave it out for an unweighted
 regression.}
+
+\item{k_medoids}{Use k-medoids clustering (PAM), the default. Set to \code{FALSE}
+to use Clara, as for large datasets: use the same setting as in the placebo
+test so that the clusters are the same.}
 }
 \value{
 An object of class \code{im_regression}, a list containing

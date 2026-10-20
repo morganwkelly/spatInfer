@@ -70,6 +70,15 @@ significance levels.
 The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
 and Hans-Joachim Voth (\url{https://github.com/spatial-spur/scpcR}, MIT licence),
 ported into spatInfer so that scpcR is not needed; it gives the same results.
+
+With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
+computes the spatial weights from random subsets of 1,000 locations and extends them
+to the rest. As in scpcR, this extension measures the distance between locations in
+degrees of longitude and latitude, whereas the rate at which correlation decays with
+distance is calibrated on great-circle distances in fractions of the earth's
+circumference. The weights therefore decay faster with distance than intended, and
+results can differ from the exact calculation used for smaller samples. The
+calculation is left unchanged so that results match scpcR.
 SCPC inference uses X and Y as longitude and
 latitude, so distances are great-circle distances. Larger values of \code{avc}
 allow for stronger spatial correlation and give wider confidence intervals.

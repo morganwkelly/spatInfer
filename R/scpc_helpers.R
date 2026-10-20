@@ -22,9 +22,7 @@ scpc_setup=function(df,avc){
 ######The treatment is found by name, as feols drops collinear variables. spcs is the
 ######output of scpc_setup() for the same observations and avc.
 scpc_stats=function(fit,df,avc,spcs=scpc_setup(df,avc)){
-  treat=which(names(stats::coef(fit))%in%c("sim","explan_var"))
-  if(length(treat)!=1)
-    stop("The treatment variable was dropped from the regression because of collinearity.",call.=FALSE)
+  treat=match(treatment_term(fit),names(stats::coef(fit)))
   obs=fixest::obs(fit)
   if(!identical(obs,seq_len(nrow(df)))) spcs=scpc_setup(df[obs,],avc)   #observations were dropped
   out=t(vapply(spcs,function(spc) scpc_coef_stats(fit,spc,treat)[1,],numeric(6)))
@@ -33,7 +31,7 @@ scpc_stats=function(fit,df,avc,spcs=scpc_setup(df,avc)){
 }
 
 ######SCPC p values of the simulated regression j, one column per avc.
-######A simulation where SCPC fails gives NA p values; these are left out by summary_scpc().
+######A simulation where SCPC fails gives NA p values; summary_scpc() leaves these out for each avc.
 scpc_sim=function(j,Sim,eq_sim,df,avc,spcs=scpc_setup(df,avc)){
   df1=cbind.data.frame(sim=Sim[,j],df)
   p=tryCatch({
@@ -53,23 +51,22 @@ scpc_p_values=function(Sim,eq_sim,df,avc,nSim,Parallel){
 ######Pseudo SE, one quarter of the width of the 95% confidence interval, are in the units
 ######of the coefficient.
 summary_scpc=function(df,eq_est,avc,scpc_out,hc_out){
-  n_failed=sum(!stats::complete.cases(scpc_out))
-  if(n_failed>0)
-    warning("SCPC could not be computed in ",n_failed," of ",nrow(scpc_out),
-            " simulations, which are left out.",call.=FALSE)
-  scpc_out=scpc_out[stats::complete.cases(scpc_out),,drop=FALSE]
+  n_failed=colSums(is.na(scpc_out))   #failures are counted, and left out, separately for each avc
+  for(k in which(n_failed>0))
+    warning("SCPC could not be computed in ",n_failed[k]," of ",nrow(scpc_out),
+            " simulations for avc = ",avc[k],", which are left out.",call.=FALSE)
 
   fit=fixest::feols(eq_est,data=df,weights=~wts)
   est=scpc_stats(fit,df,avc)
   sim_summ=list()
   for(k in seq_along(avc)){
     ci=est[k,c("lower","upper")]
-    sim_summ[[k]]=ci_summary_row("SCPC",avc[k],est[k,"p"],ci,scpc_out[,k])
+    sim_summ[[k]]=ci_summary_row("SCPC",avc[k],est[k,"p"],ci,stats::na.omit(scpc_out[,k]))
     sim_summ[[k]]$pseudo_se=(ci[2]-ci[1])/4
   }
 
   hc=fixest::feols(eq_est,data=df,weights=~wts,vcov="hetero")
-  hc_ci=confint(hc)[2,]
+  hc_ci=confint(hc)[treatment_term(hc),]
   hc_row=hc_summary_row(df,eq_est,hc_out)
   hc_row$pseudo_se=(hc_ci[[2]]-hc_ci[[1]])/4
 

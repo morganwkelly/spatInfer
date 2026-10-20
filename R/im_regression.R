@@ -15,6 +15,9 @@
 #' @param weights The name of the weighting variable in the dataset, as a
 #'   string, for example `weights="pop"`. Leave it out for an unweighted
 #'   regression.
+#' @param k_medoids Use k-medoids clustering (PAM), the default. Set to `FALSE`
+#'   to use Clara, as for large datasets: use the same setting as in the placebo
+#'   test so that the clusters are the same.
 #'
 #' @details The IM estimate of a coefficient is the mean of its estimates in the
 #'   clusters. p values and 95% confidence intervals come from a t-test of these
@@ -53,14 +56,14 @@
 #' im_table(im)
 #' im_table(im,type="clusters")
 
-im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL){
+im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,k_medoids=TRUE){
   if(!is.numeric(clusters)||length(clusters)!=1||clusters<2||clusters!=round(clusters))
     stop("clusters must be a whole number of at least 2.",call.=FALSE)
   basis=basis_data(fm,df,splines,pc_num,weights)
   df1=basis$df
 
   Coords=as.matrix(df1 |> dplyr::select(X,Y))
-  clust=factor(cluster::pam(Coords,k=clusters)$clustering)   #same clusters as BCH in basis_regression()
+  clust=make_clusters(Coords,clusters,k_medoids)   #same clusters as BCH in basis_regression()
 
   #coefficients estimated in each cluster: one column per cluster, NA where not estimated
   fits=lapply(split(df1,clust),function(d) fixest::feols(basis$eq_est,data=d,weights=~wts))

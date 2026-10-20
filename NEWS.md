@@ -77,7 +77,42 @@
   `placebo_scpc()` and `synth_scpc()` about five times faster. geodist is a new
   dependency.
 
+* `synth()`, `synth_im()`, `synth_scpc()` and `iv_synth()` have an
+  `xy_interaction` argument. Set to `TRUE`, it adds the product of longitude
+  and latitude to the quadratic trend that generates the synthetic outcome.
+  The default, `FALSE`, keeps the previous trend.
+
 ## Behaviour changes
+
+* `basis_regression()`, `im_regression()`, `iv_regression()` and
+  `iv_im_regression()` have a `k_medoids` argument. Set it to `FALSE` when the
+  placebo test used `k_medoids = FALSE`, so that the final regression uses the
+  same Clara clusters. Previously they always used PAM clusters, which could
+  differ from the clusters the placebo test chose between. Results with the
+  default are unchanged.
+
+* The treatment's p values and confidence intervals are now found by name, not
+  by their position in the coefficient table. If the treatment is dropped as
+  collinear, an error says so, instead of results being reported for another
+  variable. Results are otherwise unchanged.
+
+* `placebo_scpc()` and `synth_scpc()` leave out simulations where SCPC fails
+  separately for each `avc`, instead of leaving a simulation out for every
+  `avc` when it fails for one.
+
+* The placebo and synthetic outcome functions warn when the estimated range of
+  spatial correlation is at the upper limit of its search, the 95th percentile
+  of distances between points, since the true range may then be longer.
+
+* The BCH simulations of `placebo()` and `synth()` estimate each simulated
+  regression once and compute its clustered p value for every number of
+  clusters from that fit, instead of re-estimating it for each. Results are
+  unchanged.
+
+* The help pages of `placebo_scpc()`, `synth_scpc()` and `scpc_regression()`
+  note that with 4,500 or more observations SCPC, as in scpcR, uses distances
+  in degrees where great-circle distances are intended. The calculation is
+  unchanged.
 
 * `weights` now takes the name of the weighting variable, for example
   `weights = "pop"`, in every function that has it: the placebo, synth and

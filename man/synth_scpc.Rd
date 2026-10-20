@@ -13,7 +13,8 @@ synth_scpc(
   weights = NULL,
   avc = seq(0.02, 0.1, by = 0.02),
   Parallel = TRUE,
-  exact_cholesky = TRUE
+  exact_cholesky = TRUE,
+  xy_interaction = FALSE
 )
 }
 \arguments{
@@ -45,6 +46,10 @@ correlation to examine. Each must lie between 0.001 and 0.99. Defaults to
 
 \item{exact_cholesky}{For very large datasets, setting this to \code{FALSE} will
 use the BRISC Cholesky approximation. This requires the \code{BRISC} package.}
+
+\item{xy_interaction}{Add the product of longitude and latitude to the
+quadratic trend in them that generates the synthetic outcome. Defaults to
+\code{FALSE}, where the trend is a quadratic in each separately.}
 }
 \value{
 Returns a list of synthetic outcome p values, spatial parameters,
@@ -62,6 +67,15 @@ plus noise and is therefore independent of the explanatory variable.
 The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
 and Hans-Joachim Voth (\url{https://github.com/spatial-spur/scpcR}, MIT licence),
 ported into spatInfer so that scpcR is not needed; it gives the same results.
+
+With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
+computes the spatial weights from random subsets of 1,000 locations and extends them
+to the rest. As in scpcR, this extension measures the distance between locations in
+degrees of longitude and latitude, whereas the rate at which correlation decays with
+distance is calibrated on great-circle distances in fractions of the earth's
+circumference. The weights therefore decay faster with distance than intended, and
+results can differ from the exact calculation used for smaller samples. The
+calculation is left unchanged so that results match scpcR.
 SCPC inference uses X and Y as longitude and
 latitude, so distances are great-circle distances. \verb{Pseudo SE} is one
 quarter of the width of the 95\% confidence interval, in the units of the

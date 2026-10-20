@@ -11,7 +11,8 @@ basis_regression(
   pc_num,
   clusters,
   weights = NULL,
-  cov = "BCH"
+  cov = "BCH",
+  k_medoids = TRUE
 )
 }
 \arguments{
@@ -30,6 +31,10 @@ string, for example \code{weights="pop"}. Leave it out for an unweighted
 regression.}
 
 \item{cov}{Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.}
+
+\item{k_medoids}{Use k-medoids clustering (PAM), the default. Set to \code{FALSE}
+to use Clara, as for large datasets: use the same setting as in the placebo
+test so that the clusters are the same.}
 }
 \value{
 feols object that can be printed and exported using the modelsummary package.
