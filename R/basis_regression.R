@@ -5,7 +5,9 @@
 #' @param splines The dimension of the linear tensor used, from optimal_basis function.
 #' @param pc_num The number of principal component to include, again from optimal_basis.
 #' @param clusters Number of k-medoids clusters to use based on the placebo test.
-#' @param weights Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.
+#' @param weights The name of the weighting variable in the dataset, as a
+#'   string, for example `weights="pop"`. Leave it out for an unweighted
+#'   regression.
 #' @param cov Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.
 #'
 #' @return feols object that can be printed and exported using the modelsummary package.
@@ -33,18 +35,19 @@
 #' coef_omit = c("Intercept|PC*"), #omit basis and intercept
 #' gof_map = c("nobs", "r.squared"),fmt=2)
 
-basis_regression=function(fm,df,splines,pc_num,clusters,weights=FALSE,cov="BCH"){
+basis_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,cov="BCH"){
 
   if(is.null(df$X)|is.null(df$Y))
     stop("You must have longitude and latitude variables named X and Y")
   if(sum(is.na(df$X))>0|sum(is.na(df$Y))>0)
     stop("You cannot have missing values in longitude and latitude.")
-  if(weights&&is.null(df$weights))
-    stop("There is no variable called weights in your data.")
 
-#regression weights, taken from the weights variable when weights=TRUE
+#regression weights, taken from the variable named by weights
 wts=NULL
-if(weights) wts=~weights
+if(!is.null(weights)){
+  df$wts=regression_weights(df,weights)
+  wts=~wts
+}
 
 new_names=set_names(fm)
 orig_name= new_names$orig_name  #stringr::str_split_1(new_names$gg[2],"\\+")[1]

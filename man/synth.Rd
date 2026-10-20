@@ -10,7 +10,7 @@ synth(
   splines,
   pc_num,
   nSim = 1000,
-  weights = FALSE,
+  weights = NULL,
   max_clus = 6,
   Parallel = TRUE,
   exact_cholesky = TRUE,
@@ -34,8 +34,9 @@ optimal_basis}
 values should be used first to get an idea of how the regression is
 behaving.}
 
-\item{weights}{Set weights=TRUE if the regression is weighted. The weighting
-variable in the dataset must be named weights.}
+\item{weights}{The name of the weighting variable in the dataset, as a
+string, for example \code{weights="pop"}. Leave it out for an unweighted
+regression.}
 
 \item{max_clus}{The maximum number of large cluster standard errors to
 examine with the placebo test. Defaults to 6.}

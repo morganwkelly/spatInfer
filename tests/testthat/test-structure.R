@@ -60,15 +60,15 @@ test_that("basis_regression() returns a fixest object with saved data", {
   expect_true(all(paste0("PC", 1:4) %in% rownames(m$coeftable)))
 })
 
-test_that("basis_regression() applies weights = TRUE", {
+test_that("basis_regression() applies the weights it is given", {
   d <- fixture_data(weighted = TRUE)
   unweighted <- quietly(basis_regression(fixture_fm, d, 4, 4, 4))
-  weighted <- quietly(basis_regression(fixture_fm, d, 4, 4, 4, weights = TRUE))
+  weighted <- quietly(basis_regression(fixture_fm, d, 4, 4, 4, weights = "wt"))
   expect_false(isTRUE(all.equal(coef(weighted), coef(unweighted))))
-  expect_equal(unname(weights(weighted)), d$weights)
+  expect_equal(unname(weights(weighted)), d$wt)
 
   # Same coefficients as a weighted lm() fit on the regression's own data.
-  check <- lm(formula(weighted), data = weighted$data, weights = weights)
+  check <- lm(formula(weighted), data = weighted$data, weights = wt)
   expect_equal(coef(weighted), coef(check))
 })
 
@@ -82,6 +82,32 @@ test_that("placebo_table() and synth_table() return tinytables", {
   expect_s4_class(syn_tab, "tinytable")
   expect_identical(names(syn_tab@data),
     c("Adj", "Clusters", "Est p", "Synth p", "CI Width", "CI"))
+})
+
+test_that("combined_table() picks one row of each placebo and adds its synth p value", {
+  g <- function(f) readRDS(golden_path(f))
+  plbo <- list(g("placebo"), g("placebo_im"), g("placebo_scpc"))
+  syn <- list(g("synth"), g("synth_im"), g("synth_scpc"))
+  tab <- combined_table(plbo, syn, select = c(4, 5, 0.04), caption = "x")
+  expect_s4_class(tab, "tinytable")
+  expect_identical(names(tab@data),
+    c("Adj", "Clusters/avc", "Est p", "Plac p", "Plac 5%", "Synth p", "CI Width", "CI"))
+  expect_identical(tab@data$Adj, c("HC", "BCH", "IM", "SCPC"))
+  expect_identical(tab@data$`Clusters/avc`, c(".", "4", "5", "0.04"))
+  expect_equal(tab@data$`Est p`[2], round(plbo[[1]]$Results$`Est p`[3], 3))
+  expect_equal(tab@data$`Synth p`, round(c(syn[[1]]$Results$`Synth p`[c(1, 3)],
+    syn[[2]]$Results$`Synth p`[4], syn[[3]]$Results$`Synth p`[3]), 3))
+
+  # A single placebo and synth need not be wrapped in lists.
+  one <- combined_table(g("placebo"), g("synth"), 4)
+  expect_identical(names(one@data)[2], "Clusters")
+  expect_identical(nrow(one@data), 2L)
+
+  expect_error(combined_table(g("placebo"), g("synth"), 9), "Available values: 3, 4, 5")
+  expect_error(combined_table(g("placebo"), g("synth_im"), 4), "uses BCH but synth 1 uses IM")
+  expect_error(combined_table(g("placebo"), g("synth"), c(4, 5)), "same length")
+  expect_error(combined_table(g("synth"), g("synth"), 4), "is not the output of placebo")
+  expect_error(combined_table(g("iv_placebo"), g("iv_synth"), 4), "does not take iv_placebo")
 })
 
 # Results objects with the HC row and n_clus cluster rows, as returned by placebo() and synth().
@@ -119,7 +145,7 @@ test_that("the Moran test handles identical coordinates without jittering", {
   dup$X[2:6] <- dup$X[1]
   dup$Y[2:6] <- dup$Y[1]
 
-  prep <- prepare_spatial_data(fixture_fm, dup, 4, 4, FALSE, 5)
+  prep <- prepare_spatial_data(fixture_fm, dup, 4, 4, NULL, 5)
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
   expect_no_warning(m1 <- moran(eqs$eq_est, prep$df))
   expect_true(is.finite(m1))
@@ -139,7 +165,7 @@ test_that("plot_basis() passes theta and phi to vis.gam()", {
 })
 
 test_that("IM leaves out clusters without a treatment estimate, with a warning", {
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE, 5)
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL, 5)
   df <- prep$df
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
   hold <- generate_clusters(df, TRUE, 5)
@@ -166,7 +192,7 @@ test_that("plot_basis() draws without error", {
 
 test_that("confidence intervals are in the units of the treatment coefficient", {
   fmt <- function(ci) paste0("[", signif(ci[1], 3), ", ", signif(ci[2], 3), "]")
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL)
   eq <- build_formulas(prep$rhs, prep$pc, "explan_var")$eq_est
   hc <- quietly(fixest::feols(eq, data = prep$df, weights = ~wts, vcov = "hetero"))
   hc_ci <- confint(hc)[2, ]

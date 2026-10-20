@@ -4,7 +4,7 @@
 \alias{scpc_regression}
 \title{Spatial basis regression with SCPC inference on every coefficient.}
 \usage{
-scpc_regression(fm, df, splines, pc_num, avc, weights = FALSE)
+scpc_regression(fm, df, splines, pc_num, avc, weights = NULL)
 }
 \arguments{
 \item{fm}{The equation formula. The variable of interest is the first one on the right hand side.}
@@ -18,7 +18,9 @@ scpc_regression(fm, df, splines, pc_num, avc, weights = FALSE)
 \item{avc}{The SCPC upper bound on the average pairwise correlation, based on
 the placebo test of \code{\link[=placebo_scpc]{placebo_scpc()}}. It must lie between 0.001 and 0.99.}
 
-\item{weights}{Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.}
+\item{weights}{The name of the weighting variable in the dataset, as a
+string, for example \code{weights="pop"}. Leave it out for an unweighted
+regression.}
 }
 \value{
 An object of class \code{scpc_regression}, a list containing \code{Coefs}, a

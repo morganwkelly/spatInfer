@@ -2,3 +2,6 @@
 ^\.Rproj\.user$
 ^README\.Rmd$
 ^\.DS_Store$
+^CLAUDE\.md$
+^\.Rhistory$
+^\.Rapp\.history$

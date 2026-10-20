@@ -11,7 +11,9 @@
 #' @param pc_num The number of principal component to include, again from optimal_basis.
 #' @param avc The SCPC upper bound on the average pairwise correlation, based on
 #'   the placebo test of [placebo_scpc()]. It must lie between 0.001 and 0.99.
-#' @param weights Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.
+#' @param weights The name of the weighting variable in the dataset, as a
+#'   string, for example `weights="pop"`. Leave it out for an unweighted
+#'   regression.
 #'
 #' @return An object of class `scpc_regression`, a list containing `Coefs`, a
 #'   data frame with one row for each coefficient giving the estimate, SCPC
@@ -30,7 +32,7 @@
 #' opportunity,splines=4,pc_num=3,avc=0.04)
 #' sc
 
-scpc_regression=function(fm,df,splines,pc_num,avc,weights=FALSE){
+scpc_regression=function(fm,df,splines,pc_num,avc,weights=NULL){
   if(length(avc)!=1)
     stop("avc must be a single number between 0.001 and 0.99.",call.=FALSE)
   avc=check_avc(avc)

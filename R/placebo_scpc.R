@@ -21,8 +21,9 @@
 #' @param nSim The number of placebos to generate. Defaults to 1000 but lower
 #'   values should be used first to get an idea of how the regression is
 #'   behaving.
-#' @param weights Set weights=TRUE if the regression is weighted. The weighting
-#'   variable in the dataset must be named weights.
+#' @param weights The name of the weighting variable in the dataset, as a
+#'   string, for example `weights="pop"`. Leave it out for an unweighted
+#'   regression.
 #' @param avc The values of the SCPC upper bound on the average pairwise
 #'   correlation to examine with the placebo test. Each must lie between 0.001
 #'   and 0.99. Defaults to 0.02, 0.04, 0.06, 0.08 and 0.1.
@@ -69,7 +70,7 @@
 
 
 placebo_scpc=function(fm,df,splines,pc_num,
-                      nSim=1000,weights=FALSE,avc=seq(0.02,0.1,by=0.02),
+                      nSim=1000,weights=NULL,avc=seq(0.02,0.1,by=0.02),
                       Parallel=TRUE,exact_cholesky=TRUE){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers

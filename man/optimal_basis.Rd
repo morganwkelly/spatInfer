@@ -7,7 +7,8 @@
 optimal_basis(fm, df, max_splines, Description = "")
 }
 \arguments{
-\item{fm}{The regression formula.}
+\item{fm}{The regression formula. Instrumental variable formulas,
+\code{outcome ~ controls | treatment ~ instrument}, can also be used.}
 
 \item{df}{The dataset used.}
 

@@ -9,7 +9,7 @@
 # how dplyr::slice_sample() uses the RNG.
 fixture_data <- function(weighted = FALSE) {
   d <- spatInfer::opportunity[seq(1, 693, by = 7), ]
-  if (weighted) d$weights <- 0.5 + (seq_len(nrow(d)) %% 4) / 2
+  if (weighted) d$wt <- 0.5 + (seq_len(nrow(d)) %% 4) / 2
   d
 }
 
@@ -35,6 +35,20 @@ run_sim <- function(fun, ..., data = fixture_data()) {
 run_scpc <- function(fun, ..., data = fixture_data()) {
   args <- utils::modifyList(c(list(fm = fixture_fm, df = data), fixture_args), list(...))
   args$max_clus <- NULL
+  quietly(do.call(fun, args))
+}
+
+# IV fixture: deterministic 121-row subset of the 2000-2007 period of autor_china.
+iv_fixture_data <- function() {
+  d <- spatInfer::autor_china[spatInfer::autor_china$t2 == 1, ]
+  d <- d[seq(1, nrow(d), by = 6), ]
+  d
+}
+
+iv_fixture_fm <- d_sh_empl_mfg ~ l_shind_manuf_cbp + l_sh_popedu_c | d_tradeusch_pw ~ d_tradeotch_pw_lag
+
+run_iv <- function(fun, ..., data = iv_fixture_data()) {
+  args <- utils::modifyList(c(list(fm = iv_fixture_fm, df = data), fixture_args), list(...))
   quietly(do.call(fun, args))
 }
 
@@ -75,17 +89,17 @@ golden_cases <- list(
   },
   basis_regression_weighted = function() {
     summarise_feols(quietly(basis_regression(fixture_fm, fixture_data(TRUE),
-      splines = 4, pc_num = 4, clusters = 4, weights = TRUE)))
+      splines = 4, pc_num = 4, clusters = 4, weights = "wt")))
   },
   placebo = function() run_sim(placebo, Parallel = FALSE),
   placebo_im = function() run_sim(placebo_im, Parallel = FALSE),
   synth = function() run_sim(synth, Parallel = FALSE),
   synth_im = function() run_sim(synth_im, Parallel = FALSE),
   placebo_weighted = function() {
-    run_sim(placebo, Parallel = FALSE, weights = TRUE, data = fixture_data(TRUE))
+    run_sim(placebo, Parallel = FALSE, weights = "wt", data = fixture_data(TRUE))
   },
   synth_im_weighted = function() {
-    run_sim(synth_im, Parallel = FALSE, weights = TRUE, data = fixture_data(TRUE))
+    run_sim(synth_im, Parallel = FALSE, weights = "wt", data = fixture_data(TRUE))
   },
   placebo_clara = function() run_sim(placebo, Parallel = FALSE, k_medoids = FALSE),
   placebo_brisc = function() run_sim(placebo, Parallel = FALSE, exact_cholesky = FALSE),
@@ -93,7 +107,13 @@ golden_cases <- list(
   placebo_scpc = function() run_scpc(placebo_scpc, Parallel = FALSE),
   synth_scpc = function() run_scpc(synth_scpc, Parallel = FALSE),
   placebo_scpc_weighted = function() {
-    run_scpc(placebo_scpc, Parallel = FALSE, weights = TRUE, data = fixture_data(TRUE))
+    run_scpc(placebo_scpc, Parallel = FALSE, weights = "wt", data = fixture_data(TRUE))
+  },
+  # IV cases were recorded when iv_placebo() and iv_synth() were added.
+  iv_placebo = function() run_iv(iv_placebo, Parallel = FALSE),
+  iv_synth = function() run_iv(iv_synth, Parallel = FALSE),
+  iv_placebo_weighted = function() {
+    run_iv(iv_placebo, Parallel = FALSE, weights = "timepwt48")
   }
 )
 

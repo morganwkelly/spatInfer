@@ -29,6 +29,7 @@
 plot_basis=function(fm,df,splines,grd_num=20,phi=50,theta=30, Title=""){
 
   
+  if(grepl("\\|",deparse1(fm))) fm=iv_ols_formula(fm)   #IV formulas: outcome ~ controls | treatment ~ instrument
   new_names=set_names(fm)
   df=df |> dplyr::rename(dep_var=new_names$gg[1],
                          explan_var=stringr::str_split_1(new_names$gg[2],"\\+")[1])

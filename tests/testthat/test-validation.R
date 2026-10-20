@@ -18,12 +18,18 @@ test_that("max_clus below 3 is rejected", {
   }
 })
 
-test_that("weights = TRUE requires a weights column", {
+test_that("weights must name a numeric variable without missing values", {
+  d <- fixture_data(weighted = TRUE)
+  d$wt_text <- as.character(d$wt)
+  d$wt_na <- replace(d$wt, 1, NA)
   for (fun in list(placebo, placebo_im, synth, synth_im)) {
-    expect_error(fun(fixture_fm, fixture_data(), 4, 4, weights = TRUE), "no variable called weights")
+    expect_error(fun(fixture_fm, d, 4, 4, weights = "pop"), "no variable called pop")
+    expect_error(fun(fixture_fm, d, 4, 4, weights = TRUE), "name of the weighting variable")
+    expect_error(fun(fixture_fm, d, 4, 4, weights = "wt_text"), "must be numeric")
+    expect_error(fun(fixture_fm, d, 4, 4, weights = "wt_na"), "missing values")
   }
-  expect_error(basis_regression(fixture_fm, fixture_data(), 4, 4, 4, weights = TRUE),
-    "no variable called weights")
+  for (w in list("pop", TRUE, c("wt", "wt_na")))
+    expect_error(basis_regression(fixture_fm, d, 4, 4, 4, weights = w))
 })
 
 test_that("optimal_basis() rejects max_splines outside 3 to 12", {

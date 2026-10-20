@@ -12,7 +12,9 @@
 #' @param splines The dimension of the linear tensor used, from optimal_basis function.
 #' @param pc_num The number of principal component to include, again from optimal_basis.
 #' @param clusters Number of k-medoids clusters to use, based on the placebo test of [placebo_im()].
-#' @param weights Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.
+#' @param weights The name of the weighting variable in the dataset, as a
+#'   string, for example `weights="pop"`. Leave it out for an unweighted
+#'   regression.
 #'
 #' @details The IM estimate of a coefficient is the mean of its estimates in the
 #'   clusters. p values and 95% confidence intervals come from a t-test of these
@@ -51,7 +53,7 @@
 #' im_table(im)
 #' im_table(im,type="clusters")
 
-im_regression=function(fm,df,splines,pc_num,clusters,weights=FALSE){
+im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL){
   if(!is.numeric(clusters)||length(clusters)!=1||clusters<2||clusters!=round(clusters))
     stop("clusters must be a whole number of at least 2.",call.=FALSE)
   basis=basis_data(fm,df,splines,pc_num,weights)
@@ -121,14 +123,17 @@ print.im_regression=function(x,...){
 #' `im_table()` makes a table of the results of [im_regression()]: either a
 #' standard coefficient table or the estimate of each coefficient in each cluster.
 #'
-#' @param im An object created by [im_regression()].
+#' @param im An object created by [im_regression()] or [iv_im_regression()].
 #' @param type `"coefs"` (the default) for a table giving the IM estimate,
-#'   standard error, t statistic, p value and 95% confidence interval of each
+#'   pseudo standard error, p value and 95% confidence interval of each
 #'   coefficient. `"clusters"` for a table giving each coefficient's estimate in
 #'   each cluster, one row per cluster, with the number of observations in each
 #'   cluster in the last column.
 #' @param caption An optional caption for the table.
-#' @param digits Number of significant digits shown. Defaults to 3.
+#' @param digits Number of significant digits shown in the `"coefs"` table.
+#'   Defaults to 3.
+#' @param decimals Number of decimal places the cluster estimates are rounded
+#'   to in the `"clusters"` table. Defaults to 2.
 #'
 #' @return A tinytable object.
 #' @export
@@ -143,32 +148,33 @@ print.im_regression=function(x,...){
 #' im_table(im,caption="IM estimates.")
 #' im_table(im,type="clusters",caption="Coefficients estimated in each cluster.")
 
-im_table=function(im,type=c("coefs","clusters"),caption="",digits=3){
-  if(!inherits(im,"im_regression"))
-    stop("im must be the output of im_regression().",call.=FALSE)
+im_table=function(im,type=c("coefs","clusters"),caption="",digits=3,decimals=2){
+  if(!inherits(im,c("im_regression","iv_im_regression")))
+    stop("im must be the output of im_regression() or iv_im_regression().",call.=FALSE)
   type=match.arg(type)
   basis_note=paste0("Splines=",im$Splines,", PCs=",im$PCs,", N=",im$N,".")
+  if(inherits(im,"iv_im_regression"))
+    basis_note=paste0("2SLS in each cluster. ",basis_note)
 
   if(type=="coefs"){
     tab=im$Coefs |>
       dplyr::mutate(CI=paste0("[",signif(conf.low,digits),", ",signif(conf.high,digits),"]")) |>
-      dplyr::select(Variable=term,Estimate=estimate,`Pseudo SE`=std.error,`Pseudo t`=statistic,
+      dplyr::select(Variable=term,Estimate=estimate,`Pseudo SE`=std.error,
                     p=p.value,CI,Clusters=clusters) |>
-      dplyr::mutate(dplyr::across(c(Estimate,`Pseudo SE`,`Pseudo t`),\(x) signif(x,digits)),
+      dplyr::mutate(dplyr::across(c(Estimate,`Pseudo SE`),\(x) signif(x,digits)),
                     p=round(p,3))
     notes=list(paste0("IM inference with ",im$Clusters," k-medoids clusters. Estimates are means of the
                       coefficients estimated in each cluster; p values and 95% confidence intervals come
                       from a t-test of these with one degree of freedom fewer than the number of clusters used.
-                      Pseudo SE is one quarter of the width of the confidence interval, and Pseudo t is the
-                      estimate divided by Pseudo SE."),
+                      Pseudo SE is one quarter of the width of the confidence interval."),
                basis_note)
   }else{
     tab=im$Cluster_Coefs |>
-      dplyr::mutate(dplyr::across(-cluster,\(x) signif(x,digits)),
+      dplyr::mutate(dplyr::across(-cluster,\(x) round(x,decimals)),
                     Observations=unname(im$Cluster_N[cluster]),
                     cluster=paste("Cluster",cluster)) |>
       dplyr::rename(Cluster=cluster)
-    notes=list("Coefficients estimated separately in each k-medoids cluster.",basis_note)
+    notes=list("Coefficient values in each k-medoids cluster.",basis_note)
   }
 
   out=tinytable::tt(tab,theme="striped",align=paste0("l",strrep("r",ncol(tab)-1)),
@@ -186,9 +192,7 @@ basis_data=function(fm,df,splines,pc_num,weights){
     stop("You must have longitude and latitude variables named X and Y")
   if(sum(is.na(df$X))>0|sum(is.na(df$Y))>0)
     stop("You cannot have missing values in longitude and latitude.")
-  if(weights&&is.null(df$weights))
-    stop("There is no variable called weights in your data.")
-  df$wts=if(weights) df$weights else 1
+  df$wts=regression_weights(df,weights)
 
   new_names=set_names(fm)
   df=df |> dplyr::rename(dep_var=new_names$gg[1])

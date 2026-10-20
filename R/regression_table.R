@@ -106,6 +106,9 @@ regression_models=function(orig,bch,im,scpc,caller){
          call.=FALSE)
   if(is.null(orig)&&is.null(bch)&&is.null(im)&&is.null(scpc))
     stop("Give at least one of orig, bch, im and scpc.",call.=FALSE)
+  if(inherits(bch,"iv_regression")||inherits(im,"iv_regression"))
+    stop("For iv_regression() and iv_im_regression() results use iv_regression_table() and iv_regression_plot().",
+         call.=FALSE)
 
   models=list()
   model_notes=character(0)

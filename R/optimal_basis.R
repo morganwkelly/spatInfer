@@ -4,7 +4,8 @@
 #' principal components for tensor bases starting at 3x3. It reports the combination
 #' that minimizes BIC.
 #'
-#' @param fm  The regression formula.
+#' @param fm  The regression formula. Instrumental variable formulas,
+#'   `outcome ~ controls | treatment ~ instrument`, can also be used.
 #' @param df  The dataset used.
 #' @param max_splines The maximum dimension of tensor to examine
 #' @param Description Optional description of the regression used to label the output diagram.
@@ -30,6 +31,7 @@ optimal_basis=function(fm,df,max_splines,Description=""){
   if(max_splines<3)
     stop("The minimum number of splines you can use is 3.")
 
+  if(grepl("\\|",deparse1(fm))) fm=iv_ols_formula(fm)   #IV formulas: outcome ~ controls | treatment ~ instrument
   fm=deparse1(fm)
   fm=stringr::str_replace_all(fm," ","")
   gg=stringr::str_split_1(fm,"~")

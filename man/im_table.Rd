@@ -4,20 +4,30 @@
 \alias{im_table}
 \title{Tables of IM regression results.}
 \usage{
-im_table(im, type = c("coefs", "clusters"), caption = "", digits = 3)
+im_table(
+  im,
+  type = c("coefs", "clusters"),
+  caption = "",
+  digits = 3,
+  decimals = 2
+)
 }
 \arguments{
-\item{im}{An object created by \code{\link[=im_regression]{im_regression()}}.}
+\item{im}{An object created by \code{\link[=im_regression]{im_regression()}} or \code{\link[=iv_im_regression]{iv_im_regression()}}.}
 
 \item{type}{\code{"coefs"} (the default) for a table giving the IM estimate,
-standard error, t statistic, p value and 95\% confidence interval of each
+pseudo standard error, p value and 95\% confidence interval of each
 coefficient. \code{"clusters"} for a table giving each coefficient's estimate in
 each cluster, one row per cluster, with the number of observations in each
 cluster in the last column.}
 
 \item{caption}{An optional caption for the table.}
 
-\item{digits}{Number of significant digits shown. Defaults to 3.}
+\item{digits}{Number of significant digits shown in the \code{"coefs"} table.
+Defaults to 3.}
+
+\item{decimals}{Number of decimal places the cluster estimates are rounded
+to in the \code{"clusters"} table. Defaults to 2.}
 }
 \value{
 A tinytable object.

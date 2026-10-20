@@ -18,8 +18,9 @@
 #' @param nSim The number of placebos to generate. Defaults to 1000 but lower
 #'   values should be used first to get an idea of how the regression is
 #'   behaving.
-#' @param weights Set weights=TRUE if the regression is weighted. The weighting
-#'   variable in the dataset must be named weights.
+#' @param weights The name of the weighting variable in the dataset, as a
+#'   string, for example `weights="pop"`. Leave it out for an unweighted
+#'   regression.
 #' @param max_clus The maximum number of large cluster standard errors to
 #'   examine with the placebo test. Defaults to 6.
 #' @param Parallel Run the simulations in parallel.
@@ -56,7 +57,7 @@
 
 
 synth_im=function(fm,df,splines,pc_num,
-                     nSim=1000,weights=FALSE,max_clus=6,
+                     nSim=1000,weights=NULL,max_clus=6,
                      Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers

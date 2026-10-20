@@ -14,7 +14,7 @@ test_that("im_regression() tests every coefficient on its cluster estimates", {
   expect_equal(sum(im$Cluster_N), nrow(fixture_data()))
 
   # The treatment matches the IM t-test of placebo_im().
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL)
   eq <- build_formulas(prep$rhs, prep$pc)$eq_est
   clust <- factor(cluster::pam(as.matrix(fixture_data()[, c("X", "Y")]), k = 4)$clustering)
   tt <- im_t_test(quietly(im_cluster_coefs(eq, prep$df, clust)))
@@ -34,19 +34,22 @@ test_that("im_regression() tests every coefficient on its cluster estimates", {
 
 test_that("im_regression() checks its inputs", {
   expect_error(im_regression(fixture_fm, fixture_data(), 4, 4, clusters = 1), "at least 2")
-  expect_error(im_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4, weights = TRUE),
-               "no variable called weights")
+  expect_error(im_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4, weights = "pop"),
+               "no variable called pop")
 })
 
 test_that("im_table() makes coefficient and cluster tables", {
   im <- fit_im()
   coef_tab <- im_table(im)
   expect_identical(names(coef_tab@data),
-    c("Variable", "Estimate", "Pseudo SE", "Pseudo t", "p", "CI", "Clusters"))
+    c("Variable", "Estimate", "Pseudo SE", "p", "CI", "Clusters"))
   clus_tab <- im_table(im, type = "clusters")
   expect_identical(names(clus_tab@data), c("Cluster", fixture_terms, "Observations"))
   expect_identical(clus_tab@data$Cluster, paste("Cluster", 1:4))
   expect_equal(sum(clus_tab@data$Observations), nrow(fixture_data()))
+  expect_equal(clus_tab@data[[fixture_terms[1]]], round(im$Cluster_Coefs[[fixture_terms[1]]], 2))
+  clus_tab3 <- im_table(im, type = "clusters", decimals = 3)
+  expect_equal(clus_tab3@data[[fixture_terms[1]]], round(im$Cluster_Coefs[[fixture_terms[1]]], 3))
   expect_error(im_table(list()), "im_regression")
 })
 

@@ -13,6 +13,25 @@ set_names=function(fm){
   return(list(rhs=rhs,gg=gg,orig_name=orig_name))
 }
 
+#####Regression weights: the variable of df named by weights, or 1 for every observation
+#####when weights is NULL (unweighted).
+regression_weights=function(df,weights){
+  if(is.null(weights)) return(rep(1,nrow(df)))
+  if(is.logical(weights))
+    stop("weights takes the name of the weighting variable, for example weights=\"pop\", ",
+         "not TRUE or FALSE. Leave it out for an unweighted regression.",call.=FALSE)
+  if(!is.character(weights)||length(weights)!=1)
+    stop("weights must be the name of one variable in your data.",call.=FALSE)
+  if(!weights %in% names(df))
+    stop("There is no variable called ",weights," in your data.",call.=FALSE)
+  wts=df[[weights]]
+  if(!is.numeric(wts))
+    stop("The weighting variable ",weights," must be numeric.",call.=FALSE)
+  if(anyNA(wts))
+    stop("The weighting variable ",weights," cannot have missing values.",call.=FALSE)
+  return(wts)
+}
+
 #####Shared setup for the placebo and synth functions: check inputs, set weights,
 #####rename outcome and treatment to dep_var and explan_var, and add the spatial basis principal components.
 prepare_spatial_data=function(fm,df,splines,pc_num,weights,max_clus=NULL){
@@ -23,14 +42,7 @@ prepare_spatial_data=function(fm,df,splines,pc_num,weights,max_clus=NULL){
   if(!is.null(max_clus)&&max_clus<3)
     stop("Your maximum number of clusters max_clus must be greater than 2.")
 
-  if(!weights){
-    df$wts=1
-  }else{
-    if(is.null(df$weights)){
-      stop("There is no variable called weights in your data.")
-    }else{
-    df$wts=df$weights}
-  }
+  df$wts=regression_weights(df,weights)
 
 #rename dependent and explanatory variables as dep_var and explan_var and list all other variables in a string called rhs
   new_names=set_names(fm)
@@ -108,9 +120,11 @@ hc_sim=function(j,Sim,eq_sim,df){
 
 #############search for mle ests of matern params and generate simulated noise with these parameters.
 #############For large datasets use exact_cholesky=FALSE which uses BRISC.
+#############seeds are the seeds of the exact and BRISC simulations. trend=FALSE returns the noise
+#############without the fitted values of lm_res added.
 has_brisc=function() requireNamespace("BRISC",quietly=TRUE)
 
-Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
+Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel,seeds=c(1234,123),trend=TRUE){
   if(!exact_cholesky&&!has_brisc())
     stop("exact_cholesky = FALSE needs the BRISC package. Install it with install.packages(\"BRISC\").",
          call.=FALSE)
@@ -164,10 +178,10 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
     KL=t(chol(KL))
 
     ###################Generate simulated variables. 
-    set.seed(1234)
+    set.seed(seeds[1])
     Sim=KL%*%matrix(rnorm(nSim*nrow(Coords)),ncol=nSim)   #sims without original trend
   }else{    #Use BRISC approx Cholesky for large data
-    set.seed(123)
+    set.seed(seeds[2])
     beg_seed=round(1e4*runif(nSim))
     Sim=BRISC::BRISC_simulation(
       Coords,
@@ -180,7 +194,8 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel){
 
     Sim=Sim$output.data
     }
-  Sim=lm_res$fitted+sd(Residuals)*Sim         #Adding trend leaves results unchanged: resids orthogonal to spatial basis.
+  Sim=sd(Residuals)*Sim
+  if(trend) Sim=lm_res$fitted+Sim         #Adding trend leaves results unchanged: resids orthogonal to spatial basis.
   return(list(Sim=Sim,matern_params=matern_params))
 }
 

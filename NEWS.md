@@ -2,6 +2,46 @@
 
 ## New features
 
+* `combined_table()` summarises several placebo and synthetic outcome tests
+  in one table: an HC row, then for each placebo the row with a chosen number
+  of clusters or SCPC `avc` value, with the synthetic outcome p value of the
+  matching synth. Its notes give the structure, effective range and R2 of the
+  treatment and of the outcome separately.
+
+* `iv_placebo()` and `iv_synth()` run the placebo and synthetic outcome tests
+  for instrumental variable regressions with one endogenous treatment and one
+  instrument, written as in fixest: `outcome ~ controls | treatment ~
+  instrument`. Each gives estimated and simulated p values and confidence
+  intervals for 2SLS with HC, BCH and IM inference, and for the
+  Anderson-Rubin (AR) test with HC and BCH inference (IM is not valid for
+  AR), for 3 up to `max_clus` clusters. AR confidence sets are
+  computed exactly and can be unbounded when the instrument is weak. In
+  `iv_placebo()` the placebo instrument is generated from the placebo treatment
+  through the estimated relationship between the instrument and the treatment,
+  plus its own spatial noise. Each HC and BCH row of the results gives the
+  first stage F statistic with its own inference and number of clusters; IM
+  rows give none.
+  `placebo_table()` and `synth_table()` show the results in separate BCH, IM
+  and AR tables, chosen with their new `type` argument, and `optimal_basis()`
+  and `plot_basis()` accept IV formulas.
+
+* `iv_regression()` estimates the spatial basis IV regression by 2SLS with
+  BCH or HC standard errors (`cov`), and `iv_im_regression()` with IM
+  inference, using the same clusters as `iv_placebo()`. `iv_regression()`
+  also gives the Anderson-Rubin p value and confidence set of the treatment
+  effect and the first stage F statistic; `iv_im_regression()` gives neither. `im_table()` shows
+  `iv_im_regression()` results.
+
+* `iv_regression_table()` and `iv_regression_plot()` compare an original IV
+  regression with `iv_regression()` and `iv_im_regression()` results. The
+  table adds rows for the first stage F statistic and the AR p value and 95%
+  set of each column except IM. The plot shows each coefficient's 2SLS
+  confidence interval and, for the treatment, the AR set of each column except IM, with arrows for unbounded
+  parts.
+
+* New dataset `autor_china`: Autor, Dorn and Hanson (2013) data on Chinese
+  import competition and US commuting zones.
+
 * `im_regression()` runs the spatial basis regression with IM inference on
   every coefficient: each is estimated separately in k-medoids clusters (the
   same clusters `basis_regression()` uses for BCH) and tested with a t-test of
@@ -10,7 +50,7 @@
   the estimates divided by these. `Cluster_Coefs` has one row per cluster and
   one column per coefficient. `im_table()` gives a coefficient table of the results
   (`type = "coefs"`) or the estimate of each coefficient in each cluster
-  (`type = "clusters"`).
+  (`type = "clusters"`, rounded to `decimals` places, 2 by default).
 
 * `scpc_regression()` runs the spatial basis regression with SCPC inference on
   every coefficient for a chosen value of `avc`.
@@ -39,6 +79,13 @@
 
 ## Behaviour changes
 
+* `weights` now takes the name of the weighting variable, for example
+  `weights = "pop"`, in every function that has it: the placebo, synth and
+  regression functions, including the IV ones. The variable no longer has to
+  be called `weights`, and `weights = TRUE` is an error. Leave `weights` out
+  for an unweighted regression. The weighting variable must be numeric with no
+  missing values. Results are unchanged.
+
 * Confidence intervals and their widths in the results and tables of all
   placebo and synthetic outcome functions are now in the units of the
   treatment coefficient. Previously they were divided by the absolute value of
@@ -61,10 +108,9 @@
   longer jitters identical coordinates, which it does not need, so with
   duplicated sites its value differs slightly from before.
 
-* `basis_regression()` now applies regression weights when `weights = TRUE`.
-  Previously the argument was ignored and the regression was unweighted. It
-  now also stops with an error if there is no `weights` variable, as the other
-  functions do. Unweighted results are unchanged.
+* `basis_regression()` now applies regression weights. Previously the
+  argument was ignored and the regression was unweighted. Unweighted results
+  are unchanged.
 
 * `placebo()`, `placebo_im()`, `synth()` and `synth_im()` no longer change the
   user's random number state. They still use the same fixed internal seeds, so

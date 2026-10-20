@@ -10,7 +10,7 @@ synth_scpc(
   splines,
   pc_num,
   nSim = 1000,
-  weights = FALSE,
+  weights = NULL,
   avc = seq(0.02, 0.1, by = 0.02),
   Parallel = TRUE,
   exact_cholesky = TRUE
@@ -33,8 +33,9 @@ optimal_basis}
 values should be used first to get an idea of how the regression is
 behaving.}
 
-\item{weights}{Set weights=TRUE if the regression is weighted. The weighting
-variable in the dataset must be named weights.}
+\item{weights}{The name of the weighting variable in the dataset, as a
+string, for example \code{weights="pop"}. Leave it out for an unweighted
+regression.}
 
 \item{avc}{The values of the SCPC upper bound on the average pairwise
 correlation to examine. Each must lie between 0.001 and 0.99. Defaults to

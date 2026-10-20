@@ -10,7 +10,7 @@ placebo(
   splines,
   pc_num,
   nSim = 1000,
-  weights = FALSE,
+  weights = NULL,
   max_clus = 6,
   Parallel = TRUE,
   exact_cholesky = TRUE,
@@ -22,8 +22,7 @@ placebo(
 one on the right hand side.}
 
 \item{df}{The name of the dataset use. Longitude and latitude must be named
-\code{X} and \code{Y} and have no missing values. Weighting variables, if used, must be
-named \code{weights}.}
+\code{X} and \code{Y} and have no missing values.}
 
 \item{splines}{The dimension of the linear tensor used, from \code{\link[=optimal_basis]{optimal_basis()}}
 function.}
@@ -35,8 +34,9 @@ optimal_basis function.}
 values should be used first to get an idea of how the regression is
 behaving.}
 
-\item{weights}{Set \code{weights=TRUE} if the regression is weighted. The weighting
-variable in the dataset must be named \code{weights}.}
+\item{weights}{The name of the weighting variable in the dataset, as a
+string, for example \code{weights="pop"}. Leave it out for an unweighted
+regression.}
 
 \item{max_clus}{The maximum number of large cluster standard errors to examine
 with the placebo test. Defaults to 6.}

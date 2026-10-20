@@ -10,7 +10,7 @@ basis_regression(
   splines,
   pc_num,
   clusters,
-  weights = FALSE,
+  weights = NULL,
   cov = "BCH"
 )
 }
@@ -25,7 +25,9 @@ basis_regression(
 
 \item{clusters}{Number of k-medoids clusters to use based on the placebo test.}
 
-\item{weights}{Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.}
+\item{weights}{The name of the weighting variable in the dataset, as a
+string, for example \code{weights="pop"}. Leave it out for an unweighted
+regression.}
 
 \item{cov}{Defaults to BCH. It gives heteroskedasticity consistent standard errors otherwise.}
 }

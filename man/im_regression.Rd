@@ -4,7 +4,7 @@
 \alias{im_regression}
 \title{Spatial basis regression with IM inference on every coefficient.}
 \usage{
-im_regression(fm, df, splines, pc_num, clusters, weights = FALSE)
+im_regression(fm, df, splines, pc_num, clusters, weights = NULL)
 }
 \arguments{
 \item{fm}{The equation formula. The variable of interest is the first one on the right hand side.}
@@ -17,7 +17,9 @@ im_regression(fm, df, splines, pc_num, clusters, weights = FALSE)
 
 \item{clusters}{Number of k-medoids clusters to use, based on the placebo test of \code{\link[=placebo_im]{placebo_im()}}.}
 
-\item{weights}{Set weights=TRUE if the regression is weighted. The weighting variable in the dataset must be named weights.}
+\item{weights}{The name of the weighting variable in the dataset, as a
+string, for example \code{weights="pop"}. Leave it out for an unweighted
+regression.}
 }
 \value{
 An object of class \code{im_regression}, a list containing

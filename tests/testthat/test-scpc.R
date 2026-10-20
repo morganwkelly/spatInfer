@@ -42,7 +42,7 @@ test_that("Pseudo SE is one quarter of the width of the 95% confidence interval"
   est <- plbo$Estimates
   expect_equal(plbo$Results$`Pseudo SE`[-1], signif((est$upper - est$lower) / 4, 3))
 
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL)
   eq <- build_formulas(prep$rhs, prep$pc, "explan_var")$eq_est
   hc <- quietly(fixest::feols(eq, data = prep$df, weights = ~wts, vcov = "hetero"))
   expect_equal(plbo$Results$`Pseudo SE`[1], signif((confint(hc)[2, 2] - confint(hc)[2, 1]) / 4, 3))
@@ -63,12 +63,12 @@ test_that("SCPC functions check coordinates and weights like the others", {
   no_x <- d[, setdiff(names(d), "X")]
   for (fun in list(placebo_scpc, synth_scpc)) {
     expect_error(fun(fixture_fm, no_x, 4, 4), "named X and Y")
-    expect_error(fun(fixture_fm, d, 4, 4, weights = TRUE), "no variable called weights")
+    expect_error(fun(fixture_fm, d, 4, 4, weights = "pop"), "no variable called pop")
   }
 })
 
 test_that("simulations where SCPC fails are left out, with a warning", {
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, FALSE)
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL)
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
   avc <- c(0.02, 0.1)
   scpc_out <- data.frame(avc_0.02 = c(0.01, NA, 0.5, 0.5), avc_0.1 = c(0.01, NA, 0.5, 0.9))
@@ -111,7 +111,7 @@ test_that("SCPC functions do not change the user's random number state", {
 })
 
 test_that("SCPC with saved spatial weights matches scpcR in simulated regressions", {
-  prep <- prepare_spatial_data(fixture_fm, fixture_data(TRUE), 4, 4, TRUE)
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(TRUE), 4, 4, "wt")
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
   set.seed(1)
   df1 <- cbind.data.frame(sim = rnorm(nrow(prep$df)), prep$df)
