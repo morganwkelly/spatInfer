@@ -12,31 +12,47 @@
   for instrumental variable regressions with one endogenous treatment and one
   instrument, written as in fixest: `outcome ~ controls | treatment ~
   instrument`. Each gives estimated and simulated p values and confidence
-  intervals for 2SLS with HC, BCH and IM inference, and for the
-  Anderson-Rubin (AR) test with HC and BCH inference (IM is not valid for
-  AR), for 3 up to `max_clus` clusters. AR confidence sets are
-  computed exactly and can be unbounded when the instrument is weak. In
+  intervals for 2SLS and for the Anderson-Rubin (AR) test, each with HC,
+  BCH, IM and, for each SCPC bound given in `avc`, SCPC inference, for 3 up
+  to `max_clus` clusters. AR tests use the
+  reduced form approach of Chernozhukov and Hansen (2008): the treatment
+  effect `b` is rejected when the instrument is significant in the regression
+  of `outcome - b*treatment` on the instrument, controls and spatial basis,
+  under the chosen inference. The IM version estimates this regression in
+  each cluster, and needs no strong instrument within clusters. AR confidence
+  sets are computed exactly from the reduced forms of the outcome and
+  treatment, and can be unbounded when the instrument is weak. In
   `iv_placebo()` the placebo instrument is generated from the placebo treatment
   through the estimated relationship between the instrument and the treatment,
   plus its own spatial noise. Each HC and BCH row of the results gives the
   first stage F statistic with its own inference and number of clusters; IM
-  rows give none.
-  `placebo_table()` and `synth_table()` show the results in separate BCH, IM
-  and AR tables, chosen with their new `type` argument, and `optimal_basis()`
+  and SCPC rows give none.
+  `placebo_table()` and `synth_table()` show the results in separate BCH, IM,
+  SCPC and AR tables, chosen with their new `type` argument, and `optimal_basis()`
   and `plot_basis()` accept IV formulas.
 
 * `iv_regression()` estimates the spatial basis IV regression by 2SLS with
   BCH or HC standard errors (`cov`), and `iv_im_regression()` with IM
   inference, using the same clusters as `iv_placebo()`. `iv_regression()`
   also gives the Anderson-Rubin p value and confidence set of the treatment
-  effect and the first stage F statistic; `iv_im_regression()` gives neither. `im_table()` shows
-  `iv_im_regression()` results.
+  effect and the first stage F statistic; `iv_im_regression()` gives the
+  Anderson-Rubin results with IM inference, and no F statistic. `im_table()` shows
+  `iv_im_regression()` results. `iv_scpc_regression()` gives 2SLS and
+  Anderson-Rubin results with SCPC inference: 2SLS is treated as least
+  squares on the instrumented regressors, with structural residuals.
+
+* `iv_combined_table()` is the IV version of `combined_table()`: from one
+  `iv_placebo()` and the matching `iv_synth()` it shows the HC row and the
+  chosen BCH, IM and SCPC rows, with their synthetic outcome p values, in a
+  2SLS block and an Anderson-Rubin block (`select`, and optionally
+  `ar_select`, e.g. `c(BCH=7, IM=5, SCPC=0.04)`).
 
 * `iv_regression_table()` and `iv_regression_plot()` compare an original IV
-  regression with `iv_regression()` and `iv_im_regression()` results. The
-  table adds rows for the first stage F statistic and the AR p value and 95%
-  set of each column except IM. The plot shows each coefficient's 2SLS
-  confidence interval and, for the treatment, the AR set of each column except IM, with arrows for unbounded
+  regression with `iv_regression()`, `iv_im_regression()` and
+  `iv_scpc_regression()` results. The table adds rows for the first stage F
+  statistic and the AR p value and 95% set of each column (no F for IM or
+  SCPC). The plot shows each coefficient's 2SLS
+  confidence interval and, for the treatment, the AR set of each column, with arrows for unbounded
   parts.
 
 * New dataset `autor_china`: Autor, Dorn and Hanson (2013) data on Chinese

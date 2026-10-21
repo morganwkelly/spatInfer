@@ -57,15 +57,18 @@ it with \code{\link[=iv_regression_table]{iv_regression_table()}} or \code{\link
 \code{iv_regression()} estimates an instrumental variable regression by 2SLS
 with the spatial basis added, using BCH (clustered) or HC standard errors,
 and gives the Anderson-Rubin (AR) test and confidence set of the treatment
-effect and the first stage F statistic. Choose the
+effect, with the same inference, and the first stage F statistic. Choose the
 number of clusters with \code{\link[=iv_placebo]{iv_placebo()}}: the clusters are the same k-medoids
-clusters it uses. For IM inference use \code{\link[=iv_im_regression]{iv_im_regression()}}.
+clusters it uses. For IM inference use \code{\link[=iv_im_regression]{iv_im_regression()}}, and for SCPC
+\code{\link[=iv_scpc_regression]{iv_scpc_regression()}}.
 }
 \details{
-The AR confidence set contains the treatment effects \code{b} where the
-instrument is not significant at 5\% in a regression of
-\code{outcome - b*treatment}, and can be unbounded when the instrument is weak:
-see \code{\link[=iv_placebo]{iv_placebo()}}.
+The AR test and confidence set use the reduced form approach of
+Chernozhukov and Hansen (2008): the set contains the treatment effects \code{b}
+where the instrument is not significant at 5\% in a regression of
+\code{outcome - b*treatment} on the instrument, controls and spatial basis, with
+BCH or HC inference. It is valid however weak the instrument, and can be
+unbounded: see \code{\link[=iv_placebo]{iv_placebo()}}.
 }
 \examples{
 library(spatInfer)

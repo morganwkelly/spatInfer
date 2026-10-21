@@ -40,7 +40,7 @@ to use Clara, as for large datasets: use the same setting as in
 }
 \value{
 An object of class \code{iv_im_regression}, which is also an
-\code{iv_regression}: as for \code{\link[=iv_regression]{iv_regression()}}, but without \code{AR} and \code{AR_Set}, with \code{F} set to \code{NA}, and in place of \code{Fit} it
+\code{iv_regression}: as for \code{\link[=iv_regression]{iv_regression()}}, with IM inference for \code{AR} and \code{AR_Set}, with \code{F} set to \code{NA}, and in place of \code{Fit} it
 contains \code{Cluster_Coefs}, with one row per cluster and one column per
 coefficient, and \code{Cluster_N}, the number of observations in each cluster.
 \code{\link[=im_table]{im_table()}} shows its coefficients or its estimates in each cluster.
@@ -50,11 +50,16 @@ coefficient, and \code{Cluster_N}, the number of observations in each cluster.
 regression with IM inference on every coefficient: each is estimated by
 2SLS separately in k-medoids clusters (the same clusters \code{\link[=iv_regression]{iv_regression()}}
 and \code{\link[=iv_placebo]{iv_placebo()}} use) and tested with a t-test of its cluster estimates.
-No Anderson-Rubin (AR) test is given, since IM is not valid for it: use
-\code{\link[=iv_regression]{iv_regression()}} for AR. No first stage F statistic is given.
+The Anderson-Rubin (AR) test and confidence set use IM inference too: the
+reduced forms of the outcome and treatment on the instrument are estimated
+in each cluster, and \code{b} is in the set when the t-test does not reject a
+zero mean of the cluster coefficients of \code{outcome - b*treatment} (see
+\code{\link[=iv_placebo]{iv_placebo()}}). No first stage F statistic is given.
 }
 \details{
-Estimates are means of the coefficients estimated in each cluster.
+Estimates are means of the 2SLS coefficients estimated in each
+cluster. Unlike these, the AR test needs no strong instrument within each
+cluster.
 Standard errors are pseudo standard errors, one quarter of the width of the
 95\% confidence interval, and t statistics are the estimates divided by
 these.

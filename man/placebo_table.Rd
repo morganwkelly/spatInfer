@@ -4,7 +4,7 @@
 \alias{placebo_table}
 \title{Table of placebo output.}
 \usage{
-placebo_table(plbo, caption = "", type = c("BCH", "IM", "AR"))
+placebo_table(plbo, caption = "", type = c("BCH", "IM", "SCPC", "AR"))
 }
 \arguments{
 \item{plbo}{An object created by \code{\link[=placebo]{placebo()}}, \code{\link[=placebo_im]{placebo_im()}}, \code{\link[=placebo_scpc]{placebo_scpc()}} or \code{\link[=iv_placebo]{iv_placebo()}}.}
@@ -13,10 +13,12 @@ placebo_table(plbo, caption = "", type = c("BCH", "IM", "AR"))
 
 \item{type}{For results from \code{\link[=iv_placebo]{iv_placebo()}}, the table shown: \code{"BCH"} (the
 default) for 2SLS with HC and BCH inference, \code{"IM"} for 2SLS with HC and IM
-inference, or \code{"AR"} for Anderson-Rubin tests with HC and BCH inference
-(IM is not valid for AR).
+inference, \code{"SCPC"} for 2SLS with HC and SCPC inference (when
+\code{\link[=iv_placebo]{iv_placebo()}} was given \code{avc}), or \code{"AR"} for Anderson-Rubin tests with
+HC, BCH, IM and (when \code{\link[=iv_placebo]{iv_placebo()}} was given \code{avc}) SCPC inference. In
+SCPC rows \code{Clusters} gives \code{avc}.
 Each HC and BCH row gives the first stage F statistic with its inference
-and number of clusters; IM rows give none. Not used for other results.}
+and number of clusters; IM and SCPC rows give none. Not used for other results.}
 }
 \value{
 Generates a tinytable object. This gives the regression and placebo p values and the proportion

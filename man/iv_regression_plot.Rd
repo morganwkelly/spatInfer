@@ -8,6 +8,7 @@ iv_regression_plot(
   orig = NULL,
   bch = NULL,
   im = NULL,
+  scpc = NULL,
   coef_omit = "Intercept|^PC[0-9]+$"
 )
 }
@@ -23,6 +24,8 @@ column is labelled "BCH" or "HC".}
 
 \item{im}{Output of \code{\link[=iv_im_regression]{iv_im_regression()}}.}
 
+\item{scpc}{Output of \code{\link[=iv_scpc_regression]{iv_scpc_regression()}}.}
+
 \item{coef_omit}{Coefficients to leave out, as a regular expression. Defaults
 to the intercept and the principal components of the spatial basis.}
 }
@@ -33,7 +36,7 @@ A ggplot object.
 \code{iv_regression_plot()} plots the coefficients and 95\% confidence intervals
 of the instrumental variable regressions supplied, one panel per
 coefficient. For the treatment it adds the Anderson-Rubin (AR) 95\%
-confidence set of each spatial basis regression except IM.
+confidence set of each spatial basis regression.
 Unbounded parts of an AR set run to the edge of the panel and end in arrows.
 }
 \examples{

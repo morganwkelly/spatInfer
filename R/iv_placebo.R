@@ -4,8 +4,9 @@
 #'  `iv_placebo()` runs a spatial noise placebo test on an instrumental
 #'  variable regression with one endogenous treatment and one instrument. It
 #'  gives the estimated and placebo significance levels of the treatment for
-#'  2SLS with HC, BCH and IM inference, and for the Anderson-Rubin (AR) test
-#'  with HC and BCH inference, for each number of large clusters.
+#'  2SLS and for the Anderson-Rubin (AR) test, each with HC, BCH, IM and
+#'  (optionally) SCPC inference, for each number of large clusters or SCPC
+#'  bound `avc`.
 #'
 #'  The placebo treatment matches the spatial trends of the treatment by
 #'  regressing it on the principal components chosen by [optimal_basis()] and
@@ -40,30 +41,54 @@
 #'  the `BRISC` Cholesky approximation. This requires the `BRISC` package.
 #'@param k_medoids For large datasets, set to `FALSE` to use a faster
 #'  approximation to generate medoids.
+#'@param avc SCPC upper bounds on the average pairwise correlation for 2SLS
+#'  and AR tests with SCPC inference, each between 0.001 and 0.99, as in
+#'  [placebo_scpc()]. The default, `NULL`, gives no SCPC tests, which are the
+#'  slowest.
 #'@details BCH uses clustered standard errors, and IM a t-test of the
-#'  coefficients estimated separately in each cluster. The AR test of a zero
-#'  treatment effect is the test of the instrument in the reduced form
-#'  regression of the outcome on the instrument, controls and spatial basis.
-#'  Its confidence set contains the treatment effects `b` where the instrument
-#'  is not significant at 5% in a regression of `outcome - b*treatment`, and it
-#'  is valid however weak the instrument. When the first stage is not
-#'  significant the set is unbounded: either two rays, shown as
-#'  `(-Inf, a] U [b, Inf)`, or the whole line, and its width is `Inf`. IM is
-#'  not valid for the AR test, so no IM version of it is given.
+#'  coefficients estimated separately in each cluster. SCPC inference on 2SLS
+#'  coefficients is described in [iv_scpc_regression()].
+#'
+#'  The AR tests use the reduced form approach of Chernozhukov and Hansen
+#'  (2008). The treatment effect `b` is rejected when the instrument is
+#'  significant at 5% in the regression of `outcome - b*treatment` on the
+#'  instrument, controls and spatial basis: its instrument coefficient is zero
+#'  when `b` is the true effect. Any valid test of a regression coefficient can
+#'  be used, here with HC, BCH, IM or SCPC inference. For IM the regression is
+#'  estimated separately in each cluster and the cluster coefficients are
+#'  tested with a t-test, which, unlike IM for 2SLS, needs no strong instrument
+#'  within each cluster. For SCPC the conditional critical value of Mueller and
+#'  Watson (2023) is used, as in [scpc_regression()]. At `b = 0` the test is the
+#'  test of the instrument in the reduced form of the outcome, which gives the
+#'  estimated and simulated p values of each AR row.
+#'
+#'  The confidence set is the treatment effects not rejected. It is valid
+#'  however weak the instrument, and is computed exactly: the coefficient and
+#'  variance of the instrument for `outcome - b*treatment` follow from the
+#'  reduced forms of the outcome and the treatment, so the set is where a
+#'  quadratic in `b` is not positive. It is bounded when the first stage is
+#'  significant with the same inference, and otherwise unbounded: either two
+#'  rays, shown as `(-Inf, a] U [b, Inf)`, or the whole line, and its width is
+#'  `Inf`.
 #'
 #'  `F` in each row of the results is the first stage F statistic of the
-#'  instrument with HC or BCH standard errors. It is not given (`NA`) for IM.
+#'  instrument with HC or BCH standard errors. It is not given (`NA`) for IM or
+#'  SCPC. For AR SCPC rows, `Clusters` gives `avc`.
+#'
+#'@references Chernozhukov, V. and Hansen, C. (2008). The reduced form: A simple
+#'  approach to inference with weak instruments. *Economics Letters*, 100(1),
+#'  68-71.
 #'
 #'@return  A list containing `Results`, which summarizes the placebo values
 #'  and gives the first stage F statistic for each kind of inference and number
-#'  of clusters (except IM), and `Spatial_Params`, giving the Moran statistic of the reduced
+#'  of clusters (except IM and SCPC), and `Spatial_Params`, giving the Moran statistic of the reduced
 #'  form residuals, the R2 of the treatment on the principal components and the
 #'  effective range and structure of the treatment noise, and the R2 of the
 #'  instrument on the treatment and the effective range and structure of the
 #'  instrument noise (`_Inst`). For each kind of inference choose the number of
 #'  clusters where the proportion of placebo regressions significant at 5% is
 #'  in the region of 0.05 to 0.07. Show the results with [placebo_table()],
-#'  using `type` to choose the BCH, IM or AR table.
+#'  using `type` to choose the BCH, IM, SCPC or AR table.
 #'@export
 #'
 #' @examples
@@ -85,9 +110,10 @@
 
 iv_placebo=function(fm,df,splines,pc_num,
                     nSim=1000,weights=NULL,max_clus=6,
-                    Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE){
+                    Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE,avc=NULL){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
+  if(!is.null(avc)) avc=check_avc(avc)
   prep=prepare_iv_data(fm,df,splines,pc_num,weights,max_clus)
   df=prep$df
   rhs=prep$rhs
@@ -128,10 +154,13 @@ rm(noise_sim,noise_inst)
 # k-medoids clusters from 3 up to max_clus
 hold_clus=iv_clusters(df,k_medoids,max_clus)
 
-# p values of placebo treatments (2SLS) and placebo instruments (AR) in simulated regressions.
-sim_out=iv_sim_p_values(df,Sim,eqs,hold_clus,nSim,Parallel,Sim_inst=Sim_inst)
+# SCPC spatial weights for each avc, which depend only on the locations.
+spcs=if(is.null(avc)) NULL else scpc_setup(df,avc)
 
-Results=iv_summary(df,eqs,hold_clus,sim_out) |>
+# p values of placebo treatments (2SLS) and of placebo instruments in the reduced form (AR).
+sim_out=iv_sim_p_values(df,Sim,eqs,hold_clus,nSim,Parallel,Sim_inst=Sim_inst,avc=avc,spcs=spcs)
+
+Results=iv_summary(df,eqs,hold_clus,sim_out,avc,spcs) |>
   dplyr::rename(`Plac p`= sim_p, `Plac 5%`=sim_05,
                 `Est p`=est_p,`CI Width`=width_ci)
 

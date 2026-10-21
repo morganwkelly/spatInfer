@@ -57,9 +57,11 @@ their product.
 Regressions with one endogenous treatment and one instrument, written as
 in fixest, `outcome ~ controls | treatment ~ instrument`, follow the
 same workflow with `iv_placebo()`, `iv_synth()`, and then
-`iv_regression()` and `iv_im_regression()`. These report 2SLS and
-Anderson-Rubin tests, along with the first stage F statistic. Display
-the results with `iv_regression_table()` and `iv_regression_plot()`.
+`iv_regression()`, `iv_im_regression()` and `iv_scpc_regression()`.
+These report 2SLS estimates and Anderson-Rubin tests, computed by the
+reduced form approach of Chernozhukov and Hansen (2008), with BCH, IM or
+SCPC inference, along with the first stage F statistic. Display the
+results with `iv_regression_table()` and `iv_regression_plot()`.
 
 ## Tutorial
 

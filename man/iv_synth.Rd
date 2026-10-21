@@ -15,7 +15,8 @@ iv_synth(
   Parallel = TRUE,
   exact_cholesky = TRUE,
   k_medoids = TRUE,
-  xy_interaction = FALSE
+  xy_interaction = FALSE,
+  avc = NULL
 )
 }
 \arguments{
@@ -55,15 +56,20 @@ approximation to generate medoids.}
 \item{xy_interaction}{Add the product of longitude and latitude to the
 quadratic trend in them that generates the synthetic outcome. Defaults to
 \code{FALSE}, where the trend is a quadratic in each separately.}
+
+\item{avc}{SCPC upper bounds on the average pairwise correlation for 2SLS
+and AR tests with SCPC inference, each between 0.001 and 0.99, as in
+\code{\link[=placebo_scpc]{placebo_scpc()}}. The default, \code{NULL}, gives no SCPC tests, which are the
+slowest.}
 }
 \value{
 A list containing \code{Results}, which gives the estimated and
 synthetic outcome p values and the first stage F statistic for each kind of
-inference and number of clusters (except IM), and \code{Spatial_Params}, giving the Moran
+inference and number of clusters (except IM and SCPC), and \code{Spatial_Params}, giving the Moran
 statistic of the reduced form residuals, the R2 of the outcome on a
 quadratic in longitude and latitude, and the effective range and structure
 of the synthetic noise. Show the results with \code{\link[=synth_table]{synth_table()}}, using \code{type}
-to choose the BCH, IM or AR table.
+to choose the BCH, IM, SCPC or AR table.
 }
 \description{
 \code{iv_synth()} tests the null hypothesis that the outcome of an instrumental
@@ -71,9 +77,9 @@ variable regression is spatial noise, and therefore unrelated to the
 treatment. The outcome is replaced by synthetic outcomes: a quadratic trend
 in longitude and latitude, plus noise with the same spatial correlation as
 the residuals from that trend. It gives the estimated and synthetic outcome
-significance levels of the treatment for 2SLS with HC, BCH and IM
-inference, and for the Anderson-Rubin (AR) test with HC and BCH
-inference, for each number of large clusters.
+significance levels of the treatment for 2SLS and for the Anderson-Rubin
+(AR) test, each with HC, BCH, IM and (optionally) SCPC inference, for each
+number of large clusters or SCPC bound \code{avc}.
 }
 \details{
 See \code{\link[=iv_placebo]{iv_placebo()}} for the inference methods and AR confidence sets.

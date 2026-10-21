@@ -107,7 +107,7 @@ test_that("combined_table() picks one row of each placebo and adds its synth p v
   expect_error(combined_table(g("placebo"), g("synth_im"), 4), "uses BCH but synth 1 uses IM")
   expect_error(combined_table(g("placebo"), g("synth"), c(4, 5)), "same length")
   expect_error(combined_table(g("synth"), g("synth"), 4), "is not the output of placebo")
-  expect_error(combined_table(g("iv_placebo"), g("iv_synth"), 4), "does not take iv_placebo")
+  expect_error(combined_table(g("iv_placebo"), g("iv_synth"), 4), "use iv_combined_table")
 })
 
 # Results objects with the HC row and n_clus cluster rows, as returned by placebo() and synth().

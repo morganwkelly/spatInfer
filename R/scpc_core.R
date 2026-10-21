@@ -320,45 +320,25 @@ scpc_ln_Oms=function(S,c0,cmax,W,random_t,capM=1000000L){
 ######unweighted (all ones here), which gives the same results only in unweighted regressions.
 scpc_cond_weights=function(w) sqrt(w)
 
-######SCPC estimate, standard error, t statistic, p value and 95% confidence interval of the
-######coefficients coefs (positions in coef(fit)) of a feols regression, given the spatial
-######weights spc from scpc_spatial() for the same observations. The approximate method for
-######large samples draws random numbers for each coefficient in turn, so all coefficients
-######up to the last one wanted are computed then.
-scpc_coef_stats=function(fit,spc,coefs){
-  X=stats::model.matrix(fit)
-  coef_vec=stats::coef(fit)
-  X=X[,names(coef_vec),drop=FALSE]
+######Correlation matrices of conditional SCPC for the coefficients coefs (positions in the columns
+######of X) of a regression on X with weights w: the spatial weights of spc projected off the
+######regressors, which are rescaled by scpc_cond_weights(w), and weighted by each coefficient's
+######weights on the observations. They depend on the regressors and locations but not on the
+######outcome. The approximate method for large samples draws random numbers for each coefficient
+######in turn, so all coefficients up to the last one wanted are computed then.
+scpc_cond_Oms=function(X,w,spc,coefs){
   n=nrow(X)
-  w=stats::weights(fit)
-  if(is.null(w)) w=rep(1,n)
-  ##Influence of each observation on the coefficients, and the coefficients' weights on
-  ##the regressors. Conditional SCPC uses the regression rescaled by scpc_cond_weights(w).
-  XWXinv=solve(crossprod(X,w*X))
-  infl=n*XWXinv%*%t(X*(w*stats::resid(fit)))
   cw=scpc_cond_weights(w)
-  xw=n*XWXinv%*%t(X*cw)
-
+  xw=n*solve(crossprod(X,w*X))%*%t(X*cw)
   Wfin=spc$Wfin
-  q=ncol(Wfin)-1
   perm=spc$perm
   random_state=spc$random_state
   Xr=if("(Intercept)"%in%colnames(X)) X else cbind(`(Intercept)`=1,X)
   qrX=qr((cw*Xr)[perm,,drop=FALSE],tol=1e-10)
   if(qrX$rank<ncol(X)) stop("SCPC regressors are collinear.",call.=FALSE)
 
-  out=matrix(NA_real_,length(coefs),6)
+  out=vector("list",length(coefs))
   for(j in if(spc$large_n) seq_len(max(coefs)) else coefs){
-    coef_j=coef_vec[[j]]
-    wj=(infl[j,]+coef_j)[perm]
-    denom=sqrt(sum((t(Wfin[,-1,drop=FALSE])%*%wj)^2))
-    if(!is.finite(denom)||denom<=sqrt(.Machine$double.eps))
-      stop("SCPC variance projection is degenerate.",call.=FALSE)
-    tau_u=as.numeric(sqrt(q)*crossprod(Wfin[,1],wj)/denom)
-    SE=as.numeric(denom/(sqrt(q)*sqrt(n)))
-    p_u=scpc_maxrp(spc$Omsfin,q,abs(tau_u)/sqrt(q))$max
-
-    ##Conditional SCPC: W projected off the regressors.
     xj=xw[j,perm]
     xjs=sign(xj)
     Wx=Wfin
@@ -373,10 +353,47 @@ scpc_coef_stats=function(fit,spc,coefs){
     }else{
       Omsx=scpc_Oms(spc$distmat,spc$c0,spc$cmax,Wx)
     }
-    if(!j%in%coefs) next
-    p=max(p_u,scpc_maxrp(Omsx,q,abs(tau_u)/sqrt(q))$max)
-    cv=max(spc$cvfin,scpc_cv(Omsx,q,0.05))
-    out[match(j,coefs),]=c(coef_j,SE,tau_u,p,coef_j-cv*SE,coef_j+cv*SE)
+    if(j%in%coefs) out[[match(j,coefs)]]=Omsx
+  }
+  return(out)
+}
+
+######SCPC estimate, standard error, t statistic, p value and 95% confidence interval of the
+######coefficients coefs (positions in coef(fit)) of a feols regression, given the spatial
+######weights spc from scpc_spatial() for the same observations.
+######
+######For a 2SLS regression X is the second stage design, with the treatment replaced by its first
+######stage fitted values, and the residuals are those of the structural equation. 2SLS is least
+######squares of the outcome on this design, so the coefficients' influence on the observations is
+######computed as for least squares, and conditional SCPC conditions on this design.
+scpc_coef_stats=function(fit,spc,coefs){
+  X=stats::model.matrix(fit,type=if(isTRUE(fit$is_iv)) "iv.rhs2" else "rhs")
+  coef_vec=stats::coef(fit)
+  X=X[,names(coef_vec),drop=FALSE]
+  n=nrow(X)
+  w=stats::weights(fit)
+  if(is.null(w)) w=rep(1,n)
+  ##Influence of each observation on the coefficients. Conditional SCPC uses the regression
+  ##rescaled by scpc_cond_weights(w).
+  infl=n*solve(crossprod(X,w*X))%*%t(X*(w*stats::resid(fit)))
+  Omsx=scpc_cond_Oms(X,w,spc,coefs)
+
+  Wfin=spc$Wfin
+  q=ncol(Wfin)-1
+  out=matrix(NA_real_,length(coefs),6)
+  for(k in seq_along(coefs)){
+    j=coefs[k]
+    coef_j=coef_vec[[j]]
+    wj=(infl[j,]+coef_j)[spc$perm]
+    denom=sqrt(sum((t(Wfin[,-1,drop=FALSE])%*%wj)^2))
+    if(!is.finite(denom)||denom<=sqrt(.Machine$double.eps))
+      stop("SCPC variance projection is degenerate.",call.=FALSE)
+    tau_u=as.numeric(sqrt(q)*crossprod(Wfin[,1],wj)/denom)
+    SE=as.numeric(denom/(sqrt(q)*sqrt(n)))
+    p_u=scpc_maxrp(spc$Omsfin,q,abs(tau_u)/sqrt(q))$max
+    p=max(p_u,scpc_maxrp(Omsx[[k]],q,abs(tau_u)/sqrt(q))$max)
+    cv=max(spc$cvfin,scpc_cv(Omsx[[k]],q,0.05))
+    out[k,]=c(coef_j,SE,tau_u,p,coef_j-cv*SE,coef_j+cv*SE)
   }
   dimnames(out)=list(names(coef_vec)[coefs],c("Coef","Std_Err","t","p","lower","upper"))
   return(out)

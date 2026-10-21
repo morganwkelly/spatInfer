@@ -116,7 +116,7 @@ check_combined_input=function(x,p_col,arg,i){
          if(arg=="placebos") "placebo(), placebo_im() or placebo_scpc()"
          else "synth(), synth_im() or synth_scpc()",".", call.=FALSE)
   if(is_iv_results(x$Results))
-    stop("combined_table() does not take iv_placebo() or iv_synth() results; use placebo_table() and synth_table().",
+    stop("combined_table() does not take iv_placebo() or iv_synth() results; use iv_combined_table().",
          call.=FALSE)
 }
 
@@ -130,23 +130,26 @@ check_same_regression=function(xs){
          call.=FALSE)
 }
 
+#####Row of results whose SE label is `se` and whose clusters or avc (the second column, stored as
+#####character with "." for HC) equal `value`. value is NA for HC rows, which have no level.
+pick_row=function(results,se,value){
+  level=results[[2]]
+  rows=results$SE==se
+  if(!is.na(value)) rows=rows & (abs(suppressWarnings(as.numeric(level))-value)<1e-8) %in% TRUE
+  rows=which(rows %in% TRUE)
+  if(length(rows)==0){
+    available=paste(level[results$SE==se],collapse=", ")
+    stop("No ",se," row with ",names(results)[2]," = ",value,". Available values: ",available,".",
+         call.=FALSE)
+  }
+  results[rows[1],,drop=FALSE]
+}
+
 #####Row of a placebo whose SE label is `se` and whose clusters or avc equal `value` (any value for
 #####HC), with the synth p value of the matching synth row.
 combined_row=function(plbo,syn,se,value){
-  pick=function(results){
-    level=results[[2]]   #Clusters or avc, stored as character with "." for HC
-    rows=results$SE==se
-    if(se!="HC") rows=rows & (abs(suppressWarnings(as.numeric(level))-value)<1e-8) %in% TRUE
-    rows=which(rows %in% TRUE)
-    if(length(rows)==0){
-      available=paste(level[results$SE==se],collapse=", ")
-      stop("No ",se," row with ",names(results)[2]," = ",value,". Available values: ",available,".",
-           call.=FALSE)
-    }
-    results[rows[1],,drop=FALSE]
-  }
-  row=pick(plbo$Results)
-  row$`Synth p`=pick(syn$Results)$`Synth p`
+  row=pick_row(plbo$Results,se,value)
+  row$`Synth p`=pick_row(syn$Results,se,value)$`Synth p`
   names(row)[2]="Level"
   row[,c("SE","Level","Est p","Plac p","Plac 5%","Synth p","CI Width","CI")]
 }

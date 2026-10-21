@@ -8,10 +8,12 @@
 #' @param caption An optional caption for the table.
 #' @param type For results from [iv_placebo()], the table shown: `"BCH"` (the
 #'   default) for 2SLS with HC and BCH inference, `"IM"` for 2SLS with HC and IM
-#'   inference, or `"AR"` for Anderson-Rubin tests with HC and BCH inference
-#'   (IM is not valid for AR).
+#'   inference, `"SCPC"` for 2SLS with HC and SCPC inference (when
+#'   [iv_placebo()] was given `avc`), or `"AR"` for Anderson-Rubin tests with
+#'   HC, BCH, IM and (when [iv_placebo()] was given `avc`) SCPC inference. In
+#'   SCPC rows `Clusters` gives `avc`.
 #'   Each HC and BCH row gives the first stage F statistic with its inference
-#'   and number of clusters; IM rows give none. Not used for other results.
+#'   and number of clusters; IM and SCPC rows give none. Not used for other results.
 #'
 #' @return Generates a tinytable object. This gives the regression and placebo p values and the proportion
 #' of placebo simulation significant at 5\% as the number of clusters, or the SCPC bound `avc`, increases.
@@ -39,7 +41,7 @@
 #' # placebo_table(plbo_iv, type="BCH"); placebo_table(plbo_iv, type="IM"); placebo_table(plbo_iv, type="AR")
 
 
-placebo_table=function(plbo, caption="", type=c("BCH","IM","AR")){
+placebo_table=function(plbo, caption="", type=c("BCH","IM","SCPC","AR")){
 ##plbo is output of `placebo()`, `placebo_im()`, `placebo_scpc()` or `iv_placebo()` functions.
 type=match.arg(type)
 is_iv=is_iv_results(plbo$Results)
@@ -63,7 +65,7 @@ plac_tab=tinytable::tt(rr,theme="striped",align="r",digits=3,
                 paste0("Splines=",ss$Splines,
                        ", PCs=",ss$PCs,"."
                 ),
-                if(is_iv) iv_notes(ss,type),
+                if(is_iv) iv_notes(ss,type,"SCPC" %in% rr$Adj),
                 if("avc" %in% names(rr))
                   "Estimated and placebo p values and proportion of placebo regressions significant at 5%, along
                 with confidence intervals, for different values of the SCPC average correlation bound avc.
@@ -83,7 +85,7 @@ plac_tab= plac_tab |>
 return(plac_tab)
 }
 
-#####Show the standard error label (HC, BCH, IM, SCPC, or AR HC and AR BCH for IV regressions)
+#####Show the standard error label (HC, BCH, IM, SCPC, or AR HC, AR BCH, ... for IV regressions)
 #####only where each block starts.
 blank_repeated_se=function(results){
   n=nrow(results)
@@ -94,16 +96,17 @@ blank_repeated_se=function(results){
 #####Results of iv_placebo() and iv_synth() have Anderson-Rubin rows.
 is_iv_results=function(results) "AR HC" %in% results$SE
 
-#####Rows of IV results shown in each table: 2SLS with HC and BCH, 2SLS with HC and IM, or
-#####Anderson-Rubin tests with HC and BCH, labelled by their inference alone. F is blank for IM.
+#####Rows of IV results shown in each table: 2SLS with HC and BCH, IM or SCPC, or Anderson-Rubin
+#####tests with HC, BCH, IM and SCPC, labelled by their inference alone. F is blank for IM and SCPC.
 iv_table_rows=function(results,type){
+  if(type=="SCPC"&&!"SCPC" %in% results$SE)
+    stop("There are no SCPC results: give avc to iv_placebo() or iv_synth().",call.=FALSE)
   rows=switch(type,
-              BCH=results$SE %in% c("HC","BCH"),
-              IM=results$SE %in% c("HC","IM"),
-              AR=startsWith(results$SE,"AR "))
+              AR=startsWith(results$SE,"AR "),
+              results$SE %in% c("HC",type))
   results=results[rows,,drop=FALSE]
   results$SE=sub("^AR ","",results$SE)
-  F=rep("",nrow(results))   #IM rows have no first stage F
+  F=rep("",nrow(results))   #IM and SCPC rows have no first stage F
   F[!is.na(results$F)]=trimws(format(results$F[!is.na(results$F)],digits=3))
   results$F=F
   rownames(results)=NULL
@@ -111,16 +114,21 @@ iv_table_rows=function(results,type){
 }
 
 #####Table notes for iv_placebo() and iv_synth(): the instrument noise of placebos, the first stage
-#####F statistics and the test shown.
-iv_notes=function(ss,type){
+#####F statistics and the test shown. scpc is TRUE when the table has SCPC rows.
+iv_notes=function(ss,type,scpc=FALSE){
   inst=if("R2_Inst" %in% names(ss))
     paste0("Noise instrument: Structure=",ss$Structure_Inst,
            ", Effective Range=",ss$Effective_Range_Inst,
            ", R2=",ss$R2_Inst,". ") else ""
   test=if(type=="AR")
-    "Anderson-Rubin tests of a zero treatment effect with HC and BCH inference, with 95% confidence sets that are valid however weak the instrument and can be unbounded."
-  else paste0("2SLS estimates with HC and ",type," inference.")
+    paste0("Anderson-Rubin tests of a zero treatment effect by the reduced form approach, with HC, BCH, IM",
+           if(scpc) " and SCPC inference (Clusters gives avc for SCPC)" else " inference",
+           ", with 95% confidence sets that are valid however weak the instrument and can be unbounded.")
+  else paste0("2SLS estimates with HC and ",type," inference",
+              if(type=="SCPC") " (Clusters gives avc for SCPC)" else "",".")
   paste0(inst,test," F is the first stage F statistic",
-         if(type=="IM") ", not given for IM" else "",
+         if(type %in% c("IM","SCPC")) paste0(", not given for ",type)
+         else if(type=="AR") paste0(", not given for IM",if(scpc) " or SCPC" else "")
+         else "",
          ".")
 }

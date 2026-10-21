@@ -4,7 +4,7 @@
 \alias{synth_table}
 \title{Table of synthetic outcome significance levels.}
 \usage{
-synth_table(syn, caption = "", type = c("BCH", "IM", "AR"))
+synth_table(syn, caption = "", type = c("BCH", "IM", "SCPC", "AR"))
 }
 \arguments{
 \item{syn}{An object containing simulation results created by synth, synth_im, synth_scpc or iv_synth.}
@@ -12,7 +12,7 @@ synth_table(syn, caption = "", type = c("BCH", "IM", "AR"))
 \item{caption}{An optional caption for the table.}
 
 \item{type}{For results from \code{\link[=iv_synth]{iv_synth()}}, the table shown: \code{"BCH"} (the
-default), \code{"IM"} or \code{"AR"}, as in \code{\link[=placebo_table]{placebo_table()}}. Not used for other
+default), \code{"IM"}, \code{"SCPC"} or \code{"AR"}, as in \code{\link[=placebo_table]{placebo_table()}}. Not used for other
 results.}
 }
 \value{

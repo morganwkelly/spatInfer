@@ -8,6 +8,7 @@ iv_regression_table(
   orig = NULL,
   bch = NULL,
   im = NULL,
+  scpc = NULL,
   statistic = "conf.int",
   coef_omit = "Intercept|^PC[0-9]+$",
   gof_map = "nobs",
@@ -26,6 +27,8 @@ shown for it.}
 column is labelled "BCH" or "HC".}
 
 \item{im}{Output of \code{\link[=iv_im_regression]{iv_im_regression()}}.}
+
+\item{scpc}{Output of \code{\link[=iv_scpc_regression]{iv_scpc_regression()}}.}
 
 \item{statistic}{Passed to \code{\link[modelsummary:modelsummary]{modelsummary::modelsummary()}}. Defaults to 95\%
 confidence intervals; use for example \code{c("conf.int","p = {p.value}")} to add
@@ -48,15 +51,16 @@ chooses or the one set by \code{output}.
 }
 \description{
 \code{iv_regression_table()} makes a \code{\link[modelsummary:modelsummary]{modelsummary::modelsummary()}} table of
-instrumental variable regressions, with a column for each of the BCH and IM
-results supplied, optionally preceded by a column for the original
+instrumental variable regressions, with a column for each of the BCH, IM and
+SCPC results supplied, optionally preceded by a column for the original
 regression. Below the coefficients it gives, for each column, the first stage
 F statistic and the Anderson-Rubin (AR) p value and 95\% confidence set of the
 treatment effect, all with the inference and number of clusters of that
-column. Neither is given for IM, which is not valid for AR. Notes give the number of clusters.
+column. No first stage F is given for IM or SCPC. Notes give the number of
+clusters and \code{avc}.
 }
 \details{
-At least one of \code{orig}, \code{bch} and \code{im} must be given. The IM
+At least one of \code{orig}, \code{bch}, \code{im} and \code{scpc} must be given. The IM
 estimate is the mean of the 2SLS coefficients estimated in each cluster, so
 it differs from the other estimates.
 }
@@ -69,7 +73,8 @@ fm=d_sh_empl_mfg~l_shind_manuf_cbp+l_sh_popedu_c|d_tradeusch_pw~d_tradeotch_pw_l
 orig=fixest::feols(fm,china,weights=~timepwt48,vcov="hetero")
 iv_bch=iv_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
 iv_im=iv_im_regression(fm,china,splines=6,pc_num=8,clusters=4,weights="timepwt48")
-iv_regression_table(orig=orig,bch=iv_bch,im=iv_im)
-iv_regression_plot(orig=orig,bch=iv_bch,im=iv_im)
+iv_sc=iv_scpc_regression(fm,china,splines=6,pc_num=8,avc=0.05,weights="timepwt48")
+iv_regression_table(orig=orig,bch=iv_bch,im=iv_im,scpc=iv_sc)
+iv_regression_plot(orig=orig,bch=iv_bch,im=iv_im,scpc=iv_sc)
 }
 }

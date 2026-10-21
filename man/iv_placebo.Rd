@@ -14,7 +14,8 @@ iv_placebo(
   max_clus = 6,
   Parallel = TRUE,
   exact_cholesky = TRUE,
-  k_medoids = TRUE
+  k_medoids = TRUE,
+  avc = NULL
 )
 }
 \arguments{
@@ -50,25 +51,31 @@ the \code{BRISC} Cholesky approximation. This requires the \code{BRISC} package.
 
 \item{k_medoids}{For large datasets, set to \code{FALSE} to use a faster
 approximation to generate medoids.}
+
+\item{avc}{SCPC upper bounds on the average pairwise correlation for 2SLS
+and AR tests with SCPC inference, each between 0.001 and 0.99, as in
+\code{\link[=placebo_scpc]{placebo_scpc()}}. The default, \code{NULL}, gives no SCPC tests, which are the
+slowest.}
 }
 \value{
 A list containing \code{Results}, which summarizes the placebo values
 and gives the first stage F statistic for each kind of inference and number
-of clusters (except IM), and \code{Spatial_Params}, giving the Moran statistic of the reduced
+of clusters (except IM and SCPC), and \code{Spatial_Params}, giving the Moran statistic of the reduced
 form residuals, the R2 of the treatment on the principal components and the
 effective range and structure of the treatment noise, and the R2 of the
 instrument on the treatment and the effective range and structure of the
 instrument noise (\verb{_Inst}). For each kind of inference choose the number of
 clusters where the proportion of placebo regressions significant at 5\% is
 in the region of 0.05 to 0.07. Show the results with \code{\link[=placebo_table]{placebo_table()}},
-using \code{type} to choose the BCH, IM or AR table.
+using \code{type} to choose the BCH, IM, SCPC or AR table.
 }
 \description{
 \code{iv_placebo()} runs a spatial noise placebo test on an instrumental
 variable regression with one endogenous treatment and one instrument. It
 gives the estimated and placebo significance levels of the treatment for
-2SLS with HC, BCH and IM inference, and for the Anderson-Rubin (AR) test
-with HC and BCH inference, for each number of large clusters.
+2SLS and for the Anderson-Rubin (AR) test, each with HC, BCH, IM and
+(optionally) SCPC inference, for each number of large clusters or SCPC
+bound \code{avc}.
 
 The placebo treatment matches the spatial trends of the treatment by
 regressing it on the principal components chosen by \code{\link[=optimal_basis]{optimal_basis()}} and
@@ -82,18 +89,34 @@ strongly as the real one.
 }
 \details{
 BCH uses clustered standard errors, and IM a t-test of the
-coefficients estimated separately in each cluster. The AR test of a zero
-treatment effect is the test of the instrument in the reduced form
-regression of the outcome on the instrument, controls and spatial basis.
-Its confidence set contains the treatment effects \code{b} where the instrument
-is not significant at 5\% in a regression of \code{outcome - b*treatment}, and it
-is valid however weak the instrument. When the first stage is not
-significant the set is unbounded: either two rays, shown as
-\verb{(-Inf, a] U [b, Inf)}, or the whole line, and its width is \code{Inf}. IM is
-not valid for the AR test, so no IM version of it is given.
+coefficients estimated separately in each cluster. SCPC inference on 2SLS
+coefficients is described in \code{\link[=iv_scpc_regression]{iv_scpc_regression()}}.
+
+The AR tests use the reduced form approach of Chernozhukov and Hansen
+(2008). The treatment effect \code{b} is rejected when the instrument is
+significant at 5\% in the regression of \code{outcome - b*treatment} on the
+instrument, controls and spatial basis: its instrument coefficient is zero
+when \code{b} is the true effect. Any valid test of a regression coefficient can
+be used, here with HC, BCH, IM or SCPC inference. For IM the regression is
+estimated separately in each cluster and the cluster coefficients are
+tested with a t-test, which, unlike IM for 2SLS, needs no strong instrument
+within each cluster. For SCPC the conditional critical value of Mueller and
+Watson (2023) is used, as in \code{\link[=scpc_regression]{scpc_regression()}}. At \code{b = 0} the test is the
+test of the instrument in the reduced form of the outcome, which gives the
+estimated and simulated p values of each AR row.
+
+The confidence set is the treatment effects not rejected. It is valid
+however weak the instrument, and is computed exactly: the coefficient and
+variance of the instrument for \code{outcome - b*treatment} follow from the
+reduced forms of the outcome and the treatment, so the set is where a
+quadratic in \code{b} is not positive. It is bounded when the first stage is
+significant with the same inference, and otherwise unbounded: either two
+rays, shown as \verb{(-Inf, a] U [b, Inf)}, or the whole line, and its width is
+\code{Inf}.
 
 \code{F} in each row of the results is the first stage F statistic of the
-instrument with HC or BCH standard errors. It is not given (\code{NA}) for IM.
+instrument with HC or BCH standard errors. It is not given (\code{NA}) for IM or
+SCPC. For AR SCPC rows, \code{Clusters} gives \code{avc}.
 }
 \examples{
 \donttest{
@@ -111,4 +134,9 @@ Parallel=FALSE
 )
 placebo_table(plbo)
 }
+}
+\references{
+Chernozhukov, V. and Hansen, C. (2008). The reduced form: A simple
+approach to inference with weak instruments. \emph{Economics Letters}, 100(1),
+68-71.
 }

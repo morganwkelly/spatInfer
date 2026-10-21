@@ -47,6 +47,9 @@ iv_fixture_data <- function() {
 
 iv_fixture_fm <- d_sh_empl_mfg ~ l_shind_manuf_cbp + l_sh_popedu_c | d_tradeusch_pw ~ d_tradeotch_pw_lag
 
+# SCPC bounds for the Anderson-Rubin tests of the IV golden cases.
+iv_avc <- c(0.05, 0.1)
+
 run_iv <- function(fun, ..., data = iv_fixture_data()) {
   args <- utils::modifyList(c(list(fm = iv_fixture_fm, df = data), fixture_args), list(...))
   quietly(do.call(fun, args))
@@ -109,9 +112,10 @@ golden_cases <- list(
   placebo_scpc_weighted = function() {
     run_scpc(placebo_scpc, Parallel = FALSE, weights = "wt", data = fixture_data(TRUE))
   },
-  # IV cases were recorded when iv_placebo() and iv_synth() were added.
-  iv_placebo = function() run_iv(iv_placebo, Parallel = FALSE),
-  iv_synth = function() run_iv(iv_synth, Parallel = FALSE),
+  # IV cases were recorded when the Anderson-Rubin tests were redone by the reduced form
+  # approach, with IM and SCPC inference added.
+  iv_placebo = function() run_iv(iv_placebo, Parallel = FALSE, avc = iv_avc),
+  iv_synth = function() run_iv(iv_synth, Parallel = FALSE, avc = iv_avc),
   iv_placebo_weighted = function() {
     run_iv(iv_placebo, Parallel = FALSE, weights = "timepwt48")
   }

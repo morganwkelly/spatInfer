@@ -38,7 +38,8 @@ for (fork in c(FALSE, TRUE)) {
   test_that(paste("iv_placebo() and iv_synth() give identical results with", backend), {
     skip_parallel()
     local_backend(fork)
-    expect_identical(run_iv(iv_placebo, Parallel = TRUE), run_iv(iv_placebo, Parallel = FALSE))
+    expect_identical(run_iv(iv_placebo, Parallel = TRUE, avc = iv_avc),
+                     run_iv(iv_placebo, Parallel = FALSE, avc = iv_avc))
     expect_identical(run_iv(iv_synth, Parallel = TRUE), run_iv(iv_synth, Parallel = FALSE))
   })
 

@@ -7,7 +7,7 @@
 #' @param syn An object containing simulation results created by synth, synth_im, synth_scpc or iv_synth.
 #' @param caption An optional caption for the table.
 #' @param type For results from [iv_synth()], the table shown: `"BCH"` (the
-#'   default), `"IM"` or `"AR"`, as in [placebo_table()]. Not used for other
+#'   default), `"IM"`, `"SCPC"` or `"AR"`, as in [placebo_table()]. Not used for other
 #'   results.
 #'
 #' @return Generates a tinytable object. This gives the regression and synthetic outcome p values as the number of clusters, or the SCPC bound `avc`, increases.
@@ -33,7 +33,7 @@
 #' synth_table(synt, caption="Synthetic outcomes significance levels for single mothers variable.")
 
 
-synth_table=function(syn, caption="", type=c("BCH","IM","AR")){
+synth_table=function(syn, caption="", type=c("BCH","IM","SCPC","AR")){
 type=match.arg(type)
 is_iv=is_iv_results(syn$Results)
 if(is_iv) syn$Results=iv_table_rows(syn$Results,type)
@@ -60,7 +60,7 @@ syn_tab=tinytable::tt(rr,theme="striped",align="r",digits=3 ,
                   ", Splines=",ss$Splines,
                        ", PCs=",ss$PCs,"."
                 ),
-                if(is_iv) iv_notes(ss,type),
+                if(is_iv) iv_notes(ss,type,"SCPC" %in% rr$Adj),
                 if("avc" %in% names(rr))
                   "Estimated and synthetic outcome p values for different values of the SCPC average correlation bound avc.
                 R2 gives the explanatory power of a regression of the outcome on a quadratic in longitude and latitude."
