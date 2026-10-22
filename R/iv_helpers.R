@@ -185,15 +185,6 @@ iv_summary=function(df,eqs,hold_clus,sim_out,avc=NULL,spcs=NULL){
   return(out)
 }
 
-######Simulated SCPC p values with the draws where SCPC failed (NA) left out, and a warning.
-scpc_sim_p=function(sim_p,label,avc){
-  n_failed=sum(is.na(sim_p))
-  if(n_failed>0)
-    warning(label," could not be computed in ",n_failed," of ",length(sim_p),
-            " simulations for avc = ",avc,", which are left out.",call.=FALSE)
-  return(as.numeric(stats::na.omit(sim_p)))
-}
-
 ######Simulated p values for every draw in Sim (and Sim_inst for placebos), run in parallel if asked.
 ######spcs are the SCPC spatial weights for each avc, computed once from the locations.
 iv_sim_p_values=function(df,Sim,eqs,hold_clus,nSim,Parallel,Sim_inst=NULL,avc=NULL,spcs=NULL){
@@ -204,11 +195,4 @@ iv_sim_p_values=function(df,Sim,eqs,hold_clus,nSim,Parallel,Sim_inst=NULL,avc=NU
   }
   out=run_sims(nSim,sim_fun,Parallel,fixest_single_thread=TRUE)
   return(purrr::list_rbind(out))
-}
-
-
-######Clusters used by the IV tests: 3 up to max_clus k-medoids clusters, as a list of factors.
-iv_clusters=function(df,k_medoids,max_clus){
-  hold_clus=generate_clusters(df,k_medoids,max_clus)
-  return(as.list(hold_clus)[-1])
 }

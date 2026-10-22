@@ -14,7 +14,9 @@
 #'   clusters (`BCH` and `IM`) or the value of `avc` (`SCPC`) of the 2SLS row, for example
 #'   `c(BCH=7, IM=5, SCPC=0.04)`. Rows appear in this order. SCPC needs `avc` in [iv_placebo()]
 #'   and [iv_synth()].
-#' @param ar_select The same for the AR rows. Defaults to `select`.
+#' @param ar_select The same for the AR rows, which can use different inference methods, numbers of
+#'   clusters or values of `avc` from the 2SLS rows, for example `ar_select=c(BCH=6, IM=7)`.
+#'   Defaults to `select`.
 #' @param caption An optional caption for the table.
 #'
 #' @return Generates a tinytable object with the 2SLS and AR blocks. Each row gives the first stage
@@ -35,40 +37,26 @@
 #' plbo=iv_placebo(fm,china,splines=6,pc_num=13,nSim=100,weights="timepwt48",Parallel=FALSE,avc=0.04)
 #' syn=iv_synth(fm,china,splines=6,pc_num=13,nSim=100,weights="timepwt48",Parallel=FALSE,avc=0.04)
 #' iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04))
+#' # Different choices for the AR rows.
+#' iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04),ar_select=c(BCH=5,IM=6,SCPC=0.04))
 #' }
 
 iv_combined_table=function(plbo, syn, select, ar_select=select, caption=""){
-check_iv_combined_input(plbo,"Plac p","plbo","iv_placebo()")
-check_iv_combined_input(syn,"Synth p","syn","iv_synth()")
+check_combined_input(plbo,"Plac p","plbo","iv_placebo()",iv=TRUE)
+check_combined_input(syn,"Synth p","syn","iv_synth()",iv=TRUE)
 check_same_regression(list(plbo,syn))
-check_iv_select(select,"select")
-check_iv_select(ar_select,"ar_select")
+check_select(select,"select")
+check_select(ar_select,"ar_select")
 
-#####Block of rows of one test: HC, then the chosen row of each inference method, with the synth
-#####p value of the same row. prefix is "" for 2SLS and "AR " for Anderson-Rubin.
-block=function(sel,prefix){
-  rows=lapply(c("HC",names(sel)),function(se){
-    value=if(se=="HC") NA else sel[[se]]
-    row=pick_row(plbo$Results,paste0(prefix,se),value)
-    row$`Synth p`=pick_row(syn$Results,paste0(prefix,se),value)$`Synth p`
-    row$SE=se
-    names(row)[2]="Level"
-    row[,c("SE","Level","F","Est p","Plac p","Plac 5%","Synth p","CI Width","CI")]
-  })
-  do.call(rbind,rows)
-}
-wald=block(select,"")
-ar=block(ar_select,"AR ")
+wald=combined_rows(plbo,syn,select,"")
+ar=combined_rows(plbo,syn,ar_select,"AR ")
 rr=rbind(wald,ar)
 rownames(rr)=NULL
-F=rep("",nrow(rr))   #IM and SCPC rows have no first stage F
-F[!is.na(rr$F)]=trimws(format(rr$F[!is.na(rr$F)],digits=3))
-rr$F=F
+rr$F=format_F(rr$F)   #IM and SCPC rows have no first stage F
 rr=rr |>
   dplyr::rename(Adj=SE) |>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("CI Width"),~{round(.x,3)}))   #CI widths keep their significant digits
-methods=union(names(select),names(ar_select))
-names(rr)[2]=if(all(methods=="SCPC")) "avc" else if("SCPC" %in% methods) "Clusters/avc" else "Clusters"
+names(rr)[2]=level_name(union(names(select),names(ar_select)))
 
 sp=plbo$Spatial_Params|>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
@@ -111,20 +99,4 @@ comb_tab= comb_tab |>
   tinytable::group_tt(i=stats::setNames(list(1,nrow(wald)+1),c("2SLS","Anderson-Rubin")))
 
 return(comb_tab)
-}
-
-#####iv_placebo() or iv_synth() results, with the expected simulated p value column.
-check_iv_combined_input=function(x,p_col,arg,fun){
-  ok=is.list(x) && is.data.frame(x$Results) && p_col %in% names(x$Results) &&
-    is_iv_results(x$Results) && !is.null(x$Spatial_Params)
-  if(!ok) stop("`",arg,"` is not the output of ",fun,".",call.=FALSE)
-}
-
-#####Named numbers of clusters or avc values, one for each of BCH, IM and SCPC at most.
-check_iv_select=function(sel,arg){
-  ok=is.numeric(sel) && length(sel)>0 && !anyNA(sel) && !is.null(names(sel)) &&
-    all(names(sel) %in% c("BCH","IM","SCPC")) && !anyDuplicated(names(sel))
-  if(!ok)
-    stop("`",arg,"` must be a named vector of numbers of clusters or avc values, such as c(BCH=7, IM=5, SCPC=0.04).",
-         call.=FALSE)
 }

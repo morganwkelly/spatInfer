@@ -81,6 +81,12 @@ generate_clusters=function(df,k_medoids,max_clus){
   return(hold_clus)
 }
 
+######Clusters used by the placebo and synth tests: 3 up to max_clus k-medoids clusters, as a list of factors.
+sim_clusters=function(df,k_medoids,max_clus){
+  hold_clus=generate_clusters(df,k_medoids,max_clus)
+  return(as.list(hold_clus)[-1])
+}
+
 ######Spatial trend of the outcome for synthetic outcome tests: a quadratic in longitude and
 ######latitude, with their product added when xy_interaction is TRUE.
 synth_trend=function(df,xy_interaction){
@@ -114,20 +120,6 @@ pc=pc[1:pc_num]   #keep number than minimize BIC
 return(pc)
 }
 
-
-hc_sim=function(j,Sim,eq_sim,df){
-  ##get simulated regression results with hetero standard errors
-  sim=Sim[,j]
-  df1=cbind.data.frame(sim,df)
-  rob_hc=fixest::feols(eq_sim,data=df1,
-                       weights = ~wts,
-                       vcov="hetero")
-
-  sim_res2=data.frame(
-    hc_p=rob_hc$coeftable[treatment_term(rob_hc),4]
-  )
-  return(sim_res2)
-}
 
 #############search for mle ests of matern params and generate simulated noise with these parameters.
 #############For large datasets use exact_cholesky=FALSE which uses BRISC.
@@ -214,14 +206,6 @@ Noise_Sim=function(df,lm_res,nSim,exact_cholesky,Parallel,seeds=c(1234,123),tren
   return(list(Sim=Sim,matern_params=matern_params))
 }
 
-######Calculate p_values for simulated data, using HC standard errors.
-hc_p_values=function(Sim,eq_sim,df,nSim,Parallel){
-  hc_out=run_sims(nSim,function(j) hc_sim(j,Sim,eq_sim,df),Parallel,fixest_single_thread=TRUE)
-  hc_out=purrr::list_rbind(hc_out)
-
-  return(hc_out)
-}
-
 ######Number of parallel workers: all cores but two, and at least one.
 ######detectCores() can return NA, in which case one worker is used.
 n_workers=function(){
@@ -282,24 +266,6 @@ run_sims=function(n,fun,Parallel,fixest_single_thread){
   return(out)
 }
 
-######p values of simulated regressions for each set of clusters in hold_clus.
-######The clusters are stored in column clust_name, which sim_fun uses.
-cluster_p_values=function(Sim,eq_sim,df,hold_clus,nSim,Parallel,sim_fun,clust_name){
-  clus_p=list()
-  for (l in 1:ncol(hold_clus)){
-    df2=df
-    df2[[clust_name]]=hold_clus[,l]
-    clus_out=run_sims(nSim,function(j) sim_fun(j,Sim,eq_sim,df2),Parallel,fixest_single_thread=TRUE)
-    clus_out=purrr::list_rbind(clus_out)
-    clus_p[[l]]=clus_out
-  }
-  names(clus_p)=paste0("clus_",2:(length(clus_p)+1))
-  clus_p=purrr::list_cbind(clus_p)
-  return(clus_p)
-}
-
-
-######Summary rows shared by summary_bch() and summary_im().
 ######Confidence interval of the treatment coefficient, in the units of the coefficient.
 coef_ci=function(estimate){
   ci=confint(estimate)
@@ -327,22 +293,75 @@ ci_summary_row=function(SE,Clusters,est_p,ci,sim_p_values){
   return(data.frame(SE=SE,Clusters=Clusters,est_p,sim_p,sim_05,width_ci,CI=conf_int))
 }
 
-######HC row: baseline estimate with real variables and heteroskedasticity robust standard errors.
-hc_summary_row=function(df,eq_est,hc_out){
-  estimate=fixest::feols(eq_est,data=df,
-                         weights = ~wts,
-                         vcov="hetero")
-  return(ci_summary_row("HC",0,estimate$coeftable[treatment_term(estimate),4],coef_ci(estimate),hc_out[,1]))
+######Show "." as the number of clusters of HC rows, and round. CI widths keep their significant digits.
+finish_summary=function(rows){
+  out=purrr::list_rbind(rows) |>
+    dplyr::mutate(Clusters=ifelse(Clusters==0,".",as.character(Clusters))) |>
+    dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("width_ci"), \(x) round(x, 3)))
+  rownames(out)=NULL
+  return(out)
 }
 
-######Drop the two cluster row, put HC first, and round. CI widths keep their significant digits.
-finish_summary=function(sim_summ){
-  sim_summ=purrr::list_rbind(sim_summ) |>
-    dplyr::filter(Clusters!=2) |>
-    dplyr::arrange(Clusters) |>
-    dplyr::mutate(Clusters=ifelse(Clusters==0,".",Clusters)) |>
-    dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("width_ci"), \(x) round(x, 3)))
-  return(sim_summ)
+######p values of the treatment (or placebo) in simulated regression j with HC standard errors,
+######with BCH and IM for each set of clusters in hold_clus, and with SCPC for each avc with spatial
+######weights spcs. The regression is estimated once: its coefficients do not depend on the inference.
+######A draw where SCPC fails gives NA SCPC p values. Names are hc, bch_<clusters>, im_<clusters>
+######and scpc_<avc>.
+ols_sim=function(j,Sim,eq_sim,df,hold_clus,avc=NULL,spcs=scpc_setup(df,avc)){
+  df1=cbind.data.frame(sim=Sim[,j],df)
+  fit=fixest::feols(eq_sim,data=df1,weights=~wts,vcov="hetero")
+  term=treatment_term(fit)
+  p=c(hc=unname(fixest::pvalue(fit)[term]))
+  for(clust in hold_clus){
+    G=nlevels(clust)
+    p[paste0("bch_",G)]=fixest::pvalue(fit,cluster=clust)[[term]]
+    p[paste0("im_",G)]=im_t_test(im_cluster_coefs(eq_sim,df1,clust))$p.value
+  }
+  if(length(avc)>0)
+    p[paste0("scpc_",avc)]=tryCatch(scpc_stats(fit,df1,avc,spcs)[,"p"],
+                                    error=function(e) rep(NA_real_,length(avc)))
+  return(as.data.frame(as.list(p)))
+}
+
+######Simulated p values for every draw in Sim, run in parallel if asked.
+ols_sim_p_values=function(df,Sim,eq_sim,hold_clus,nSim,Parallel,avc=NULL,spcs=NULL){
+  out=run_sims(nSim,function(j) ols_sim(j,Sim,eq_sim,df,hold_clus,avc,spcs),Parallel,fixest_single_thread=TRUE)
+  return(purrr::list_rbind(out))
+}
+
+######Results for the actual data: an HC row, BCH and IM rows for each set of clusters in hold_clus,
+######and an SCPC row for each avc (held in Clusters), each with the estimated p value and confidence
+######interval of the treatment, and the share of simulated p values below the estimated p value
+######(sim_p) and below 0.05 (sim_05). sim_out holds the simulated p values from ols_sim().
+ols_summary=function(df,eq_est,hold_clus,sim_out,avc=NULL,spcs=NULL){
+  fit=fixest::feols(eq_est,data=df,weights=~wts,vcov="hetero")
+  term=treatment_term(fit)
+  hc=list(ci_summary_row("HC",0,fit$coeftable[term,4],coef_ci(fit),sim_out$hc))
+  bch=im=list()
+  for(clust in hold_clus){
+    G=nlevels(clust)
+    k=as.character(G)
+    df1=df
+    df1$clust=clust
+    estimate=fixest::feols(eq_est,data=df1,weights=~wts,vcov=fixest::vcov_cluster(cluster=~clust))
+    bch[[k]]=ci_summary_row("BCH",G,estimate$coeftable[term,4],coef_ci(estimate),sim_out[[paste0("bch_",G)]])
+    im_coefs=im_cluster_coefs(eq_est,df,clust)
+    n_missing=G-sum(is.finite(im_coefs$estimate))
+    if(n_missing>0)
+      warning("IM with ",G," clusters: the treatment coefficient could not be estimated in ",
+              n_missing," cluster(s), which are left out of the t-test.",call.=FALSE)
+    im_test=im_t_test(im_coefs)
+    im[[k]]=ci_summary_row("IM",G,im_test$p.value,im_test$conf.int[1:2],sim_out[[paste0("im_",G)]])
+  }
+  scpc=list()
+  if(length(avc)>0){
+    est=scpc_stats(fit,df,avc,spcs)
+    scpc=lapply(seq_along(avc),function(k){
+      sim_p=scpc_sim_p(sim_out[[paste0("scpc_",avc[k])]],"SCPC",avc[k])
+      ci_summary_row("SCPC",avc[k],unname(est[k,"p"]),unname(est[k,c("lower","upper")]),sim_p)
+    })
+  }
+  return(finish_summary(c(hc,bch,im,scpc)))
 }
 
 #Moran z test for autocorr in residuals. Uses near_neigh nearest neighbours.

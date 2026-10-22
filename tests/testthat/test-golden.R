@@ -11,19 +11,14 @@ test_that("basis_regression() estimates are unchanged", {
   expect_golden("basis_regression_weighted")
 })
 
-test_that("placebo() and placebo_im() results are unchanged", {
+test_that("placebo() and synth() results are unchanged", {
   expect_golden("placebo")
-  expect_golden("placebo_im")
-})
-
-test_that("synth() and synth_im() results are unchanged", {
   expect_golden("synth")
-  expect_golden("synth_im")
 })
 
 test_that("weighted simulation results are unchanged", {
   expect_golden("placebo_weighted")
-  expect_golden("synth_im_weighted")
+  expect_golden("synth_weighted")
 })
 
 test_that("clara clustering (k_medoids = FALSE) results are unchanged", {

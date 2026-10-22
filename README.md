@@ -27,18 +27,18 @@ your results are reliable.
 
 1.  `optimal_basis()` gives the spatial basis to include in regressions.
 
-2.  `placebo()`, `placebo_im()` and `placebo_scpc()` estimate treatment
-    significance from spatial noise placebos and select the tuning
-    parameter of each estimator: the number of clusters for
-    Bester-Conley-Hansen and Ibragimov-Mueller, and the bound on average
-    correlation `avc` for Mueller-Watson (SCPC). `placebo_table()`
-    displays the results.
+2.  `placebo()` estimates treatment significance from spatial noise
+    placebos with every estimator in one call, and selects the tuning
+    parameter of each: the number of clusters for Bester-Conley-Hansen
+    and Ibragimov-Mueller, and the bound on average correlation `avc`
+    for Mueller-Watson (SCPC). `placebo_table()` displays the results in
+    one table.
 
-3.  `synth()`, `synth_im()` and `synth_scpc()` test the null hypothesis
-    that the outcome is trending spatial noise, and therefore
-    independent of the treatment. `synth_table()` displays the results,
-    and `combined_table()` shows the chosen row of each placebo test
-    with its synthetic outcome p value.
+3.  `synth()` tests the null hypothesis that the outcome is trending
+    spatial noise, and therefore independent of the treatment.
+    `synth_table()` displays the results, and `combined_table()` shows
+    the chosen row of each estimator with its placebo and synthetic
+    outcome p values.
 
 4.  `basis_regression()`, `im_regression()` and `scpc_regression()`
     estimate the regression with each procedure, and
@@ -56,17 +56,20 @@ their product.
 
 Regressions with one endogenous treatment and one instrument, written as
 in fixest, `outcome ~ controls | treatment ~ instrument`, follow the
-same workflow with `iv_placebo()`, `iv_synth()`, and then
-`iv_regression()`, `iv_im_regression()` and `iv_scpc_regression()`.
-These report 2SLS estimates and Anderson-Rubin tests, computed by the
-reduced form approach of Chernozhukov and Hansen (2008), with BCH, IM or
-SCPC inference, along with the first stage F statistic. Display the
-results with `iv_regression_table()` and `iv_regression_plot()`.
+same workflow with `iv_placebo()`, `iv_synth()` and
+`iv_combined_table()`, and then `iv_regression()`, `iv_im_regression()`
+and `iv_scpc_regression()`. These report 2SLS estimates and
+Anderson-Rubin tests, computed by the reduced form approach of
+Chernozhukov and Hansen (2008), with BCH, IM or SCPC inference, along
+with the first stage F statistic. Display the results with
+`iv_regression_table()` and `iv_regression_plot()`.
 
 ## Tutorial
 
-A step by step tutorial can be found
-[here](https://morganwkelly.github.io/spatInfer_tutor/)
+A step by step tutorial for least squares regressions can be found
+[here](https://morganwkelly.github.io/spatInfer_tutor/), and one for
+instrumental variable regressions
+[here](https://morganwkelly.github.io/spatInfer_tutor/tutorial_iv.html).
 
 ## Installation
 

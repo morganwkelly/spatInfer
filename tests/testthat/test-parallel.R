@@ -20,19 +20,8 @@ for (fork in c(FALSE, TRUE)) {
   test_that(paste("placebo() gives identical results with", backend), {
     skip_parallel()
     local_backend(fork)
-    expect_identical(run_sim(placebo, Parallel = TRUE), run_sim(placebo, Parallel = FALSE))
-  })
-
-  test_that(paste("placebo_im() gives identical results with", backend), {
-    skip_parallel()
-    local_backend(fork)
-    expect_identical(run_sim(placebo_im, Parallel = TRUE), run_sim(placebo_im, Parallel = FALSE))
-  })
-
-  test_that(paste("placebo_scpc() gives identical results with", backend), {
-    skip_parallel()
-    local_backend(fork)
-    expect_identical(run_scpc(placebo_scpc, Parallel = TRUE), run_scpc(placebo_scpc, Parallel = FALSE))
+    expect_identical(run_sim(placebo, Parallel = TRUE, avc = fixture_avc),
+                     run_sim(placebo, Parallel = FALSE, avc = fixture_avc))
   })
 
   test_that(paste("iv_placebo() and iv_synth() give identical results with", backend), {

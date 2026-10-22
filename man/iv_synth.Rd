@@ -59,7 +59,7 @@ quadratic trend in them that generates the synthetic outcome. Defaults to
 
 \item{avc}{SCPC upper bounds on the average pairwise correlation for 2SLS
 and AR tests with SCPC inference, each between 0.001 and 0.99, as in
-\code{\link[=placebo_scpc]{placebo_scpc()}}. The default, \code{NULL}, gives no SCPC tests, which are the
+\code{\link[=placebo]{placebo()}}. The default, \code{NULL}, gives no SCPC tests, which are the
 slowest.}
 }
 \value{
@@ -68,8 +68,8 @@ synthetic outcome p values and the first stage F statistic for each kind of
 inference and number of clusters (except IM and SCPC), and \code{Spatial_Params}, giving the Moran
 statistic of the reduced form residuals, the R2 of the outcome on a
 quadratic in longitude and latitude, and the effective range and structure
-of the synthetic noise. Show the results with \code{\link[=synth_table]{synth_table()}}, using \code{type}
-to choose the BCH, IM, SCPC or AR table.
+of the synthetic noise. Show the results with \code{\link[=synth_table]{synth_table()}}, which gives
+the 2SLS and AR results in one table.
 }
 \description{
 \code{iv_synth()} tests the null hypothesis that the outcome of an instrumental

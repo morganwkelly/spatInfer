@@ -2,6 +2,28 @@
 
 ## New features
 
+* `placebo()` and `synth()` now run the placebo and synthetic outcome tests
+  with HC, BCH, IM and SCPC inference in one call, as `iv_placebo()` and
+  `iv_synth()` do. Each simulated regression is estimated once for every
+  inference method. `Results` has an HC row, BCH and IM rows for 3 up to
+  `max_clus` clusters and, for each SCPC bound given in the new `avc`
+  argument, an SCPC row, whose `Clusters` holds `avc`. The default,
+  `avc = NULL`, gives no SCPC rows. `placebo_im()`, `placebo_scpc()`,
+  `synth_im()` and `synth_scpc()` are removed: their results are the IM and
+  SCPC rows of `placebo()` and `synth()`, which agree with them exactly. Their
+  `Coefs`, `Estimates` and `Pseudo SE` outputs are dropped, and the
+  `Spatial_Params` of `placebo()` now include `N`.
+
+* `placebo_table()` and `synth_table()` show every inference method in a single
+  table, with a `Clusters/avc` column when there are SCPC rows. For
+  `iv_placebo()` and `iv_synth()` results the table has a block of 2SLS rows
+  followed by a block of Anderson-Rubin rows; the `type` argument is removed.
+
+* `combined_table()` now takes one `placebo()` and the matching `synth()`, and
+  a named `select` like that of `iv_combined_table()`, for example
+  `select = c(BCH = 7, IM = 5, SCPC = 0.04)`, instead of lists of placebos and
+  synths.
+
 * `combined_table()` summarises several placebo and synthetic outcome tests
   in one table: an HC row, then for each placebo the row with a chosen number
   of clusters or SCPC `avc` value, with the synthetic outcome p value of the
@@ -27,8 +49,7 @@
   plus its own spatial noise. Each HC and BCH row of the results gives the
   first stage F statistic with its own inference and number of clusters; IM
   and SCPC rows give none.
-  `placebo_table()` and `synth_table()` show the results in separate BCH, IM,
-  SCPC and AR tables, chosen with their new `type` argument, and `optimal_basis()`
+  `placebo_table()` and `synth_table()` show the results, and `optimal_basis()`
   and `plot_basis()` accept IV formulas.
 
 * `iv_regression()` estimates the spatial basis IV regression by 2SLS with
@@ -44,8 +65,9 @@
 * `iv_combined_table()` is the IV version of `combined_table()`: from one
   `iv_placebo()` and the matching `iv_synth()` it shows the HC row and the
   chosen BCH, IM and SCPC rows, with their synthetic outcome p values, in a
-  2SLS block and an Anderson-Rubin block (`select`, and optionally
-  `ar_select`, e.g. `c(BCH=7, IM=5, SCPC=0.04)`).
+  2SLS block and an Anderson-Rubin block (`select`, e.g.
+  `c(BCH=7, IM=5, SCPC=0.04)`). `ar_select` gives the AR rows their own
+  inference methods, numbers of clusters or `avc`, and defaults to `select`.
 
 * `iv_regression_table()` and `iv_regression_plot()` compare an original IV
   regression with `iv_regression()`, `iv_im_regression()` and

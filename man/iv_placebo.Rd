@@ -54,7 +54,7 @@ approximation to generate medoids.}
 
 \item{avc}{SCPC upper bounds on the average pairwise correlation for 2SLS
 and AR tests with SCPC inference, each between 0.001 and 0.99, as in
-\code{\link[=placebo_scpc]{placebo_scpc()}}. The default, \code{NULL}, gives no SCPC tests, which are the
+\code{\link[=placebo]{placebo()}}. The default, \code{NULL}, gives no SCPC tests, which are the
 slowest.}
 }
 \value{
@@ -67,7 +67,7 @@ instrument on the treatment and the effective range and structure of the
 instrument noise (\verb{_Inst}). For each kind of inference choose the number of
 clusters where the proportion of placebo regressions significant at 5\% is
 in the region of 0.05 to 0.07. Show the results with \code{\link[=placebo_table]{placebo_table()}},
-using \code{type} to choose the BCH, IM, SCPC or AR table.
+which gives the 2SLS and AR results in one table.
 }
 \description{
 \code{iv_placebo()} runs a spatial noise placebo test on an instrumental

@@ -43,7 +43,7 @@
 #'  approximation to generate medoids.
 #'@param avc SCPC upper bounds on the average pairwise correlation for 2SLS
 #'  and AR tests with SCPC inference, each between 0.001 and 0.99, as in
-#'  [placebo_scpc()]. The default, `NULL`, gives no SCPC tests, which are the
+#'  [placebo()]. The default, `NULL`, gives no SCPC tests, which are the
 #'  slowest.
 #'@details BCH uses clustered standard errors, and IM a t-test of the
 #'  coefficients estimated separately in each cluster. SCPC inference on 2SLS
@@ -88,7 +88,7 @@
 #'  instrument noise (`_Inst`). For each kind of inference choose the number of
 #'  clusters where the proportion of placebo regressions significant at 5% is
 #'  in the region of 0.05 to 0.07. Show the results with [placebo_table()],
-#'  using `type` to choose the BCH, IM, SCPC or AR table.
+#'  which gives the 2SLS and AR results in one table.
 #'@export
 #'
 #' @examples
@@ -152,7 +152,7 @@ Spatial_Params=cbind.data.frame(Spatial_Params,N=nrow(df),Splines=splines,PCs=pc
 rm(noise_sim,noise_inst)
 
 # k-medoids clusters from 3 up to max_clus
-hold_clus=iv_clusters(df,k_medoids,max_clus)
+hold_clus=sim_clusters(df,k_medoids,max_clus)
 
 # SCPC spatial weights for each avc, which depend only on the locations.
 spcs=if(is.null(avc)) NULL else scpc_setup(df,avc)

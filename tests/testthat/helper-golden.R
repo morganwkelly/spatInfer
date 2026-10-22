@@ -31,12 +31,8 @@ run_sim <- function(fun, ..., data = fixture_data()) {
   quietly(do.call(fun, args))
 }
 
-# The SCPC functions take avc instead of max_clus.
-run_scpc <- function(fun, ..., data = fixture_data()) {
-  args <- utils::modifyList(c(list(fm = fixture_fm, df = data), fixture_args), list(...))
-  args$max_clus <- NULL
-  quietly(do.call(fun, args))
-}
+# SCPC bounds for the least squares golden cases.
+fixture_avc <- seq(0.02, 0.1, by = 0.02)
 
 # IV fixture: deterministic 121-row subset of the 2000-2007 period of autor_china.
 iv_fixture_data <- function() {
@@ -94,24 +90,18 @@ golden_cases <- list(
     summarise_feols(quietly(basis_regression(fixture_fm, fixture_data(TRUE),
       splines = 4, pc_num = 4, clusters = 4, weights = "wt")))
   },
-  placebo = function() run_sim(placebo, Parallel = FALSE),
-  placebo_im = function() run_sim(placebo_im, Parallel = FALSE),
-  synth = function() run_sim(synth, Parallel = FALSE),
-  synth_im = function() run_sim(synth_im, Parallel = FALSE),
+  # Least squares placebo and synth cases were recorded when the BCH, IM and SCPC versions were
+  # combined into placebo() and synth(); their rows matched the earlier separate versions exactly.
+  placebo = function() run_sim(placebo, Parallel = FALSE, avc = fixture_avc),
+  synth = function() run_sim(synth, Parallel = FALSE, avc = fixture_avc),
   placebo_weighted = function() {
-    run_sim(placebo, Parallel = FALSE, weights = "wt", data = fixture_data(TRUE))
+    run_sim(placebo, Parallel = FALSE, avc = fixture_avc, weights = "wt", data = fixture_data(TRUE))
   },
-  synth_im_weighted = function() {
-    run_sim(synth_im, Parallel = FALSE, weights = "wt", data = fixture_data(TRUE))
+  synth_weighted = function() {
+    run_sim(synth, Parallel = FALSE, avc = fixture_avc, weights = "wt", data = fixture_data(TRUE))
   },
   placebo_clara = function() run_sim(placebo, Parallel = FALSE, k_medoids = FALSE),
   placebo_brisc = function() run_sim(placebo, Parallel = FALSE, exact_cholesky = FALSE),
-  # SCPC cases were recorded when placebo_scpc() and synth_scpc() were added.
-  placebo_scpc = function() run_scpc(placebo_scpc, Parallel = FALSE),
-  synth_scpc = function() run_scpc(synth_scpc, Parallel = FALSE),
-  placebo_scpc_weighted = function() {
-    run_scpc(placebo_scpc, Parallel = FALSE, weights = "wt", data = fixture_data(TRUE))
-  },
   # IV cases were recorded when the Anderson-Rubin tests were redone by the reduced form
   # approach, with IM and SCPC inference added.
   iv_placebo = function() run_iv(iv_placebo, Parallel = FALSE, avc = iv_avc),

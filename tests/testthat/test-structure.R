@@ -28,13 +28,12 @@ test_that("placebo-type results have the documented components and columns", {
   expect_named(plbo$Results,
     c("SE", "Clusters", "Est p", "Plac p", "Plac 5%", "CI Width", "CI"))
   expect_named(plbo$Spatial_Params,
-    c("Moran", "R2", "Effective_Range", "Structure", "Splines", "PCs"))
-  expect_equal(plbo$Results$SE, c("HC", rep("BCH", fixture_args$max_clus - 2)))
-
-  pim <- readRDS(golden_path("placebo_im"))
-  expect_named(pim, c("Results", "Spatial_Params", "Coefs"))
-  expect_length(pim$Coefs, fixture_args$max_clus - 1)
-  expect_equal(pim$Results$SE, c("HC", rep("IM", fixture_args$max_clus - 2)))
+    c("Moran", "R2", "Effective_Range", "Structure", "N", "Splines", "PCs"))
+  n_clus <- fixture_args$max_clus - 2
+  expect_equal(plbo$Results$SE,
+    c("HC", rep("BCH", n_clus), rep("IM", n_clus), rep("SCPC", length(fixture_avc))))
+  expect_equal(plbo$Results$Clusters,
+    c(".", rep(as.character(3:fixture_args$max_clus), 2), as.character(fixture_avc)))
 })
 
 test_that("synth-type results have the documented components and columns", {
@@ -45,11 +44,22 @@ test_that("synth-type results have the documented components and columns", {
     c("SE", "Clusters", "Est p", "Synth p", "CI Width", "CI"))
   expect_named(syn$Spatial_Params,
     c("Moran", "R2", "Effective_Range", "Structure", "N", "Splines", "PCs"))
+})
 
-  # synth_im() is the only function that sets a class.
-  syn_im <- readRDS(golden_path("synth_im"))
-  expect_s3_class(syn_im, "synth_im")
-  expect_named(syn_im$Results, names(syn$Results))
+test_that("each simulation is estimated once for HC, BCH, IM and SCPC p values", {
+  prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL)
+  eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
+  hold_clus <- sim_clusters(prep$df, TRUE, 4)
+  set.seed(1)
+  Sim <- matrix(rnorm(nrow(prep$df)), ncol = 1)
+  out <- quietly(ols_sim(1, Sim, eqs$eq_sim, prep$df, hold_clus, 0.05))
+  expect_named(out, c("hc", "bch_3", "im_3", "bch_4", "im_4", "scpc_0.05"))
+  df1 <- cbind.data.frame(sim = Sim[, 1], prep$df)
+  hc <- quietly(fixest::feols(eqs$eq_sim, data = df1, weights = ~wts, vcov = "hetero"))
+  expect_equal(out$hc, unname(fixest::pvalue(hc)["sim"]))
+  im <- quietly(im_t_test(im_cluster_coefs(eqs$eq_sim, df1, hold_clus[[2]])))
+  expect_equal(out$im_4, im$p.value)
+  expect_equal(out$scpc_0.05, unname(scpc_stats(hc, df1, 0.05)[, "p"]))
 })
 
 test_that("basis_regression() returns a fixest object with saved data", {
@@ -76,38 +86,50 @@ test_that("placebo_table() and synth_table() return tinytables", {
   plac_tab <- placebo_table(readRDS(golden_path("placebo")), caption = "x")
   expect_s4_class(plac_tab, "tinytable")
   expect_identical(names(plac_tab@data),
-    c("Adj", "Clusters", "Est p", "Plac p", "Plac 5%", "CI Width", "CI"))
+    c("Adj", "Clusters/avc", "Est p", "Plac p", "Plac 5%", "CI Width", "CI"))
+  expect_identical(nrow(plac_tab@data), nrow(readRDS(golden_path("placebo"))$Results))
 
-  syn_tab <- synth_table(readRDS(golden_path("synth_im")))
+  syn_tab <- synth_table(readRDS(golden_path("placebo_clara")) |> (\(x) {
+    names(x$Results)[4] <- "Synth p"
+    x$Results$`Plac 5%` <- NULL
+    x
+  })())
   expect_s4_class(syn_tab, "tinytable")
   expect_identical(names(syn_tab@data),
     c("Adj", "Clusters", "Est p", "Synth p", "CI Width", "CI"))
 })
 
-test_that("combined_table() picks one row of each placebo and adds its synth p value", {
+test_that("combined_table() picks the chosen rows and adds their synth p values", {
   g <- function(f) readRDS(golden_path(f))
-  plbo <- list(g("placebo"), g("placebo_im"), g("placebo_scpc"))
-  syn <- list(g("synth"), g("synth_im"), g("synth_scpc"))
-  tab <- combined_table(plbo, syn, select = c(4, 5, 0.04), caption = "x")
+  plbo <- g("placebo")
+  syn <- g("synth")
+  tab <- combined_table(plbo, syn, select = c(BCH = 4, IM = 5, SCPC = 0.04), caption = "x")
   expect_s4_class(tab, "tinytable")
   expect_identical(names(tab@data),
     c("Adj", "Clusters/avc", "Est p", "Plac p", "Plac 5%", "Synth p", "CI Width", "CI"))
   expect_identical(tab@data$Adj, c("HC", "BCH", "IM", "SCPC"))
   expect_identical(tab@data$`Clusters/avc`, c(".", "4", "5", "0.04"))
-  expect_equal(tab@data$`Est p`[2], round(plbo[[1]]$Results$`Est p`[3], 3))
-  expect_equal(tab@data$`Synth p`, round(c(syn[[1]]$Results$`Synth p`[c(1, 3)],
-    syn[[2]]$Results$`Synth p`[4], syn[[3]]$Results$`Synth p`[3]), 3))
+  rows <- c(1, which(plbo$Results$SE == "BCH" & plbo$Results$Clusters == "4"),
+            which(plbo$Results$SE == "IM" & plbo$Results$Clusters == "5"),
+            which(plbo$Results$SE == "SCPC" & plbo$Results$Clusters == "0.04"))
+  expect_equal(tab@data$`Est p`, round(plbo$Results$`Est p`[rows], 3))
+  expect_equal(tab@data$`Synth p`, round(syn$Results$`Synth p`[rows], 3))
 
-  # A single placebo and synth need not be wrapped in lists.
-  one <- combined_table(g("placebo"), g("synth"), 4)
+  # Rows follow the order of select.
+  one <- combined_table(plbo, syn, c(IM = 3, BCH = 4))
   expect_identical(names(one@data)[2], "Clusters")
-  expect_identical(nrow(one@data), 2L)
+  expect_identical(one@data$Adj, c("HC", "IM", "BCH"))
+  expect_identical(names(combined_table(plbo, syn, c(SCPC = 0.02))@data)[2], "avc")
 
-  expect_error(combined_table(g("placebo"), g("synth"), 9), "Available values: 3, 4, 5")
-  expect_error(combined_table(g("placebo"), g("synth_im"), 4), "uses BCH but synth 1 uses IM")
-  expect_error(combined_table(g("placebo"), g("synth"), c(4, 5)), "same length")
-  expect_error(combined_table(g("synth"), g("synth"), 4), "is not the output of placebo")
-  expect_error(combined_table(g("iv_placebo"), g("iv_synth"), 4), "use iv_combined_table")
+  expect_error(combined_table(plbo, syn, c(BCH = 9)), "Available values: 3, 4, 5")
+  expect_error(combined_table(plbo, syn, 4), "named vector")
+  expect_error(combined_table(plbo, syn, c(BCH = 4, BCH = 5)), "named vector")
+  expect_error(combined_table(syn, syn, c(BCH = 4)), "is not the output of placebo")
+  expect_error(combined_table(plbo, plbo, c(BCH = 4)), "is not the output of synth")
+  other_basis <- syn
+  other_basis$Spatial_Params$PCs <- 5
+  expect_error(combined_table(plbo, other_basis, c(BCH = 4)), "same regression")
+  expect_error(combined_table(g("iv_placebo"), g("iv_synth"), c(BCH = 4)), "use iv_combined_table")
 })
 
 # Results objects with the HC row and n_clus cluster rows, as returned by placebo() and synth().
@@ -168,16 +190,16 @@ test_that("IM leaves out clusters without a treatment estimate, with a warning",
   prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL, 5)
   df <- prep$df
   eqs <- build_formulas(prep$rhs, prep$pc, "explan_var")
-  hold <- generate_clusters(df, TRUE, 5)
+  hold <- sim_clusters(df, TRUE, 5)
   # The treatment does not vary within cluster 1 of the four cluster partition.
-  df$explan_var[hold[, 3] == 1] <- 0
-  im_out <- as.data.frame(matrix(0.5, nrow = 5, ncol = 4))
-  hc_out <- data.frame(hc_p = rep(0.5, 5))
+  df$explan_var[hold[[2]] == 1] <- 0
+  sim_out <- as.data.frame(as.list(c(hc = 0.5, setNames(rep(0.5, 6), paste0(c("bch_", "im_"), rep(3:5, each = 2))))))
+  sim_out <- sim_out[rep(1, 5), ]
 
-  warnings <- capture_warnings(quietly_notes(summary_im(df, eqs$eq_est, hold, 5, im_out, hc_out)))
+  warnings <- capture_warnings(quietly_notes(ols_summary(df, eqs$eq_est, hold, sim_out)))
   expect_match(warnings, "IM with 4 clusters: .* in 1 cluster", all = FALSE)
 
-  coefs <- quietly(im_cluster_coefs(eqs$eq_est, df, hold[, 3]))
+  coefs <- quietly(im_cluster_coefs(eqs$eq_est, df, hold[[2]]))
   expect_equal(nrow(coefs), 3)
   expect_identical(im_t_test(coefs)$p.value, t.test(coefs$estimate)$p.value)
   expect_identical(im_t_test(tibble::tibble(estimate = c(1, 2, NA, 4)))$p.value,
@@ -201,10 +223,6 @@ test_that("confidence intervals are in the units of the treatment coefficient", 
   expect_identical(plbo$Results$CI[1], fmt(unlist(hc_ci)))
   expect_equal(plbo$Results$`CI Width`[1], signif(hc_ci[[2]] - hc_ci[[1]], 3))
 
-  scpc <- readRDS(golden_path("placebo_scpc"))
-  est <- scpc$Estimates
-  expect_identical(scpc$Results$CI[-1], vapply(seq_len(nrow(est)),
-    function(k) fmt(c(est$lower[k], est$upper[k])), character(1)))
 })
 
 test_that("small coefficients keep significant digits in confidence intervals", {

@@ -11,7 +11,7 @@
 #' @param splines The dimension of the linear tensor used, from optimal_basis function.
 #' @param pc_num The number of principal component to include, again from optimal_basis.
 #' @param avc The SCPC upper bound on the average pairwise correlation, based on
-#'   the placebo test of [placebo_scpc()]. It must lie between 0.001 and 0.99.
+#'   the placebo test of [placebo()]. It must lie between 0.001 and 0.99.
 #' @param weights The name of the weighting variable in the dataset, as a
 #'   string, for example `weights="pop"`. Leave it out for an unweighted
 #'   regression.

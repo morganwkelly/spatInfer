@@ -11,7 +11,7 @@
 #' @param df  The name of the dataset use. Longitude and latitude must be named X and Y and have no missing values.
 #' @param splines The dimension of the linear tensor used, from optimal_basis function.
 #' @param pc_num The number of principal component to include, again from optimal_basis.
-#' @param clusters Number of k-medoids clusters to use, based on the placebo test of [placebo_im()].
+#' @param clusters Number of k-medoids clusters to use, based on the placebo test of [placebo()].
 #' @param weights The name of the weighting variable in the dataset, as a
 #'   string, for example `weights="pop"`. Leave it out for an unweighted
 #'   regression.

@@ -4,7 +4,7 @@ test_that("missing or incomplete coordinates are rejected", {
   na_y <- d
   na_y$Y[1] <- NA
 
-  for (fun in list(placebo, placebo_im, synth, synth_im)) {
+  for (fun in list(placebo, synth)) {
     expect_error(fun(fixture_fm, no_x, 4, 4), "named X and Y")
     expect_error(fun(fixture_fm, na_y, 4, 4), "missing values")
   }
@@ -13,7 +13,7 @@ test_that("missing or incomplete coordinates are rejected", {
 })
 
 test_that("max_clus below 3 is rejected", {
-  for (fun in list(placebo, placebo_im, synth, synth_im)) {
+  for (fun in list(placebo, synth)) {
     expect_error(fun(fixture_fm, fixture_data(), 4, 4, max_clus = 2), "greater than 2")
   }
 })
@@ -22,7 +22,7 @@ test_that("weights must name a numeric variable without missing values", {
   d <- fixture_data(weighted = TRUE)
   d$wt_text <- as.character(d$wt)
   d$wt_na <- replace(d$wt, 1, NA)
-  for (fun in list(placebo, placebo_im, synth, synth_im)) {
+  for (fun in list(placebo, synth)) {
     expect_error(fun(fixture_fm, d, 4, 4, weights = "pop"), "no variable called pop")
     expect_error(fun(fixture_fm, d, 4, 4, weights = TRUE), "name of the weighting variable")
     expect_error(fun(fixture_fm, d, 4, 4, weights = "wt_text"), "must be numeric")

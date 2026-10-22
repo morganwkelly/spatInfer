@@ -23,7 +23,7 @@ im_regression(
 
 \item{pc_num}{The number of principal component to include, again from optimal_basis.}
 
-\item{clusters}{Number of k-medoids clusters to use, based on the placebo test of \code{\link[=placebo_im]{placebo_im()}}.}
+\item{clusters}{Number of k-medoids clusters to use, based on the placebo test of \code{\link[=placebo]{placebo()}}.}
 
 \item{weights}{The name of the weighting variable in the dataset, as a
 string, for example \code{weights="pop"}. Leave it out for an unweighted

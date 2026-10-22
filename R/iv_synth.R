@@ -24,8 +24,8 @@
 #'  inference and number of clusters (except IM and SCPC), and `Spatial_Params`, giving the Moran
 #'  statistic of the reduced form residuals, the R2 of the outcome on a
 #'  quadratic in longitude and latitude, and the effective range and structure
-#'  of the synthetic noise. Show the results with [synth_table()], using `type`
-#'  to choose the BCH, IM, SCPC or AR table.
+#'  of the synthetic noise. Show the results with [synth_table()], which gives
+#'  the 2SLS and AR results in one table.
 #'@export
 #'
 #' @examples
@@ -78,7 +78,7 @@ Spatial_Params=cbind.data.frame(Spatial_Params,N=nrow(df),Splines=splines,PCs=pc
 rm(noise_sim)
 
 # k-medoids clusters from 3 up to max_clus
-hold_clus=iv_clusters(df,k_medoids,max_clus)
+hold_clus=sim_clusters(df,k_medoids,max_clus)
 
 # SCPC spatial weights for each avc, which depend only on the locations.
 spcs=if(is.null(avc)) NULL else scpc_setup(df,avc)

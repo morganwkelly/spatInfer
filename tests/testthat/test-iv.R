@@ -54,7 +54,7 @@ test_that("first stage F statistics follow the inference and number of clusters"
   eqs <- build_iv_formulas(prep$rhs, prep$pc)
   fs <- quietly(fixest::feols(eqs$eq_fs, df, weights = ~wts, vcov = "hetero"))
   fit <- quietly(fixest::feols(eqs$eq_est, df, weights = ~wts, vcov = "hetero"))
-  hold_clus <- quietly(iv_clusters(df, TRUE, 5))
+  hold_clus <- quietly(sim_clusters(df, TRUE, 5))
   expect_equal(res$F[res$SE == "HC"], round(fixest::fitstat(fit, "ivwald1", simplify = TRUE)$stat, 3))
   for (clust in hold_clus) {
     G <- as.character(nlevels(clust))
@@ -103,7 +103,7 @@ ar_endpoint_p <- function(data, splines, pc_num, clust_index, avc) {
   df <- prep$df
   eqs <- build_iv_formulas(prep$rhs, prep$pc)
   eq_diff <- stats::update(eqs$eq_rf, ar_diff ~ .)
-  clust <- quietly(iv_clusters(df, TRUE, 6))[[clust_index]]
+  clust <- quietly(sim_clusters(df, TRUE, 6))[[clust_index]]
   spc <- scpc_setup(df, avc)[[1]]
   rf <- ar_data_rf(df, eqs)
   stats <- list(
@@ -152,7 +152,7 @@ test_that("reduced form variances agree with direct regressions", {
   prep <- quietly(prepare_iv_data(iv_fixture_fm, iv_fixture_data(), 4, 4, "timepwt48", 5))
   df <- prep$df
   eqs <- build_iv_formulas(prep$rhs, prep$pc)
-  clust <- quietly(iv_clusters(df, TRUE, 5))[[2]]
+  clust <- quietly(sim_clusters(df, TRUE, 5))[[2]]
   spc <- scpc_setup(df, 0.05)[[1]]
   rf <- ar_data_rf(df, eqs)
   df$comb <- df$dep_var - 0.7 * df$explan_var
@@ -219,36 +219,38 @@ test_that("IV simulations leave the user's random number state unchanged", {
   }
 })
 
-test_that("placebo_table() and synth_table() split IV results into BCH, IM and AR tables", {
+test_that("placebo_table() and synth_table() show 2SLS and AR results in one table", {
   plbo <- readRDS(golden_path("iv_placebo"))
   n_clus <- fixture_args$max_clus - 2
-  expect_equal(iv_table_rows(plbo$Results, "BCH")$SE, c("HC", rep("BCH", n_clus)))
-  expect_equal(iv_table_rows(plbo$Results, "IM")$SE, c("HC", rep("IM", n_clus)))
-  ar <- iv_table_rows(plbo$Results, "AR")
-  expect_equal(ar$SE, c("HC", rep("BCH", n_clus), rep("IM", n_clus), rep("SCPC", length(iv_avc))))
-  expect_identical(ar$F[ar$SE %in% c("IM", "SCPC")], rep("", n_clus + length(iv_avc)))
-  expect_identical(ar$CI, plbo$Results$CI[startsWith(plbo$Results$SE, "AR ")])
-  expect_equal(iv_table_rows(plbo$Results, "SCPC")$SE, c("HC", rep("SCPC", length(iv_avc))))
-  for (type in c("BCH", "IM", "SCPC", "AR")) {
-    tab <- placebo_table(plbo, type = type)
-    expect_s4_class(tab, "tinytable")
-    expect_equal(nrow(tab@data), switch(type, AR = 1 + 2 * n_clus + length(iv_avc),
-                                        SCPC = 1 + length(iv_avc), 1 + n_clus))
-    expect_true("F" %in% names(tab@data))
-    expect_true(any(grepl("Noise instrument", unlist(tab@notes))))
-    syn_tab <- synth_table(readRDS(golden_path("iv_synth")), type = type)
-    expect_identical(nrow(syn_tab@data), nrow(tab@data))
-    expect_false(any(grepl("Noise instrument", unlist(syn_tab@notes))))
-  }
-  ar_notes <- unlist(placebo_table(plbo, type = "AR")@notes)
-  expect_true(any(grepl("Anderson-Rubin", ar_notes)))
-  expect_true(any(grepl("Clusters gives avc for SCPC", ar_notes)))
-  expect_false(any(grepl("SCPC", unlist(placebo_table(readRDS(golden_path("iv_placebo_weighted")), type = "AR")@notes))))
-  expect_error(placebo_table(readRDS(golden_path("iv_placebo_weighted")), type = "SCPC"), "give avc")
-  expect_error(placebo_table(plbo, type = "OLS"))
-  # Other results are unaffected by type.
-  expect_identical(placebo_table(readRDS(golden_path("placebo")), type = "AR")@data,
-                   placebo_table(readRDS(golden_path("placebo")))@data)
+  rows <- table_rows(plbo$Results)
+  block <- c("HC", "BCH", rep("", n_clus - 1), "IM", rep("", n_clus - 1), "SCPC", rep("", length(iv_avc) - 1))
+  expect_equal(rows$rows$SE, c(block, block))
+  expect_equal(rows$n_wald, 1 + 2 * n_clus + length(iv_avc))
+  is_im_scpc <- sub("^AR ", "", plbo$Results$SE) %in% c("IM", "SCPC")
+  expect_identical(rows$rows$F[is_im_scpc], rep("", sum(is_im_scpc)))
+  expect_false(any(rows$rows$F[!is_im_scpc] == ""))
+  expect_identical(rows$rows$CI, plbo$Results$CI)
+
+  tab <- placebo_table(plbo)
+  expect_s4_class(tab, "tinytable")
+  expect_identical(nrow(tab@data), nrow(plbo$Results))
+  expect_identical(names(tab@data),
+    c("Adj", "Clusters/avc", "F", "Est p", "Plac p", "Plac 5%", "CI Width", "CI"))
+  notes <- unlist(tab@notes)
+  expect_true(any(grepl("Noise instrument", notes)))
+  expect_true(any(grepl("Anderson-Rubin", notes)))
+  expect_true(any(grepl("not given for IM or SCPC", notes)))
+
+  syn_tab <- synth_table(readRDS(golden_path("iv_synth")))
+  expect_identical(nrow(syn_tab@data), nrow(tab@data))
+  expect_false(any(grepl("Noise instrument", unlist(syn_tab@notes))))
+  # The 2SLS and Anderson-Rubin headings are orange, as in placebo tables.
+  expect_match(tinytable::save_tt(syn_tab, "html"), "#FFA500")
+
+  # Without avc there are no SCPC rows or notes.
+  weighted <- placebo_table(readRDS(golden_path("iv_placebo_weighted")))
+  expect_identical(names(weighted@data)[2], "Clusters")
+  expect_false(any(grepl("SCPC", unlist(weighted@notes))))
 })
 
 # iv_regression() and iv_im_regression() use the same clusters and tests as iv_placebo(), so their
@@ -436,10 +438,15 @@ test_that("iv_combined_table() picks the chosen 2SLS and AR rows and adds synth 
                                                            paste(plbo$Results$SE, plbo$Results$Clusters))])
   expect_true(any(grepl("Instrument: Structure", unlist(tab@notes))))
 
-  # AR rows can use their own choices.
+  # AR rows can use their own choices of inference, clusters and avc.
   ar <- iv_combined_table(plbo, syn, select = c(BCH = 4), ar_select = c(IM = 3))
   expect_identical(ar@data$Adj, c("HC", "BCH", "HC", "IM"))
   expect_identical(names(ar@data)[2], "Clusters")
+  ar <- iv_combined_table(plbo, syn, select = c(BCH = 4, SCPC = 0.05), ar_select = c(BCH = 5, SCPC = 0.1))
+  expect_identical(ar@data$`Clusters/avc`, c(".", "4", "0.05", ".", "5", "0.1"))
+  expect_equal(ar@data$`Est p`[5:6], c(pick(plbo$Results, "AR BCH", "5")$`Est p`,
+                                       pick(plbo$Results, "AR SCPC", "0.1")$`Est p`))
+  expect_error(iv_combined_table(plbo, syn, select = c(BCH = 4), ar_select = c(IM = 9)), "Available values")
 
   expect_error(iv_combined_table(plbo, syn, select = c(BCH = 9)), "Available values: 3, 4, 5")
   expect_error(iv_combined_table(plbo, syn, select = c(4, 5)), "named vector")

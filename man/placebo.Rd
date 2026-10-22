@@ -2,7 +2,7 @@
 % Please edit documentation in R/placebo.R
 \name{placebo}
 \alias{placebo}
-\title{Placebo significance levels using BCH standard errors.}
+\title{Placebo significance levels with HC, BCH, IM and SCPC inference.}
 \usage{
 placebo(
   fm,
@@ -14,7 +14,8 @@ placebo(
   max_clus = 6,
   Parallel = TRUE,
   exact_cholesky = TRUE,
-  k_medoids = TRUE
+  k_medoids = TRUE,
+  avc = NULL
 )
 }
 \arguments{
@@ -38,8 +39,8 @@ behaving.}
 string, for example \code{weights="pop"}. Leave it out for an unweighted
 regression.}
 
-\item{max_clus}{The maximum number of large cluster standard errors to examine
-with the placebo test. Defaults to 6.}
+\item{max_clus}{The maximum number of large clusters to examine with the
+placebo test, for BCH and IM. Defaults to 6.}
 
 \item{Parallel}{Run the simulations in parallel. Set to \code{FALSE} if there are memory problems,
 which can happen especially with large datasets.}
@@ -50,23 +51,63 @@ the \code{BRISC} Cholesky approximation. This requires the
 
 \item{k_medoids}{For large datasets, set to \code{FALSE} to use a faster approximation to generate
 medoids.}
+
+\item{avc}{The values of the SCPC upper bound on the average pairwise
+correlation to examine, each between 0.001 and 0.99, for example
+\code{avc=seq(0.02,0.1,by=0.02)}. The default, \code{NULL}, gives no SCPC results,
+which are the slowest to compute.}
 }
 \value{
 A list containing \code{Results} which summarizes the placebo values and
 \code{Spatial_Params} giving the Moran test value and the range and structure
-used to generate the placebos. Choose the number of clusters where the
+used to generate the placebos. \code{Results} has an HC row, then BCH and IM rows
+for 3 up to \code{max_clus} clusters, then (when \code{avc} is given) an SCPC row for
+each value of \code{avc}, which \code{Clusters} holds. For BCH and IM choose the number of clusters where the
 proportion of placebo regressions significant at 5\% is in the region of
-0.05 to 0.07.
+0.05 to 0.07; given the conservatism of IM, the highest proportion is
+sometimes only 0.03--0.04. For SCPC choose the smallest \code{avc} where it is
+close to 0.05. Show the results with \code{\link[=placebo_table]{placebo_table()}}.
 }
 \description{
-\code{placebo()} runs a spatial noise placebo test on a regression to choose
-the optimal number of large clusters for BCH standard errors and obtain the
-placebo significance level of the treatment variable. The placebo matches
+\code{placebo()} runs a spatial noise placebo test on a regression to choose the
+number of large clusters for BCH and IM inference, and the average
+correlation bound \code{avc} for SCPC inference, and to obtain the placebo
+significance level of the treatment variable. The placebo matches
 the spatial trends of the explanatory variable by regressing it on the
 principal components chosen by \code{\link[=optimal_basis]{optimal_basis()}} and then simulates noise
 with the same correlation structure as the residuals from that regression.
-For each number of clusters it gives the regression and placebo significance
+For HC inference, for each number of clusters with BCH and IM, and for each
+value of \code{avc} with SCPC, it gives the regression and placebo significance
 levels.
+}
+\details{
+BCH uses clustered standard errors. In IM inference the treatment
+coefficient is estimated separately in each cluster and the cluster
+coefficients are tested with a t-test. Clusters where it cannot be
+estimated, for example because the treatment does not vary within the
+cluster, are left out of the t-test, with a warning when this happens in
+the regression on the actual data.
+
+The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
+and Hans-Joachim Voth (\url{https://github.com/spatial-spur/scpcR}, MIT licence),
+ported into spatInfer so that scpcR is not needed. It gives the same results
+as scpcR for unweighted regressions. With \code{weights}, conditional SCPC is
+computed for the regression rescaled by the square root of the weights, the
+least squares regression equivalent to weighted least squares, whereas scpcR
+leaves the regressors unweighted.
+
+With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
+computes the spatial weights from random subsets of 1,000 locations and extends them
+to the rest. As in scpcR, this extension measures the distance between locations in
+degrees of longitude and latitude, whereas the rate at which correlation decays with
+distance is calibrated on great-circle distances in fractions of the earth's
+circumference. The weights therefore decay faster with distance than intended, and
+results can differ from the exact calculation used for smaller samples. The
+calculation is left unchanged so that results match scpcR.
+SCPC inference uses X and Y as longitude and
+latitude, so distances are great-circle distances. Larger values of \code{avc}
+allow for stronger spatial correlation and give wider confidence intervals.
+A simulation where SCPC cannot be computed is left out, with a warning.
 }
 \examples{
 library(spatInfer)
@@ -80,7 +121,8 @@ splines=6,
 pc_num=15,
 nSim=100,
 Parallel=FALSE,
-max_clus = 7
+max_clus = 7,
+avc=c(0.02,0.04,0.06)
 )
 placebo_table(plbo)
 }

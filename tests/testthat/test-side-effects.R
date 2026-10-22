@@ -1,7 +1,7 @@
 # The package must not change global state that belongs to the user.
 
 test_that("simulation functions leave the user's random number state unchanged", {
-  for (fun in list(placebo, placebo_im, synth, synth_im)) {
+  for (fun in list(placebo, synth)) {
     set.seed(42)
     expected <- runif(3)
     set.seed(42)
@@ -12,9 +12,9 @@ test_that("simulation functions leave the user's random number state unchanged",
 
 test_that("preserving the random number state does not change results", {
   set.seed(1)
-  first <- run_sim(placebo, Parallel = FALSE)
+  first <- run_sim(placebo, Parallel = FALSE, avc = fixture_avc)
   set.seed(2)
-  second <- run_sim(placebo, Parallel = FALSE)
+  second <- run_sim(placebo, Parallel = FALSE, avc = fixture_avc)
   expect_identical(first, second)
   expect_matches_golden(first, "placebo")
 })

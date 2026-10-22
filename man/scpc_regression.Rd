@@ -16,7 +16,7 @@ scpc_regression(fm, df, splines, pc_num, avc, weights = NULL)
 \item{pc_num}{The number of principal component to include, again from optimal_basis.}
 
 \item{avc}{The SCPC upper bound on the average pairwise correlation, based on
-the placebo test of \code{\link[=placebo_scpc]{placebo_scpc()}}. It must lie between 0.001 and 0.99.}
+the placebo test of \code{\link[=placebo]{placebo()}}. It must lie between 0.001 and 0.99.}
 
 \item{weights}{The name of the weighting variable in the dataset, as a
 string, for example \code{weights="pop"}. Leave it out for an unweighted

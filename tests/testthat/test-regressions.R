@@ -13,7 +13,7 @@ test_that("im_regression() tests every coefficient on its cluster estimates", {
   expect_identical(im$Cluster_Coefs$cluster, as.character(1:4))
   expect_equal(sum(im$Cluster_N), nrow(fixture_data()))
 
-  # The treatment matches the IM t-test of placebo_im().
+  # The treatment matches the IM t-test of placebo().
   prep <- prepare_spatial_data(fixture_fm, fixture_data(), 4, 4, NULL)
   eq <- build_formulas(prep$rhs, prep$pc)$eq_est
   clust <- factor(cluster::pam(as.matrix(fixture_data()[, c("X", "Y")]), k = 4)$clustering)

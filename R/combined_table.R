@@ -1,22 +1,22 @@
 #' Table combining chosen placebo and synthetic outcome results.
 #'
 #'@description
-#' `combined_table()` makes one summary table from several placebo tests and their matching
-#' synthetic outcome tests. From each placebo it takes the row with a chosen number of clusters
-#' (for [placebo()] and [placebo_im()]) or SCPC bound `avc` (for [placebo_scpc()]), and adds the
-#' synthetic outcome p value from the same row of the matching synth. The first row gives the
-#' HC results.
+#' `combined_table()` makes one summary table from a [placebo()] test and the matching [synth()]
+#' test. It starts with the HC row and then, for each inference method chosen, gives the row with
+#' the chosen number of clusters (BCH and IM) or SCPC bound `avc`, with the synthetic outcome p
+#' value from the same row of the synth. [iv_combined_table()] does the same for instrumental
+#' variable regressions.
 #'
-#' @param placebos A list of objects created by [placebo()], [placebo_im()] or [placebo_scpc()],
-#'   or a single such object.
-#' @param synths A list of objects created by [synth()], [synth_im()] or [synth_scpc()], in the
-#'   same order as `placebos` and using the same estimator as each, or a single such object.
-#' @param select A numeric vector, one entry for each placebo, giving the number of clusters (BCH
-#'   and IM) or the value of `avc` (SCPC) of the row to show.
+#' @param plbo An object created by [placebo()].
+#' @param syn An object created by [synth()] for the same regression and spatial basis.
+#' @param select A named numeric vector giving, for each inference method to show, the number of
+#'   clusters (`BCH` and `IM`) or the value of `avc` (`SCPC`) of its row, for example
+#'   `c(BCH=7, IM=5, SCPC=0.04)`. Rows appear in this order. SCPC needs `avc` in [placebo()] and
+#'   [synth()].
 #' @param caption An optional caption for the table.
 #'
 #' @return Generates a tinytable object. Its first row gives the HC regression, placebo and
-#'   synthetic outcome p values, and each following row those of a chosen placebo and synth, with the
+#'   synthetic outcome p values, and each following row those of a chosen inference method, with the
 #'   regression confidence interval and its width. The notes give the z-score of a Moran test of the
 #'   regression residuals, using 5 nearest neighbours, and, separately for the treatment and the
 #'   outcome, the R2, effective range and structure used to simulate noise: the R2 of a regression of
@@ -31,45 +31,28 @@
 #' set.seed(123)
 #' opportunity=opportunity |> dplyr::slice_sample(n=100)
 #' fm=mobility~single_mothers+short_commute+gini+dropout_rate+social_cap+dropout_na
-#' plbo_bch=placebo(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-#' synt_bch=synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-#' plbo_im=placebo_im(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-#' synt_im=synth_im(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-#' combined_table(list(plbo_bch, plbo_im), list(synt_bch, synt_im), select=c(5, 4),
+#' plbo=placebo(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7, avc=0.04)
+#' synt=synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7, avc=0.04)
+#' combined_table(plbo, synt, select=c(BCH=5, IM=4, SCPC=0.04),
 #'   caption="Placebo and synthetic outcome significance levels for single mothers variable.")
 
 
-combined_table=function(placebos, synths, select, caption=""){
-if(!is.null(placebos$Results)) placebos=list(placebos)   #a single placebo
-if(!is.null(synths$Results)) synths=list(synths)
-if(length(placebos)!=length(synths) || length(placebos)!=length(select))
-  stop("`placebos`, `synths` and `select` must have the same length.", call.=FALSE)
-if(!is.numeric(select) || anyNA(select))
-  stop("`select` must give a number of clusters or an `avc` value for each placebo.", call.=FALSE)
-for(i in seq_along(placebos)){
-  check_combined_input(placebos[[i]],"Plac p","placebos",i)
-  check_combined_input(synths[[i]],"Synth p","synths",i)
-  if(estimator(placebos[[i]])!=estimator(synths[[i]]))
-    stop("Placebo ",i," uses ",estimator(placebos[[i]])," but synth ",i," uses ",
-         estimator(synths[[i]]),".", call.=FALSE)
-}
-check_same_regression(c(placebos,synths))
+combined_table=function(plbo, syn, select, caption=""){
+check_combined_input(plbo,"Plac p","plbo","placebo()")
+check_combined_input(syn,"Synth p","syn","synth()")
+check_same_regression(list(plbo,syn))
+check_select(select,"select")
 
-#####HC row first, then the chosen row of each placebo with the synth p value of the same row.
-hc=combined_row(placebos[[1]],synths[[1]],"HC",NA)
-rows=lapply(seq_along(placebos),function(i)
-  combined_row(placebos[[i]],synths[[i]],estimator(placebos[[i]]),select[i]))
-rr=do.call(rbind,c(list(hc),rows))
-rownames(rr)=NULL
+#####HC row first, then the chosen row of each inference method with the synth p value of the same row.
+rr=combined_rows(plbo,syn,select,"")
 rr=rr |>
   dplyr::rename(Adj=SE) |>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("CI Width"),~{round(.x,3)}))   #CI widths keep their significant digits
-is_scpc=vapply(placebos,estimator,"")=="SCPC"
-names(rr)[2]=if(all(is_scpc)) "avc" else if(any(is_scpc)) "Clusters/avc" else "Clusters"
+names(rr)[2]=level_name(names(select))
 
-sp=placebos[[1]]$Spatial_Params|>
+sp=plbo$Spatial_Params|>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
-ss=synths[[1]]$Spatial_Params|>
+ss=syn$Spatial_Params|>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
 
 comb_tab=tinytable::tt(rr,theme="striped",align="r",digits=3,
@@ -104,20 +87,30 @@ comb_tab= comb_tab |>
 return(comb_tab)
 }
 
-#####Estimator of placebo or synth results: the SE label of their non-HC rows (BCH, IM or SCPC).
-estimator=function(x) setdiff(x$Results$SE,"HC")[1]
-
-#####Placebo and synth results (not IV) with the expected simulated p value column.
-check_combined_input=function(x,p_col,arg,i){
+#####Placebo and synth results with the expected simulated p value column. iv is TRUE for
+#####iv_combined_table(), which takes only IV results; combined_table() takes none.
+check_combined_input=function(x,p_col,arg,fun,iv=FALSE){
   ok=is.list(x) && is.data.frame(x$Results) && p_col %in% names(x$Results) &&
     !is.null(x$Spatial_Params)
-  if(!ok)
-    stop("Element ",i," of `",arg,"` is not the output of ",
-         if(arg=="placebos") "placebo(), placebo_im() or placebo_scpc()"
-         else "synth(), synth_im() or synth_scpc()",".", call.=FALSE)
-  if(is_iv_results(x$Results))
+  if(!ok || (iv && !is_iv_results(x$Results)))
+    stop("`",arg,"` is not the output of ",fun,".",call.=FALSE)
+  if(!iv && is_iv_results(x$Results))
     stop("combined_table() does not take iv_placebo() or iv_synth() results; use iv_combined_table().",
          call.=FALSE)
+}
+
+#####Named numbers of clusters or avc values, one for each of BCH, IM and SCPC at most.
+check_select=function(sel,arg){
+  ok=is.numeric(sel) && length(sel)>0 && !anyNA(sel) && !is.null(names(sel)) &&
+    all(names(sel) %in% c("BCH","IM","SCPC")) && !anyDuplicated(names(sel))
+  if(!ok)
+    stop("`",arg,"` must be a named vector of numbers of clusters or avc values, such as c(BCH=7, IM=5, SCPC=0.04).",
+         call.=FALSE)
+}
+
+#####Header of the column of numbers of clusters or avc values, given the inference methods shown.
+level_name=function(methods){
+  if(all(methods=="SCPC")) "avc" else if("SCPC" %in% methods) "Clusters/avc" else "Clusters"
 }
 
 #####All tests must come from the same regression and spatial basis, so that they share
@@ -145,11 +138,34 @@ pick_row=function(results,se,value){
   results[rows[1],,drop=FALSE]
 }
 
-#####Row of a placebo whose SE label is `se` and whose clusters or avc equal `value` (any value for
-#####HC), with the synth p value of the matching synth row.
-combined_row=function(plbo,syn,se,value){
-  row=pick_row(plbo$Results,se,value)
-  row$`Synth p`=pick_row(syn$Results,se,value)$`Synth p`
-  names(row)[2]="Level"
-  row[,c("SE","Level","Est p","Plac p","Plac 5%","Synth p","CI Width","CI")]
+#####Row of results whose SE label is `se` and whose clusters or avc (the second column, stored as
+#####character with "." for HC) equal `value`. value is NA for HC rows, which have no level.
+pick_row=function(results,se,value){
+  level=results[[2]]
+  rows=results$SE==se
+  if(!is.na(value)) rows=rows & (abs(suppressWarnings(as.numeric(level))-value)<1e-8) %in% TRUE
+  rows=which(rows %in% TRUE)
+  if(length(rows)==0){
+    available=paste(level[results$SE==se],collapse=", ")
+    stop("No ",se," row with ",names(results)[2]," = ",value,". Available values: ",available,".",
+         call.=FALSE)
+  }
+  results[rows[1],,drop=FALSE]
+}
+
+#####HC row, then the chosen row of each inference method in sel, with the synth p value of the same
+#####row. prefix is "" for least squares and 2SLS, and "AR " for Anderson-Rubin, whose rows are
+#####labelled by their inference alone. F is kept for IV results.
+combined_rows=function(plbo,syn,sel,prefix){
+  rows=lapply(c("HC",names(sel)),function(se){
+    value=if(se=="HC") NA else sel[[se]]
+    row=pick_row(plbo$Results,paste0(prefix,se),value)
+    row$`Synth p`=pick_row(syn$Results,paste0(prefix,se),value)$`Synth p`
+    row$SE=se
+    names(row)[2]="Level"
+    row[,intersect(c("SE","Level","F","Est p","Plac p","Plac 5%","Synth p","CI Width","CI"),names(row))]
+  })
+  rr=do.call(rbind,rows)
+  rownames(rr)=NULL
+  return(rr)
 }

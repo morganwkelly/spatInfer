@@ -4,23 +4,23 @@
 \alias{combined_table}
 \title{Table combining chosen placebo and synthetic outcome results.}
 \usage{
-combined_table(placebos, synths, select, caption = "")
+combined_table(plbo, syn, select, caption = "")
 }
 \arguments{
-\item{placebos}{A list of objects created by \code{\link[=placebo]{placebo()}}, \code{\link[=placebo_im]{placebo_im()}} or \code{\link[=placebo_scpc]{placebo_scpc()}},
-or a single such object.}
+\item{plbo}{An object created by \code{\link[=placebo]{placebo()}}.}
 
-\item{synths}{A list of objects created by \code{\link[=synth]{synth()}}, \code{\link[=synth_im]{synth_im()}} or \code{\link[=synth_scpc]{synth_scpc()}}, in the
-same order as \code{placebos} and using the same estimator as each, or a single such object.}
+\item{syn}{An object created by \code{\link[=synth]{synth()}} for the same regression and spatial basis.}
 
-\item{select}{A numeric vector, one entry for each placebo, giving the number of clusters (BCH
-and IM) or the value of \code{avc} (SCPC) of the row to show.}
+\item{select}{A named numeric vector giving, for each inference method to show, the number of
+clusters (\code{BCH} and \code{IM}) or the value of \code{avc} (\code{SCPC}) of its row, for example
+\code{c(BCH=7, IM=5, SCPC=0.04)}. Rows appear in this order. SCPC needs \code{avc} in \code{\link[=placebo]{placebo()}} and
+\code{\link[=synth]{synth()}}.}
 
 \item{caption}{An optional caption for the table.}
 }
 \value{
 Generates a tinytable object. Its first row gives the HC regression, placebo and
-synthetic outcome p values, and each following row those of a chosen placebo and synth, with the
+synthetic outcome p values, and each following row those of a chosen inference method, with the
 regression confidence interval and its width. The notes give the z-score of a Moran test of the
 regression residuals, using 5 nearest neighbours, and, separately for the treatment and the
 outcome, the R2, effective range and structure used to simulate noise: the R2 of a regression of
@@ -28,11 +28,11 @@ the treatment on the principal components of the tensor, and of the outcome on a
 longitude and latitude.
 }
 \description{
-\code{combined_table()} makes one summary table from several placebo tests and their matching
-synthetic outcome tests. From each placebo it takes the row with a chosen number of clusters
-(for \code{\link[=placebo]{placebo()}} and \code{\link[=placebo_im]{placebo_im()}}) or SCPC bound \code{avc} (for \code{\link[=placebo_scpc]{placebo_scpc()}}), and adds the
-synthetic outcome p value from the same row of the matching synth. The first row gives the
-HC results.
+\code{combined_table()} makes one summary table from a \code{\link[=placebo]{placebo()}} test and the matching \code{\link[=synth]{synth()}}
+test. It starts with the HC row and then, for each inference method chosen, gives the row with
+the chosen number of clusters (BCH and IM) or SCPC bound \code{avc}, with the synthetic outcome p
+value from the same row of the synth. \code{\link[=iv_combined_table]{iv_combined_table()}} does the same for instrumental
+variable regressions.
 }
 \examples{
 library(spatInfer)
@@ -41,10 +41,8 @@ data(opportunity)
 set.seed(123)
 opportunity=opportunity |> dplyr::slice_sample(n=100)
 fm=mobility~single_mothers+short_commute+gini+dropout_rate+social_cap+dropout_na
-plbo_bch=placebo(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-synt_bch=synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-plbo_im=placebo_im(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-synt_im=synth_im(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7)
-combined_table(list(plbo_bch, plbo_im), list(synt_bch, synt_im), select=c(5, 4),
+plbo=placebo(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7, avc=0.04)
+synt=synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7, avc=0.04)
+combined_table(plbo, synt, select=c(BCH=5, IM=4, SCPC=0.04),
   caption="Placebo and synthetic outcome significance levels for single mothers variable.")
 }

@@ -16,7 +16,9 @@ clusters (\code{BCH} and \code{IM}) or the value of \code{avc} (\code{SCPC}) of 
 \code{c(BCH=7, IM=5, SCPC=0.04)}. Rows appear in this order. SCPC needs \code{avc} in \code{\link[=iv_placebo]{iv_placebo()}}
 and \code{\link[=iv_synth]{iv_synth()}}.}
 
-\item{ar_select}{The same for the AR rows. Defaults to \code{select}.}
+\item{ar_select}{The same for the AR rows, which can use different inference methods, numbers of
+clusters or values of \code{avc} from the 2SLS rows, for example \code{ar_select=c(BCH=6, IM=7)}.
+Defaults to \code{select}.}
 
 \item{caption}{An optional caption for the table.}
 }
@@ -46,5 +48,7 @@ fm=d_sh_empl_mfg~l_shind_manuf_cbp+l_sh_popedu_c|d_tradeusch_pw~d_tradeotch_pw_l
 plbo=iv_placebo(fm,china,splines=6,pc_num=13,nSim=100,weights="timepwt48",Parallel=FALSE,avc=0.04)
 syn=iv_synth(fm,china,splines=6,pc_num=13,nSim=100,weights="timepwt48",Parallel=FALSE,avc=0.04)
 iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04))
+# Different choices for the AR rows.
+iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04),ar_select=c(BCH=5,IM=6,SCPC=0.04))
 }
 }

@@ -30,51 +30,11 @@ scpc_stats=function(fit,df,avc,spcs=scpc_setup(df,avc)){
   return(out)
 }
 
-######SCPC p values of the simulated regression j, one column per avc.
-######A simulation where SCPC fails gives NA p values; summary_scpc() leaves these out for each avc.
-scpc_sim=function(j,Sim,eq_sim,df,avc,spcs=scpc_setup(df,avc)){
-  df1=cbind.data.frame(sim=Sim[,j],df)
-  p=tryCatch({
-    fit=fixest::feols(eq_sim,data=df1,weights=~wts)
-    scpc_stats(fit,df1,avc,spcs)[,"p"]
-  },error=function(e) rep(NA_real_,length(avc)))
-  return(as.data.frame(as.list(stats::setNames(p,paste0("avc_",avc)))))
-}
-
-scpc_p_values=function(Sim,eq_sim,df,avc,nSim,Parallel){
-  spcs=scpc_setup(df,avc)
-  scpc_out=run_sims(nSim,function(j) scpc_sim(j,Sim,eq_sim,df,avc,spcs),Parallel,fixest_single_thread=TRUE)
-  return(purrr::list_rbind(scpc_out))
-}
-
-######Results table: an HC row, then one SCPC row for each avc. Confidence intervals and
-######Pseudo SE, one quarter of the width of the 95% confidence interval, are in the units
-######of the coefficient.
-summary_scpc=function(df,eq_est,avc,scpc_out,hc_out){
-  n_failed=colSums(is.na(scpc_out))   #failures are counted, and left out, separately for each avc
-  for(k in which(n_failed>0))
-    warning("SCPC could not be computed in ",n_failed[k]," of ",nrow(scpc_out),
-            " simulations for avc = ",avc[k],", which are left out.",call.=FALSE)
-
-  fit=fixest::feols(eq_est,data=df,weights=~wts)
-  est=scpc_stats(fit,df,avc)
-  sim_summ=list()
-  for(k in seq_along(avc)){
-    ci=est[k,c("lower","upper")]
-    sim_summ[[k]]=ci_summary_row("SCPC",avc[k],est[k,"p"],ci,stats::na.omit(scpc_out[,k]))
-    sim_summ[[k]]$pseudo_se=(ci[2]-ci[1])/4
-  }
-
-  hc=fixest::feols(eq_est,data=df,weights=~wts,vcov="hetero")
-  hc_ci=confint(hc)[treatment_term(hc),]
-  hc_row=hc_summary_row(df,eq_est,hc_out)
-  hc_row$pseudo_se=(hc_ci[[2]]-hc_ci[[1]])/4
-
-  Results=purrr::list_rbind(c(list(hc_row),sim_summ)) |>
-    dplyr::rename(avc=Clusters) |>
-    dplyr::mutate(avc=ifelse(SE=="HC",".",as.character(avc)),
-                  dplyr::across(c(est_p,sim_p,sim_05),\(x) round(x,3)),
-                  pseudo_se=signif(pseudo_se,3))
-  rownames(Results)=NULL
-  return(list(Results=Results,Estimates=data.frame(avc=avc,est,row.names=NULL)))
+######Simulated SCPC p values with the draws where SCPC failed (NA) left out, and a warning.
+scpc_sim_p=function(sim_p,label,avc){
+  n_failed=sum(is.na(sim_p))
+  if(n_failed>0)
+    warning(label," could not be computed in ",n_failed," of ",length(sim_p),
+            " simulations for avc = ",avc,", which are left out.",call.=FALSE)
+  return(as.numeric(stats::na.omit(sim_p)))
 }
