@@ -2,6 +2,16 @@
 
 ## New features
 
+* `placebo_synth()` runs `placebo()` and `synth()` in one command, and
+  `iv_placebo_synth()` runs `iv_placebo()` and `iv_synth()`. They show a
+  progress bar with the step being run and the number of simulated regressions
+  done (turn it off with `progress = FALSE`). The data, clusters and SCPC
+  spatial weights are prepared once for both tests, and the results, returned
+  as `Placebo` and `Synth`, are the same as those of the separate functions.
+  `placebo_synth_table()` shows both in one table: every row of the placebo
+  table with its synthetic outcome p value added or, with `select`, only the
+  chosen rows, as `combined_table()` and `iv_combined_table()` do.
+
 * `placebo()` and `synth()` now run the placebo and synthetic outcome tests
   with HC, BCH, IM and SCPC inference in one call, as `iv_placebo()` and
   `iv_synth()` do. Each simulated regression is estimated once for every
@@ -147,12 +157,17 @@
   clusters from that fit, instead of re-estimating it for each. Results are
   unchanged.
 
-* Weighted SCPC: conditional SCPC is now computed for the regression rescaled
-  by the square root of the weights, the least squares regression equivalent
-  to weighted least squares. Previously, as in scpcR, the conditioning used
-  the unweighted regressors, which does not correspond to a weighted model.
-  SCPC p values and confidence intervals of weighted regressions change;
-  estimates and standard errors, and all unweighted results, are unchanged.
+* Weighted SCPC: every function with SCPC inference has a `scpc_weighting`
+  argument. The default, `"scpcR"`, conditions on the unweighted regressors,
+  as scpcR does, so weighted results match scpcR. `scpc_weighting = "sqrt"`
+  instead computes conditional SCPC for the regression rescaled by the square
+  root of the weights, the least squares regression equivalent to weighted
+  least squares. The choice changes only the SCPC p values and confidence
+  intervals of weighted regressions.
+
+* SCPC inference on a weighted regression in which fixest drops observations
+  with missing values no longer fails: the weights of the dropped observations
+  are left out.
 
 * The help pages of `placebo_scpc()`, `synth_scpc()` and `scpc_regression()`
   note that with 4,500 or more observations SCPC, as in scpcR, uses distances

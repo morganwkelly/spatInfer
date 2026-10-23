@@ -15,7 +15,8 @@ placebo(
   Parallel = TRUE,
   exact_cholesky = TRUE,
   k_medoids = TRUE,
-  avc = NULL
+  avc = NULL,
+  scpc_weighting = "scpcR"
 )
 }
 \arguments{
@@ -56,6 +57,12 @@ medoids.}
 correlation to examine, each between 0.001 and 0.99, for example
 \code{avc=seq(0.02,0.1,by=0.02)}. The default, \code{NULL}, gives no SCPC results,
 which are the slowest to compute.}
+
+\item{scpc_weighting}{How conditional SCPC treats a weighted regression.
+The default, \code{"scpcR"}, leaves the regressors unweighted, as the scpcR
+package does. \code{"sqrt"} rescales them by the square root of the weights,
+which makes the regression the least squares regression equivalent to
+weighted least squares. The two agree for unweighted regressions.}
 }
 \value{
 A list containing \code{Results} which summarizes the placebo values and
@@ -91,10 +98,10 @@ the regression on the actual data.
 The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
 and Hans-Joachim Voth (\url{https://github.com/spatial-spur/scpcR}, MIT licence),
 ported into spatInfer so that scpcR is not needed. It gives the same results
-as scpcR for unweighted regressions. With \code{weights}, conditional SCPC is
-computed for the regression rescaled by the square root of the weights, the
-least squares regression equivalent to weighted least squares, whereas scpcR
-leaves the regressors unweighted.
+as scpcR, including for weighted regressions with the default
+\code{scpc_weighting = "scpcR"}. With \code{scpc_weighting = "sqrt"}, conditional SCPC
+in a weighted regression is computed for the regression rescaled by the
+square root of the weights instead.
 
 With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
 computes the spatial weights from random subsets of 1,000 locations and extends them

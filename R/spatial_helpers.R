@@ -228,11 +228,14 @@ use_fork=function(){
 ######Parallel workers use one BLAS thread each. A multithreaded BLAS such as OpenBLAS
 ######(the default on Ubuntu) otherwise starts a thread per core in every worker, and the
 ######oversubscribed workers run so slowly that the simulations appear to hang.
-run_sims=function(n,fun,Parallel,fixest_single_thread){
+######progress, if given, is called with the number of runs finished after each one, or in parallel
+######after each batch of runs: the runs are then split into about 20 batches.
+run_sims=function(n,fun,Parallel,fixest_single_thread,progress=NULL){
   if(!Parallel){
     out=list()
     for (j in 1:n){
       out[[j]]=fun(j)
+      if(!is.null(progress)) progress(1)
     }
     return(out)
   }
@@ -247,15 +250,28 @@ run_sims=function(n,fun,Parallel,fixest_single_thread){
     on.exit(fixest::setFixest_nthreads(nthreads=old_threads),add=TRUE)
   }
 
+  batch=if(is.null(progress)) n else n_cores*ceiling(n/(20*n_cores))
+  batches=split(seq_len(n),ceiling(seq_len(n)/batch))
+  run_batches=function(run){
+    out=list()
+    for(b in batches){
+      out=c(out,run(b))
+      if(!is.null(progress)) progress(length(b))
+    }
+    return(out)
+  }
+
   if(!use_fork()){
     cl=parallel::makePSOCKcluster(n_cores)
     on.exit(parallel::stopCluster(cl),add=TRUE)
     parallel::clusterEvalQ(cl,RhpcBLASctl::blas_set_num_threads(1))
     if(fixest_single_thread) parallel::clusterEvalQ(cl,fixest::setFixest_nthreads(nthreads=1))
-    out=parallel::parLapply(cl,1:n,fun)
+    #fun, which may hold large simulated data, is sent to the workers once, not with every batch
+    parallel::clusterCall(cl,assign_sim_fun,fun)
+    out=run_batches(function(b) parallel::parLapply(cl,b,call_sim_fun))
   }else{
     #mclapply only warns about failed workers; those are raised as errors below
-    out=suppressWarnings(parallel::mclapply(1:n,fun,mc.cores=n_cores))
+    out=run_batches(function(b) suppressWarnings(parallel::mclapply(b,fun,mc.cores=n_cores)))
     failed=vapply(out,function(x) is.null(x)||inherits(x,"try-error"),logical(1))
     if(any(failed)){
       first=out[[which(failed)[1]]]
@@ -264,6 +280,53 @@ run_sims=function(n,fun,Parallel,fixest_single_thread){
     }
   }
   return(out)
+}
+
+######Store the simulation function in a PSOCK worker, and call it. They are defined at the top
+######level of the package, so sending them to a worker does not send the data of run_sims().
+assign_sim_fun=function(fun){
+  assign(".spatInfer_sim_fun",fun,envir=globalenv())
+  return(NULL)
+}
+call_sim_fun=function(j) get(".spatInfer_sim_fun",envir=globalenv())(j)
+
+######Progress bar for placebo_synth() and iv_placebo_synth(), counting the simulated regressions,
+######with a status giving the step being run. It is created in the frame .envir of the calling
+######function, and closes when that function returns. add(k) counts k more regressions.
+sim_progress=function(total,.envir=parent.frame()){
+  id=cli::cli_progress_bar(total=total,clear=FALSE,.envir=.envir,
+                           format="{cli::pb_status} {cli::pb_bar} {cli::pb_current}/{cli::pb_total} | ETA: {cli::pb_eta}")
+  done=0
+  list(status=function(msg) cli::cli_progress_update(id=id,status=msg,set=done,force=TRUE,.envir=.envir),
+       add=function(k){
+         done<<-done+k
+         cli::cli_progress_update(id=id,set=done,.envir=.envir)
+       })
+}
+
+######Show the step being run on a progress bar, if there is one.
+progress_status=function(progress,msg){
+  if(!is.null(progress)) progress$status(msg)
+}
+
+######Inputs shared by the placebo and synthetic outcome tests: the data with the treatment and
+######outcome renamed and the spatial basis added, the clusters for BCH and IM, and the SCPC spatial
+######weights for each avc, which depend only on the locations.
+sim_inputs=function(fm,df,splines,pc_num,weights,max_clus,k_medoids,avc,scpc_weighting){
+  if(!is.null(avc)) avc=check_avc(avc)
+  scpc_weighting=check_scpc_weighting(scpc_weighting)
+  prep=prepare_spatial_data(fm,df,splines,pc_num,weights,max_clus)
+  return(sim_inputs_finish(prep,splines,pc_num,max_clus,k_medoids,avc,scpc_weighting))
+}
+
+######Clusters from 3 up to max_clus and SCPC spatial weights added to the prepared data prep.
+sim_inputs_finish=function(prep,splines,pc_num,max_clus,k_medoids,avc,scpc_weighting){
+  prep$hold_clus=sim_clusters(prep$df,k_medoids,max_clus)
+  prep$avc=avc
+  prep$spcs=if(is.null(avc)) NULL else scpc_setup(prep$df,avc,scpc_weighting)
+  prep$splines=splines
+  prep$pc_num=pc_num
+  return(prep)
 }
 
 ######Confidence interval of the treatment coefficient, in the units of the coefficient.
@@ -324,8 +387,10 @@ ols_sim=function(j,Sim,eq_sim,df,hold_clus,avc=NULL,spcs=scpc_setup(df,avc)){
 }
 
 ######Simulated p values for every draw in Sim, run in parallel if asked.
-ols_sim_p_values=function(df,Sim,eq_sim,hold_clus,nSim,Parallel,avc=NULL,spcs=NULL){
-  out=run_sims(nSim,function(j) ols_sim(j,Sim,eq_sim,df,hold_clus,avc,spcs),Parallel,fixest_single_thread=TRUE)
+######progress is passed to run_sims().
+ols_sim_p_values=function(df,Sim,eq_sim,hold_clus,nSim,Parallel,avc=NULL,spcs=NULL,progress=NULL){
+  out=run_sims(nSim,function(j) ols_sim(j,Sim,eq_sim,df,hold_clus,avc,spcs),Parallel,
+               fixest_single_thread=TRUE,progress=progress)
   return(purrr::list_rbind(out))
 }
 

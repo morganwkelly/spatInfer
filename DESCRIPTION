@@ -35,6 +35,7 @@ Imports:
   purrr,
   withr,
   RhpcBLASctl,
+  cli,
   geodist
 Suggests:
   modelsummary,

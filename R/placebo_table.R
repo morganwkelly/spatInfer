@@ -43,11 +43,19 @@ sim_table(plbo,"placebo",caption)
 }
 
 #####Table of placebo (kind="placebo") or synthetic outcome (kind="synth") results, for least
-#####squares or IV regressions, with every inference method.
-sim_table=function(x,kind,caption){
+#####squares or IV regressions, with every inference method. syn, for a placebo, is the matching
+#####synth, whose p values are added as a column, with the notes of both tests.
+sim_table=function(x,kind,caption,syn=NULL){
 is_iv=is_iv_results(x$Results)
 scpc="SCPC" %in% x$Results$SE
-tr=table_rows(x$Results)
+results=x$Results
+if(!is.null(syn)){
+  if(!identical(results[,c("SE","Clusters")],syn$Results[,c("SE","Clusters")]))
+    stop("The placebo and synth must have the same inference methods, clusters and avc values.",call.=FALSE)
+  results$`Synth p`=syn$Results$`Synth p`
+  results=dplyr::relocate(results,"Synth p",.after="Plac 5%")
+}
+tr=table_rows(results)
 rr=tr$rows |>
   dplyr::rename(Adj=SE) |>
   dplyr::mutate(dplyr::across(dplyr::where(is.numeric)&!dplyr::any_of("CI Width"),~{round(.x,3)}))   #CI widths keep their significant digits
@@ -57,8 +65,24 @@ ss=x$Spatial_Params|>
 
 of=if(kind=="placebo") "the treatment on the principal components"
    else "the outcome on a quadratic in longitude and latitude"
-tab=tinytable::tt(rr,theme="striped",align="r",digits=3,
-              notes=   Filter(Negate(is.null),list(
+notes=if(is.null(syn)) sim_notes(ss,kind,of,is_iv,scpc) else placebo_synth_notes(ss,syn,is_iv,scpc)
+tab=tinytable::tt(rr,theme="striped",align="r",digits=3,notes=notes,caption=caption)
+
+tab= tab |>
+  tinytable::style_tt(i = 0, bold=TRUE ) |>
+  tinytable::style_tt(j=1, bold=TRUE )
+if(kind=="placebo") tab=tab |> tinytable::style_tt(j = c("Plac 5%"), color = "orange")
+if(is_iv)
+  tab=tab |>
+    tinytable::group_tt(i=stats::setNames(list(1,tr$n_wald+1),c("2SLS","Anderson-Rubin"))) |>
+    tinytable::style_tt(i="groupi", color="orange")   #2SLS and Anderson-Rubin headings
+
+return(tab)
+}
+
+#####Notes of a placebo or synth table: spatial parameters of the simulated noise, and the tests shown.
+sim_notes=function(ss,kind,of,is_iv,scpc){
+Filter(Negate(is.null),list(
                 paste0("Moran=",ss$Moran,
                        ", Structure=",ss$Structure,
                        ", Effective Range=",ss$Effective_Range,
@@ -76,20 +100,26 @@ tab=tinytable::tt(rr,theme="striped",align="r",digits=3,
                        "with HC inference, BCH and IM inference for each number of clusters",
                        if(scpc) ", and SCPC inference for each value of the average correlation bound avc" else "",
                        ". R2 gives the explanatory power of a regression of ",of,".")
-              )),
-              caption=caption
-)
+              ))
+}
 
-tab= tab |>
-  tinytable::style_tt(i = 0, bold=TRUE ) |>
-  tinytable::style_tt(j=1, bold=TRUE )
-if(kind=="placebo") tab=tab |> tinytable::style_tt(j = c("Plac 5%"), color = "orange")
-if(is_iv)
-  tab=tab |>
-    tinytable::group_tt(i=stats::setNames(list(1,tr$n_wald+1),c("2SLS","Anderson-Rubin"))) |>
-    tinytable::style_tt(i="groupi", color="orange")   #2SLS and Anderson-Rubin headings
-
-return(tab)
+#####Notes of a table of a placebo with the synth p values: the spatial parameters of the treatment
+#####(and instrument) noise from the placebo, sp, and of the outcome noise from the synth.
+placebo_synth_notes=function(sp,syn,is_iv,scpc){
+ss=syn$Spatial_Params|>
+  dplyr::mutate(dplyr::across(dplyr::where(is.numeric),~{round(.x,2)}))
+Filter(Negate(is.null),list(
+  paste0("Moran=",sp$Moran,", N=",sp$N,", Splines=",sp$Splines,", PCs=",sp$PCs,"."),
+  paste0("Treatment: Structure=",sp$Structure,", Effective Range=",sp$Effective_Range,", R2=",sp$R2,". ",
+         "Outcome: Structure=",ss$Structure,", Effective Range=",ss$Effective_Range,", R2=",ss$R2,"."),
+  if(is_iv) iv_notes(sp,scpc),
+  paste0("Estimated and placebo p values, proportion of placebo regressions significant at 5%, synthetic ",
+         "outcome p values and confidence intervals, with HC inference, BCH and IM inference for each ",
+         "number of clusters",
+         if(scpc) ", and SCPC inference for each value of the average correlation bound avc" else "",
+         ". Treatment R2 gives the explanatory power of a regression of the treatment on the principal ",
+         "components, and outcome R2 of a regression of the outcome on a quadratic in longitude and latitude.")
+))
 }
 
 #####Show the standard error label (HC, BCH, IM, SCPC) only where each block starts.

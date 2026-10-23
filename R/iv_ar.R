@@ -62,8 +62,7 @@ ar_reduced_forms=function(eq,df,term,Y){
   if(is.na(j))
     stop("The instrument was dropped from the reduced form because of collinearity.",call.=FALSE)
   X=stats::model.matrix(fit)[,coef_names,drop=FALSE]
-  w=stats::weights(fit)
-  if(is.null(w)) w=rep(1,nrow(X))
+  w=fit_weights(fit)
   Y=as.matrix(Y)[fixest::obs(fit),,drop=FALSE]
   P=solve(crossprod(X,w*X),t(w*X))   #coefficients are P %*% Y
   coefs=P%*%Y

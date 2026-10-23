@@ -12,9 +12,10 @@ check_avc=function(avc){
 
 ######The spatial weights depend only on the locations and avc, and take most of the time,
 ######so scpc_setup() computes them once for each avc, to be reused in every simulated regression.
-scpc_setup=function(df,avc){
+######scpc_weighting chooses the treatment of weighted regressions (scpc_cond_weights()).
+scpc_setup=function(df,avc,scpc_weighting="scpcR"){
   coords=as.matrix(df[,c("X","Y")])
-  lapply(avc,function(a) scpc_spatial(coords,a))
+  lapply(avc,function(a) scpc_spatial(coords,a,cond_weights=scpc_weighting))
 }
 
 ######SCPC estimate, standard error, t, p value and 95% confidence interval of the
@@ -24,7 +25,8 @@ scpc_setup=function(df,avc){
 scpc_stats=function(fit,df,avc,spcs=scpc_setup(df,avc)){
   treat=match(treatment_term(fit),names(stats::coef(fit)))
   obs=fixest::obs(fit)
-  if(!identical(obs,seq_len(nrow(df)))) spcs=scpc_setup(df[obs,],avc)   #observations were dropped
+  if(!identical(obs,seq_len(nrow(df))))   #observations were dropped
+    spcs=scpc_setup(df[obs,],avc,spcs[[1]]$cond_weights)
   out=t(vapply(spcs,function(spc) scpc_coef_stats(fit,spc,treat)[1,],numeric(6)))
   colnames(out)=c("Coef","Std_Err","t","p","lower","upper")
   return(out)

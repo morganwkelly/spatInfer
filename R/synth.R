@@ -46,30 +46,32 @@
 
 synth=function(fm,df,splines,pc_num,
                    nSim=1000,weights=NULL,max_clus=6,
-                   Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE,xy_interaction=FALSE,avc=NULL){
+                   Parallel=TRUE,exact_cholesky=TRUE,k_medoids=TRUE,xy_interaction=FALSE,avc=NULL,
+                   scpc_weighting="scpcR"){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
-  if(!is.null(avc)) avc=check_avc(avc)
-  prep=prepare_spatial_data(fm,df,splines,pc_num,weights,max_clus)
-  df=prep$df
-  rhs=prep$rhs
-  pc=prep$pc
-  rm(prep)
+  inp=sim_inputs(fm,df,splines,pc_num,weights,max_clus,k_medoids,avc,scpc_weighting)
+  return(synth_run(inp,nSim,Parallel,exact_cholesky,xy_interaction))
+}
 
+######Synthetic outcome test on the inputs from sim_inputs(). progress is a progress bar from
+######sim_progress(), or NULL for none.
+synth_run=function(inp,nSim,Parallel,exact_cholesky,xy_interaction,progress=NULL){
+df=inp$df
 
 # Define two equations: the estimated equation using the true outcome variable and
 # the simulated equation that uses paramaterized noise instead.
 # Both equations have a spatial basis of principal components added.
-eqs=build_formulas(rhs,pc,sim_replaces="dep_var")
+eqs=build_formulas(inp$rhs,inp$pc,sim_replaces="dep_var")
 eq_est=eqs$eq_est
 eq_sim=eqs$eq_sim
 rm(eqs)
 
 # Regress dep_var on quadratic in long and lat to generate syn outcomes.
 lm_res=synth_trend(df,xy_interaction)
-rm(pc)
 
 # Get spatial correlation pattern of residuals and generate synthetic noise with the same structure.
+progress_status(progress,"Synth: fitting spatial noise")
 noise_sim=Noise_Sim(df,lm_res,nSim,exact_cholesky,Parallel)
 
 #Moran test using 5 nearest neighbours
@@ -80,23 +82,18 @@ Spatial_Params=data.frame(Moran,R2=summary(lm_res)$r.squared,   #explanatory pow
                           Effective_Range=noise_sim$matern_params$Effective_Range,   #fraction of 95th perc distance bw coords
                           Structure=noise_sim$matern_params$Structure)
 Spatial_Params=round(Spatial_Params,3)
-Spatial_Params=cbind.data.frame(Spatial_Params,N=nrow(df),Splines=splines,PCs=pc_num)
+Spatial_Params=cbind.data.frame(Spatial_Params,N=nrow(df),Splines=inp$splines,PCs=inp$pc_num)
 
 #Simulated variables
 Sim=noise_sim$Sim
 rm(noise_sim)
 
-# k-medoids clusters from 3 up to max_clus
-hold_clus=sim_clusters(df,k_medoids,max_clus)
-
-# SCPC spatial weights for each avc, which depend only on the locations.
-spcs=if(is.null(avc)) NULL else scpc_setup(df,avc)
-
 # p values of the treatment in regressions on synthetic outcomes with HC, BCH, IM and SCPC inference.
-sim_out=ols_sim_p_values(df,Sim,eq_sim,hold_clus,nSim,Parallel,avc,spcs)
+progress_status(progress,"Synth: simulations")
+sim_out=ols_sim_p_values(df,Sim,eq_sim,inp$hold_clus,nSim,Parallel,inp$avc,inp$spcs,progress$add)
 
 # Summary synth results
-Results=ols_summary(df,eq_est,hold_clus,sim_out,avc,spcs)
+Results=ols_summary(df,eq_est,inp$hold_clus,sim_out,inp$avc,inp$spcs)
 Results=Results  |>
   dplyr::select(-sim_05)|>
   dplyr::rename(`Synth p`= sim_p,

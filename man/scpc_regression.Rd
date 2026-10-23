@@ -4,7 +4,15 @@
 \alias{scpc_regression}
 \title{Spatial basis regression with SCPC inference on every coefficient.}
 \usage{
-scpc_regression(fm, df, splines, pc_num, avc, weights = NULL)
+scpc_regression(
+  fm,
+  df,
+  splines,
+  pc_num,
+  avc,
+  weights = NULL,
+  scpc_weighting = "scpcR"
+)
 }
 \arguments{
 \item{fm}{The equation formula. The variable of interest is the first one on the right hand side.}
@@ -21,6 +29,12 @@ the placebo test of \code{\link[=placebo]{placebo()}}. It must lie between 0.001
 \item{weights}{The name of the weighting variable in the dataset, as a
 string, for example \code{weights="pop"}. Leave it out for an unweighted
 regression.}
+
+\item{scpc_weighting}{How conditional SCPC treats a weighted regression.
+The default, \code{"scpcR"}, leaves the regressors unweighted, as the scpcR
+package does. \code{"sqrt"} rescales them by the square root of the weights,
+which makes the regression the least squares regression equivalent to
+weighted least squares. The two agree for unweighted regressions.}
 }
 \value{
 An object of class \code{scpc_regression}, a list containing \code{Coefs}, a
@@ -34,7 +48,7 @@ BCH and IM results.
 \code{scpc_regression()} runs the spatial basis regression of \code{\link[=basis_regression]{basis_regression()}}
 with SCPC inference (Mueller and Watson 2022, 2023) on every coefficient. The
 SCPC code is ported from the scpcR package, and gives the same results for
-unweighted regressions; see Details for weighted ones.
+weighted and unweighted regressions; see Details.
 }
 \details{
 With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
@@ -46,9 +60,10 @@ circumference. The weights therefore decay faster with distance than intended, a
 results can differ from the exact calculation used for smaller samples. The
 calculation is left unchanged so that results match scpcR.
 
-With \code{weights}, conditional SCPC is computed for the regression rescaled by
-the square root of the weights, the least squares regression equivalent to
-weighted least squares, whereas scpcR leaves the regressors unweighted.
+With \code{weights}, conditional SCPC leaves the regressors unweighted by
+default, as scpcR does. With \code{scpc_weighting = "sqrt"} it is computed for
+the regression rescaled by the square root of the weights, the least squares
+regression equivalent to weighted least squares.
 }
 \examples{
 library(spatInfer)

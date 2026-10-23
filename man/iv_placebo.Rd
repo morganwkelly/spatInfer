@@ -15,7 +15,8 @@ iv_placebo(
   Parallel = TRUE,
   exact_cholesky = TRUE,
   k_medoids = TRUE,
-  avc = NULL
+  avc = NULL,
+  scpc_weighting = "scpcR"
 )
 }
 \arguments{
@@ -56,6 +57,10 @@ approximation to generate medoids.}
 and AR tests with SCPC inference, each between 0.001 and 0.99, as in
 \code{\link[=placebo]{placebo()}}. The default, \code{NULL}, gives no SCPC tests, which are the
 slowest.}
+
+\item{scpc_weighting}{How conditional SCPC treats a weighted regression, as
+in \code{\link[=placebo]{placebo()}}: \code{"scpcR"} (the default) as the scpcR package does, or
+\code{"sqrt"} with the regressors rescaled by the square root of the weights.}
 }
 \value{
 A list containing \code{Results}, which summarizes the placebo values

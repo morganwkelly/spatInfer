@@ -16,7 +16,8 @@ synth(
   exact_cholesky = TRUE,
   k_medoids = TRUE,
   xy_interaction = FALSE,
-  avc = NULL
+  avc = NULL,
+  scpc_weighting = "scpcR"
 )
 }
 \arguments{
@@ -61,6 +62,12 @@ quadratic trend in them that generates the synthetic outcome. Defaults to
 correlation to examine, each between 0.001 and 0.99, for example
 \code{avc=seq(0.02,0.1,by=0.02)}. The default, \code{NULL}, gives no SCPC results,
 which are the slowest to compute.}
+
+\item{scpc_weighting}{How conditional SCPC treats a weighted regression.
+The default, \code{"scpcR"}, leaves the regressors unweighted, as the scpcR
+package does. \code{"sqrt"} rescales them by the square root of the weights,
+which makes the regression the least squares regression equivalent to
+weighted least squares. The two agree for unweighted regressions.}
 }
 \value{
 A list containing Results which summarizes the synthetic outcome

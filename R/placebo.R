@@ -41,6 +41,11 @@
 #'  correlation to examine, each between 0.001 and 0.99, for example
 #'  `avc=seq(0.02,0.1,by=0.02)`. The default, `NULL`, gives no SCPC results,
 #'  which are the slowest to compute.
+#'@param scpc_weighting How conditional SCPC treats a weighted regression.
+#'  The default, `"scpcR"`, leaves the regressors unweighted, as the scpcR
+#'  package does. `"sqrt"` rescales them by the square root of the weights,
+#'  which makes the regression the least squares regression equivalent to
+#'  weighted least squares. The two agree for unweighted regressions.
 #'@details BCH uses clustered standard errors. In IM inference the treatment
 #'  coefficient is estimated separately in each cluster and the cluster
 #'  coefficients are tested with a t-test. Clusters where it cannot be
@@ -51,10 +56,10 @@
 #'  The SCPC code is based on the scpcR package of Sascha Becker, P. David Boll
 #'  and Hans-Joachim Voth (<https://github.com/spatial-spur/scpcR>, MIT licence),
 #'  ported into spatInfer so that scpcR is not needed. It gives the same results
-#'  as scpcR for unweighted regressions. With `weights`, conditional SCPC is
-#'  computed for the regression rescaled by the square root of the weights, the
-#'  least squares regression equivalent to weighted least squares, whereas scpcR
-#'  leaves the regressors unweighted.
+#'  as scpcR, including for weighted regressions with the default
+#'  `scpc_weighting = "scpcR"`. With `scpc_weighting = "sqrt"`, conditional SCPC
+#'  in a weighted regression is computed for the regression rescaled by the
+#'  square root of the weights instead.
 #'
 #'  With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
 #'  computes the spatial weights from random subsets of 1,000 locations and extends them
@@ -101,21 +106,23 @@
 placebo=function(fm,df,splines,pc_num,
                      nSim=1000,weights=NULL,max_clus=6,
                      Parallel=TRUE,exact_cholesky=TRUE,
-                 k_medoids=TRUE,avc=NULL){
+                 k_medoids=TRUE,avc=NULL,scpc_weighting="scpcR"){
 #
   withr::local_preserve_seed()  #fixed simulation seeds do not change the user's random numbers
-  if(!is.null(avc)) avc=check_avc(avc)
-  prep=prepare_spatial_data(fm,df,splines,pc_num,weights,max_clus)
-  df=prep$df
-  rhs=prep$rhs
-  pc=prep$pc
-  rm(prep)
+  inp=sim_inputs(fm,df,splines,pc_num,weights,max_clus,k_medoids,avc,scpc_weighting)
+  return(placebo_run(inp,nSim,Parallel,exact_cholesky))
+}
 
+######Placebo test on the inputs from sim_inputs(). progress is a progress bar from
+######sim_progress(), or NULL for none.
+placebo_run=function(inp,nSim,Parallel,exact_cholesky,progress=NULL){
+df=inp$df
+pc=inp$pc
 
 # Define two equations: the estimated equation using the true explanatory variable and
 # the simulated equation that uses a placebo instead.
 # Both equations have a spatial basis of principal components added.
-eqs=build_formulas(rhs,pc,sim_replaces="explan_var")
+eqs=build_formulas(inp$rhs,pc,sim_replaces="explan_var")
 eq_est=eqs$eq_est
 eq_sim=eqs$eq_sim
 rm(eqs)
@@ -127,6 +134,7 @@ lm_res=lm(as.formula(paste("explan_var",paste(names(pc),collapse="+"),sep="~")),
 rm(pc)
 
 # Get spatial correlation pattern of residuals and generate placebo noise with the same structure.
+progress_status(progress,"Placebo: fitting spatial noise")
 noise_sim=Noise_Sim(df,lm_res,nSim,exact_cholesky,Parallel)
 #Collect Output
 
@@ -137,21 +145,16 @@ Spatial_Params=data.frame(Moran,R2=summary(lm_res)$r.squared,   #explanatory pow
                           Effective_Range=noise_sim$matern_params$Effective_Range,   #fraction of 95th perc distance bw coords
                           Structure=noise_sim$matern_params$Structure)
 Spatial_Params=round(Spatial_Params,3)
-Spatial_Params=cbind.data.frame(Spatial_Params,N=nrow(df),Splines=splines,PCs=pc_num)
+Spatial_Params=cbind.data.frame(Spatial_Params,N=nrow(df),Splines=inp$splines,PCs=inp$pc_num)
 Sim=noise_sim$Sim
 rm(noise_sim)
 
-# k-medoids clusters from 3 up to max_clus
-hold_clus=sim_clusters(df,k_medoids,max_clus)
-
-# SCPC spatial weights for each avc, which depend only on the locations.
-spcs=if(is.null(avc)) NULL else scpc_setup(df,avc)
-
 # p values of placebo variables in simulated regressions with HC, BCH, IM and SCPC inference.
-sim_out=ols_sim_p_values(df,Sim,eq_sim,hold_clus,nSim,Parallel,avc,spcs)
+progress_status(progress,"Placebo: simulations")
+sim_out=ols_sim_p_values(df,Sim,eq_sim,inp$hold_clus,nSim,Parallel,inp$avc,inp$spcs,progress$add)
 
 # Summary Placebo results
-Results=ols_summary(df,eq_est,hold_clus,sim_out,avc,spcs)
+Results=ols_summary(df,eq_est,inp$hold_clus,sim_out,inp$avc,inp$spcs)
 Results=Results  |>
                  dplyr::rename(`Plac p`= sim_p, `Plac 5%`=sim_05,
                                `Est p`=est_p,`CI Width`=width_ci)

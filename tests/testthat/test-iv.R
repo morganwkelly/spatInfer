@@ -14,6 +14,7 @@ test_that("iv_placebo() and iv_synth() results are unchanged", {
   expect_golden("iv_placebo")
   expect_golden("iv_synth")
   expect_golden("iv_placebo_weighted")
+  expect_golden("iv_placebo_weighted_scpc")
 })
 
 test_that("IV results have the documented components and columns", {

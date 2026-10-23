@@ -186,13 +186,22 @@ iv_summary=function(df,eqs,hold_clus,sim_out,avc=NULL,spcs=NULL){
 }
 
 ######Simulated p values for every draw in Sim (and Sim_inst for placebos), run in parallel if asked.
-######spcs are the SCPC spatial weights for each avc, computed once from the locations.
-iv_sim_p_values=function(df,Sim,eqs,hold_clus,nSim,Parallel,Sim_inst=NULL,avc=NULL,spcs=NULL){
+######spcs are the SCPC spatial weights for each avc, computed once from the locations. progress is
+######passed to run_sims().
+iv_sim_p_values=function(df,Sim,eqs,hold_clus,nSim,Parallel,Sim_inst=NULL,avc=NULL,spcs=NULL,progress=NULL){
   sim_fun=function(j){
     df1=cbind.data.frame(sim=Sim[,j],df)
     if(!is.null(Sim_inst)) df1$sim_inst=Sim_inst[,j]
     iv_sim(df1,eqs,hold_clus,avc,spcs)
   }
-  out=run_sims(nSim,sim_fun,Parallel,fixest_single_thread=TRUE)
+  out=run_sims(nSim,sim_fun,Parallel,fixest_single_thread=TRUE,progress=progress)
   return(purrr::list_rbind(out))
+}
+
+######Inputs shared by the IV placebo and synthetic outcome tests, as sim_inputs() for least squares.
+iv_sim_inputs=function(fm,df,splines,pc_num,weights,max_clus,k_medoids,avc,scpc_weighting){
+  if(!is.null(avc)) avc=check_avc(avc)
+  scpc_weighting=check_scpc_weighting(scpc_weighting)
+  prep=prepare_iv_data(fm,df,splines,pc_num,weights,max_clus)
+  return(sim_inputs_finish(prep,splines,pc_num,max_clus,k_medoids,avc,scpc_weighting))
 }

@@ -4,7 +4,15 @@
 \alias{iv_scpc_regression}
 \title{Spatial basis instrumental variable regressions with SCPC inference.}
 \usage{
-iv_scpc_regression(fm, df, splines, pc_num, avc, weights = NULL)
+iv_scpc_regression(
+  fm,
+  df,
+  splines,
+  pc_num,
+  avc,
+  weights = NULL,
+  scpc_weighting = "scpcR"
+)
 }
 \arguments{
 \item{fm}{The equation formula, written as in \code{\link[fixest:feols]{fixest::feols()}}:

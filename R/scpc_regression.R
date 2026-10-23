@@ -4,7 +4,7 @@
 #' `scpc_regression()` runs the spatial basis regression of [basis_regression()]
 #' with SCPC inference (Mueller and Watson 2022, 2023) on every coefficient. The
 #' SCPC code is ported from the scpcR package, and gives the same results for
-#' unweighted regressions; see Details for weighted ones.
+#' weighted and unweighted regressions; see Details.
 #'
 #' @param fm  The equation formula. The variable of interest is the first one on the right hand side.
 #' @param df  The name of the dataset use. Longitude and latitude must be named X and Y and have no missing values.
@@ -15,6 +15,7 @@
 #' @param weights The name of the weighting variable in the dataset, as a
 #'   string, for example `weights="pop"`. Leave it out for an unweighted
 #'   regression.
+#' @inheritParams placebo
 #'
 #' @details With 4,500 or more observations, SCPC uses scpcR's large sample approximation, which
 #'   computes the spatial weights from random subsets of 1,000 locations and extends them
@@ -25,9 +26,10 @@
 #'   results can differ from the exact calculation used for smaller samples. The
 #'   calculation is left unchanged so that results match scpcR.
 #'
-#'   With `weights`, conditional SCPC is computed for the regression rescaled by
-#'   the square root of the weights, the least squares regression equivalent to
-#'   weighted least squares, whereas scpcR leaves the regressors unweighted.
+#'   With `weights`, conditional SCPC leaves the regressors unweighted by
+#'   default, as scpcR does. With `scpc_weighting = "sqrt"` it is computed for
+#'   the regression rescaled by the square root of the weights, the least squares
+#'   regression equivalent to weighted least squares.
 #'
 #' @return An object of class `scpc_regression`, a list containing `Coefs`, a
 #'   data frame with one row for each coefficient giving the estimate, SCPC
@@ -46,14 +48,16 @@
 #' opportunity,splines=4,pc_num=3,avc=0.04)
 #' sc
 
-scpc_regression=function(fm,df,splines,pc_num,avc,weights=NULL){
+scpc_regression=function(fm,df,splines,pc_num,avc,weights=NULL,scpc_weighting="scpcR"){
   if(length(avc)!=1)
     stop("avc must be a single number between 0.001 and 0.99.",call.=FALSE)
   avc=check_avc(avc)
+  scpc_weighting=check_scpc_weighting(scpc_weighting)
   basis=basis_data(fm,df,splines,pc_num,weights)
   fit=fixest::feols(basis$eq_est,data=basis$df,weights=~wts)
   obs=fixest::obs(fit)
-  stats=scpc_coef_stats(fit,scpc_spatial(as.matrix(basis$df[obs,c("X","Y")]),avc),
+  stats=scpc_coef_stats(fit,scpc_spatial(as.matrix(basis$df[obs,c("X","Y")]),avc,
+                                          cond_weights=scpc_weighting),
                         seq_along(stats::coef(fit)))
   stats=stats[!rownames(stats)%in%names(basis$pc),,drop=FALSE]
   Coefs=data.frame(term=rownames(stats),

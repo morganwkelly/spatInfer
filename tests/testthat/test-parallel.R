@@ -32,6 +32,23 @@ for (fork in c(FALSE, TRUE)) {
     expect_identical(run_iv(iv_synth, Parallel = TRUE), run_iv(iv_synth, Parallel = FALSE))
   })
 
+  test_that(paste("placebo_synth() gives identical results with a progress bar and", backend), {
+    skip_parallel()
+    local_backend(fork)
+    expect_identical(run_sim(placebo_synth, Parallel = TRUE, avc = fixture_avc),
+                     run_sim(placebo_synth, Parallel = FALSE, avc = fixture_avc, progress = FALSE))
+  })
+
+  test_that(paste("run_sims() reports progress in batches with", backend), {
+    skip_parallel()
+    local_backend(fork)
+    done <- integer()
+    out <- run_sims(50, function(j) j^2, TRUE, FALSE, progress = function(k) done <<- c(done, k))
+    expect_identical(out, as.list((1:50)^2))
+    expect_identical(sum(done), 50L)
+    expect_gt(length(done), 1)
+  })
+
   test_that(paste("errors are raised from", backend), {
     skip_parallel()
     local_backend(fork)

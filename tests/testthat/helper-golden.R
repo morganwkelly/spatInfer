@@ -94,10 +94,21 @@ golden_cases <- list(
   # combined into placebo() and synth(); their rows matched the earlier separate versions exactly.
   placebo = function() run_sim(placebo, Parallel = FALSE, avc = fixture_avc),
   synth = function() run_sim(synth, Parallel = FALSE, avc = fixture_avc),
+  # The weighted cases were recorded when weighted conditional SCPC rescaled the regressors by the
+  # square root of the weights, now the option scpc_weighting = "sqrt", which they check.
   placebo_weighted = function() {
-    run_sim(placebo, Parallel = FALSE, avc = fixture_avc, weights = "wt", data = fixture_data(TRUE))
+    run_sim(placebo, Parallel = FALSE, avc = fixture_avc, weights = "wt", data = fixture_data(TRUE),
+            scpc_weighting = "sqrt")
   },
   synth_weighted = function() {
+    run_sim(synth, Parallel = FALSE, avc = fixture_avc, weights = "wt", data = fixture_data(TRUE),
+            scpc_weighting = "sqrt")
+  },
+  # Weighted cases with the default scpc_weighting = "scpcR", recorded when it became the default.
+  placebo_weighted_scpcr = function() {
+    run_sim(placebo, Parallel = FALSE, avc = fixture_avc, weights = "wt", data = fixture_data(TRUE))
+  },
+  synth_weighted_scpcr = function() {
     run_sim(synth, Parallel = FALSE, avc = fixture_avc, weights = "wt", data = fixture_data(TRUE))
   },
   placebo_clara = function() run_sim(placebo, Parallel = FALSE, k_medoids = FALSE),
@@ -108,6 +119,9 @@ golden_cases <- list(
   iv_synth = function() run_iv(iv_synth, Parallel = FALSE, avc = iv_avc),
   iv_placebo_weighted = function() {
     run_iv(iv_placebo, Parallel = FALSE, weights = "timepwt48")
+  },
+  iv_placebo_weighted_scpc = function() {
+    run_iv(iv_placebo, Parallel = FALSE, weights = "timepwt48", avc = iv_avc)
   }
 )
 

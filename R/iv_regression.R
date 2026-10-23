@@ -131,18 +131,20 @@ iv_im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,k_medoids=T
 #' iv_sc=iv_scpc_regression(fm,china,splines=6,pc_num=8,avc=0.05,weights="timepwt48")
 #' iv_sc
 
-iv_scpc_regression=function(fm,df,splines,pc_num,avc,weights=NULL){
+iv_scpc_regression=function(fm,df,splines,pc_num,avc,weights=NULL,scpc_weighting="scpcR"){
   if(length(avc)!=1)
     stop("avc must be a single number between 0.001 and 0.99.",call.=FALSE)
   avc=check_avc(avc)
-  obj=iv_basis_regression(fm,df,splines,pc_num,NULL,weights,"SCPC",avc=avc)
+  scpc_weighting=check_scpc_weighting(scpc_weighting)
+  obj=iv_basis_regression(fm,df,splines,pc_num,NULL,weights,"SCPC",avc=avc,scpc_weighting=scpc_weighting)
   class(obj)=c("iv_scpc_regression","iv_regression")
   return(obj)
 }
 
 ######2SLS with the spatial basis and BCH, HC, IM or SCPC inference, for iv_regression(),
 ######iv_im_regression() and iv_scpc_regression().
-iv_basis_regression=function(fm,df,splines,pc_num,clusters,weights,cov,k_medoids=TRUE,avc=NULL){
+iv_basis_regression=function(fm,df,splines,pc_num,clusters,weights,cov,k_medoids=TRUE,avc=NULL,
+                             scpc_weighting="scpcR"){
   if(cov%in%c("BCH","IM")&&(!is.numeric(clusters)||length(clusters)!=1||clusters<2||clusters!=round(clusters)))
     stop("clusters must be a whole number of at least 2 for BCH and IM.",call.=FALSE)
   if(cov%in%c("HC","SCPC")) clusters=NULL
@@ -177,7 +179,7 @@ iv_basis_regression=function(fm,df,splines,pc_num,clusters,weights,cov,k_medoids
     first_F=NA_real_   #no first stage F for IM
   }else if(cov=="SCPC"){
     fit=full
-    spc=scpc_spatial(as.matrix(df1[fixest::obs(full),c("X","Y")]),avc)
+    spc=scpc_spatial(as.matrix(df1[fixest::obs(full),c("X","Y")]),avc,cond_weights=scpc_weighting)
     stats=scpc_coef_stats(full,spc,seq_along(stats::coef(full)))
     stats=stats[rownames(stats)%in%terms,,drop=FALSE]
     obj$Coefs=data.frame(term=rownames(stats),estimate=stats[,"Coef"],std.error=stats[,"Std_Err"],

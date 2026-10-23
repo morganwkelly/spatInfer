@@ -51,7 +51,9 @@ scpc_gq=gauss_legendre_01(40)
 ######components of the spatial correlation matrix, the correlation matrices Oms of W over a
 ######grid of correlation decay rates, and the unconditional critical value cvfin.
 ######coords are longitude and latitude. large_n chooses the method for large samples.
-scpc_spatial=function(coords,avc0,large_n=nrow(coords)>=scpc_large_n){
+######cond_weights is kept with the weights and chooses how weighted regressions are treated by
+######conditional SCPC (see scpc_cond_weights()).
+scpc_spatial=function(coords,avc0,large_n=nrow(coords)>=scpc_large_n,cond_weights="scpcR"){
   coords=as.matrix(coords)
   n=nrow(coords)
   qmax=if(avc0>=0.05) 10 else if(avc0>=0.01) 20 else if(avc0>=0.005) 60 else 120
@@ -85,7 +87,8 @@ scpc_spatial=function(coords,avc0,large_n=nrow(coords)>=scpc_large_n){
     qmax=round(qmax+qmax/2)
   }
   return(list(Wfin=fin$W,cvfin=fin$cv,Omsfin=Oms,c0=c0,cmax=cmax,coords=coords_use,
-              perm=perm,distmat=distmat,large_n=large_n,random_state=random_t))
+              perm=perm,distmat=distmat,large_n=large_n,random_state=random_t,
+              cond_weights=cond_weights))
 }
 
 ######Great-circle distances in units of half the earth's circumference.
@@ -315,20 +318,32 @@ scpc_ln_Oms=function(S,c0,cmax,W,random_t,capM=1000000L){
   return(list(Oms=Oms,state=inds_res$state))
 }
 
-######Weighted least squares is least squares on the data multiplied by the square root of the
-######weights, so conditional SCPC uses the regressors rescaled in this way. scpcR leaves them
-######unweighted (all ones here), which gives the same results only in unweighted regressions.
-scpc_cond_weights=function(w) sqrt(w)
+######Rescaling of the regressors by conditional SCPC in a regression with weights w. By default,
+######method "scpcR", they are left unweighted (all ones here), as in scpcR. Weighted least squares
+######is least squares on the data multiplied by the square root of the weights, and method "sqrt"
+######rescales the regressors in this way instead. The two agree in unweighted regressions.
+scpc_cond_weights=function(w,method="scpcR"){
+  if(identical(method,"sqrt")) return(sqrt(w))
+  return(rep(1,length(w)))
+}
+
+######Check the scpc_weighting argument of the user functions.
+check_scpc_weighting=function(scpc_weighting){
+  if(!is.character(scpc_weighting)||length(scpc_weighting)!=1||!scpc_weighting%in%c("scpcR","sqrt"))
+    stop("scpc_weighting must be \"scpcR\" or \"sqrt\".",call.=FALSE)
+  return(scpc_weighting)
+}
 
 ######Correlation matrices of conditional SCPC for the coefficients coefs (positions in the columns
 ######of X) of a regression on X with weights w: the spatial weights of spc projected off the
-######regressors, which are rescaled by scpc_cond_weights(w), and weighted by each coefficient's
-######weights on the observations. They depend on the regressors and locations but not on the
+######regressors, which are rescaled by scpc_cond_weights(w) with the method of spc, and weighted
+######by each coefficient's weights on the observations. They depend on the regressors and
+######locations but not on the
 ######outcome. The approximate method for large samples draws random numbers for each coefficient
 ######in turn, so all coefficients up to the last one wanted are computed then.
 scpc_cond_Oms=function(X,w,spc,coefs){
   n=nrow(X)
-  cw=scpc_cond_weights(w)
+  cw=scpc_cond_weights(w,spc$cond_weights)
   xw=n*solve(crossprod(X,w*X))%*%t(X*cw)
   Wfin=spc$Wfin
   perm=spc$perm
@@ -358,6 +373,15 @@ scpc_cond_Oms=function(X,w,spc,coefs){
   return(out)
 }
 
+######Regression weights of the observations used by a feols fit, ones if it is unweighted.
+######fixest's weights() also gives those of observations dropped for missing values.
+fit_weights=function(fit){
+  w=stats::weights(fit)
+  if(is.null(w)) return(rep(1,stats::nobs(fit)))
+  if(length(w)>stats::nobs(fit)) w=w[fixest::obs(fit)]
+  return(w)
+}
+
 ######SCPC estimate, standard error, t statistic, p value and 95% confidence interval of the
 ######coefficients coefs (positions in coef(fit)) of a feols regression, given the spatial
 ######weights spc from scpc_spatial() for the same observations.
@@ -371,10 +395,9 @@ scpc_coef_stats=function(fit,spc,coefs){
   coef_vec=stats::coef(fit)
   X=X[,names(coef_vec),drop=FALSE]
   n=nrow(X)
-  w=stats::weights(fit)
-  if(is.null(w)) w=rep(1,n)
+  w=fit_weights(fit)
   ##Influence of each observation on the coefficients. Conditional SCPC uses the regression
-  ##rescaled by scpc_cond_weights(w).
+  ##rescaled by scpc_cond_weights(w) with the method of spc.
   infl=n*solve(crossprod(X,w*X))%*%t(X*(w*stats::resid(fit)))
   Omsx=scpc_cond_Oms(X,w,spc,coefs)
 

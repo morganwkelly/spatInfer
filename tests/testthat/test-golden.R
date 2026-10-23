@@ -19,6 +19,8 @@ test_that("placebo() and synth() results are unchanged", {
 test_that("weighted simulation results are unchanged", {
   expect_golden("placebo_weighted")
   expect_golden("synth_weighted")
+  expect_golden("placebo_weighted_scpcr")
+  expect_golden("synth_weighted_scpcr")
 })
 
 test_that("clara clustering (k_medoids = FALSE) results are unchanged", {
