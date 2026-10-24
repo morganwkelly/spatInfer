@@ -62,18 +62,18 @@ test_that("each simulation is estimated once for HC, BCH, IM and SCPC p values",
   expect_equal(out$scpc_0.05, unname(scpc_stats(hc, df1, 0.05)[, "p"]))
 })
 
-test_that("basis_regression() returns a fixest object with saved data", {
-  m <- quietly(basis_regression(fixture_fm, fixture_data(),
+test_that("bch_regression() returns a fixest object with saved data", {
+  m <- quietly(bch_regression(fixture_fm, fixture_data(),
     splines = 4, pc_num = 4, clusters = 4))
   expect_s3_class(m, "fixest")
   expect_identical(rownames(m$coeftable)[2], "single_mothers")
   expect_true(all(paste0("PC", 1:4) %in% rownames(m$coeftable)))
 })
 
-test_that("basis_regression() applies the weights it is given", {
+test_that("bch_regression() applies the weights it is given", {
   d <- fixture_data(weighted = TRUE)
-  unweighted <- quietly(basis_regression(fixture_fm, d, 4, 4, 4))
-  weighted <- quietly(basis_regression(fixture_fm, d, 4, 4, 4, weights = "wt"))
+  unweighted <- quietly(bch_regression(fixture_fm, d, 4, 4, 4))
+  weighted <- quietly(bch_regression(fixture_fm, d, 4, 4, 4, weights = "wt"))
   expect_false(isTRUE(all.equal(coef(weighted), coef(unweighted))))
   expect_equal(unname(weights(weighted)), d$wt)
 

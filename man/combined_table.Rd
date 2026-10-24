@@ -4,12 +4,14 @@
 \alias{combined_table}
 \title{Table combining chosen placebo and synthetic outcome results.}
 \usage{
-combined_table(plbo, syn, select, caption = "")
+combined_table(plbo, syn = NULL, select, caption = "")
 }
 \arguments{
-\item{plbo}{An object created by \code{\link[=placebo]{placebo()}}.}
+\item{plbo}{An object created by \code{\link[=placebo]{placebo()}}, or by \code{\link[=placebo_synth]{placebo_synth()}}, in which case \code{syn} is
+left out.}
 
-\item{syn}{An object created by \code{\link[=synth]{synth()}} for the same regression and spatial basis.}
+\item{syn}{An object created by \code{\link[=synth]{synth()}} for the same regression and spatial basis. Leave it
+out when \code{plbo} comes from \code{\link[=placebo_synth]{placebo_synth()}}.}
 
 \item{select}{A named numeric vector giving, for each inference method to show, the number of
 clusters (\code{BCH} and \code{IM}) or the value of \code{avc} (\code{SCPC}) of its row, for example
@@ -29,7 +31,7 @@ longitude and latitude.
 }
 \description{
 \code{combined_table()} makes one summary table from a \code{\link[=placebo]{placebo()}} test and the matching \code{\link[=synth]{synth()}}
-test. It starts with the HC row and then, for each inference method chosen, gives the row with
+test, or from the output of \code{\link[=placebo_synth]{placebo_synth()}}. It starts with the HC row and then, for each inference method chosen, gives the row with
 the chosen number of clusters (BCH and IM) or SCPC bound \code{avc}, with the synthetic outcome p
 value from the same row of the synth. \code{\link[=iv_combined_table]{iv_combined_table()}} does the same for instrumental
 variable regressions.
@@ -45,4 +47,8 @@ plbo=placebo(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, ma
 synt=synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7, avc=0.04)
 combined_table(plbo, synt, select=c(BCH=5, IM=4, SCPC=0.04),
   caption="Placebo and synthetic outcome significance levels for single mothers variable.")
+# Or both tests from one command.
+ps=placebo_synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7,
+  avc=0.04, progress=FALSE)
+combined_table(ps, select=c(BCH=5, IM=4, SCPC=0.04))
 }

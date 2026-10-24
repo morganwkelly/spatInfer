@@ -2,6 +2,11 @@
 
 ## New features
 
+* `basis_regression()` is renamed `bch_regression()`, and `iv_regression()`
+  is renamed `iv_bch_regression()`, to match `im_regression()`,
+  `scpc_regression()`, `iv_im_regression()` and `iv_scpc_regression()`. The
+  old names are removed.
+
 * `placebo_synth()` runs `placebo()` and `synth()` in one command, and
   `iv_placebo_synth()` runs `iv_placebo()` and `iv_synth()`. They show a
   progress bar with the step being run and the number of simulated regressions
@@ -11,6 +16,9 @@
   `placebo_synth_table()` shows both in one table: every row of the placebo
   table with its synthetic outcome p value added or, with `select`, only the
   chosen rows, as `combined_table()` and `iv_combined_table()` do.
+  `combined_table()` and `iv_combined_table()` also take the output of
+  `placebo_synth()` or `iv_placebo_synth()` in place of a placebo and a synth,
+  for example `combined_table(ps, select = c(BCH = 7, IM = 5))`.
 
 * `placebo()` and `synth()` now run the placebo and synthetic outcome tests
   with HC, BCH, IM and SCPC inference in one call, as `iv_placebo()` and

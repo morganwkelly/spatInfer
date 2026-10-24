@@ -37,7 +37,7 @@ regression.}
 }
 \value{
 An object of class \code{iv_scpc_regression}, which is also an
-\code{iv_regression}: as for \code{\link[=iv_regression]{iv_regression()}}, with SCPC standard errors,
+\code{iv_regression}: as for \code{\link[=iv_bch_regression]{iv_bch_regression()}}, with SCPC standard errors,
 t statistics, p values and confidence intervals in \code{Coefs}, SCPC inference
 for \code{AR} and \code{AR_Set}, \code{F} set to \code{NA}, and \code{avc} in place of \code{Clusters}.
 Show it with \code{\link[=iv_regression_table]{iv_regression_table()}} or \code{\link[=iv_regression_plot]{iv_regression_plot()}}.

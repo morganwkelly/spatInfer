@@ -4,12 +4,14 @@
 \alias{iv_combined_table}
 \title{Table combining chosen IV placebo and synthetic outcome results.}
 \usage{
-iv_combined_table(plbo, syn, select, ar_select = select, caption = "")
+iv_combined_table(plbo, syn = NULL, select, ar_select = select, caption = "")
 }
 \arguments{
-\item{plbo}{An object created by \code{\link[=iv_placebo]{iv_placebo()}}.}
+\item{plbo}{An object created by \code{\link[=iv_placebo]{iv_placebo()}}, or by \code{\link[=iv_placebo_synth]{iv_placebo_synth()}}, in which case
+\code{syn} is left out.}
 
-\item{syn}{An object created by \code{\link[=iv_synth]{iv_synth()}} for the same regression and spatial basis.}
+\item{syn}{An object created by \code{\link[=iv_synth]{iv_synth()}} for the same regression and spatial basis. Leave
+it out when \code{plbo} comes from \code{\link[=iv_placebo_synth]{iv_placebo_synth()}}.}
 
 \item{select}{A named numeric vector giving, for each inference method to show, the number of
 clusters (\code{BCH} and \code{IM}) or the value of \code{avc} (\code{SCPC}) of the 2SLS row, for example
@@ -32,7 +34,8 @@ simulate noise for the treatment, the instrument and the outcome.
 }
 \description{
 \code{iv_combined_table()} is the instrumental variable version of \code{\link[=combined_table]{combined_table()}}. It makes
-one summary table from an \code{\link[=iv_placebo]{iv_placebo()}} test and the matching \code{\link[=iv_synth]{iv_synth()}} test, with a block
+one summary table from an \code{\link[=iv_placebo]{iv_placebo()}} test and the matching \code{\link[=iv_synth]{iv_synth()}} test, or from the
+output of \code{\link[=iv_placebo_synth]{iv_placebo_synth()}}, with a block
 of 2SLS results followed by a block of Anderson-Rubin (AR) results. Each block starts with the
 HC row and then, for each inference method chosen, the row with the chosen number of clusters
 (BCH and IM) or SCPC bound \code{avc}, with the synthetic outcome p value from the same row of the
@@ -50,5 +53,9 @@ syn=iv_synth(fm,china,splines=6,pc_num=13,nSim=100,weights="timepwt48",Parallel=
 iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04))
 # Different choices for the AR rows.
 iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04),ar_select=c(BCH=5,IM=6,SCPC=0.04))
+# Or both tests from one command.
+ps=iv_placebo_synth(fm,china,splines=6,pc_num=13,nSim=100,weights="timepwt48",Parallel=FALSE,
+  avc=0.04,progress=FALSE)
+iv_combined_table(ps,select=c(BCH=6,IM=5,SCPC=0.04))
 }
 }

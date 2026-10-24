@@ -1,7 +1,7 @@
 #' Spatial basis instrumental variable regressions with BCH standard errors.
 #'@description
 #'
-#'  `iv_regression()` estimates an instrumental variable regression by 2SLS
+#'  `iv_bch_regression()` estimates an instrumental variable regression by 2SLS
 #'  with the spatial basis added, using BCH (clustered) or HC standard errors,
 #'  and gives the Anderson-Rubin (AR) test and confidence set of the treatment
 #'  effect, with the same inference, and the first stage F statistic. Choose the
@@ -40,10 +40,10 @@
 #' china=subset(autor_china,t2==1)
 #' fm=d_sh_empl_mfg~l_shind_manuf_cbp+l_sh_popedu_c|d_tradeusch_pw~d_tradeotch_pw_lag
 #' # Use the number of splines and PCs from optimal_basis() and clusters from iv_placebo().
-#' iv_bch=iv_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
+#' iv_bch=iv_bch_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
 #' iv_bch
 
-iv_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BCH","HC"),k_medoids=TRUE){
+iv_bch_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BCH","HC"),k_medoids=TRUE){
   cov=match.arg(cov)
   return(iv_basis_regression(fm,df,splines,pc_num,clusters,weights,cov,k_medoids))
 }
@@ -53,7 +53,7 @@ iv_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BC
 #'
 #'  `iv_im_regression()` runs the spatial basis instrumental variable
 #'  regression with IM inference on every coefficient: each is estimated by
-#'  2SLS separately in k-medoids clusters (the same clusters [iv_regression()]
+#'  2SLS separately in k-medoids clusters (the same clusters [iv_bch_regression()]
 #'  and [iv_placebo()] use) and tested with a t-test of its cluster estimates.
 #'  The Anderson-Rubin (AR) test and confidence set use IM inference too: the
 #'  reduced forms of the outcome and treatment on the instrument are estimated
@@ -61,7 +61,7 @@ iv_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BC
 #'  zero mean of the cluster coefficients of `outcome - b*treatment` (see
 #'  [iv_placebo()]). No first stage F statistic is given.
 #'
-#'@inheritParams iv_regression
+#'@inheritParams iv_bch_regression
 #'@param clusters Number of k-medoids clusters, based on the placebo test.
 #'@details Estimates are means of the 2SLS coefficients estimated in each
 #'  cluster. Unlike these, the AR test needs no strong instrument within each
@@ -71,7 +71,7 @@ iv_regression=function(fm,df,splines,pc_num,clusters=NULL,weights=NULL,cov=c("BC
 #'  these.
 #'
 #'@return An object of class `iv_im_regression`, which is also an
-#'  `iv_regression`: as for [iv_regression()], with IM inference for `AR` and `AR_Set`, with `F` set to `NA`, and in place of `Fit` it
+#'  `iv_regression`: as for [iv_bch_regression()], with IM inference for `AR` and `AR_Set`, with `F` set to `NA`, and in place of `Fit` it
 #'  contains `Cluster_Coefs`, with one row per cluster and one column per
 #'  coefficient, and `Cluster_N`, the number of observations in each cluster.
 #'  [im_table()] shows its coefficients or its estimates in each cluster.
@@ -101,7 +101,7 @@ iv_im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,k_medoids=T
 #'  of the treatment effect with SCPC inference. Choose `avc` with the SCPC rows
 #'  of [iv_placebo()].
 #'
-#'@inheritParams iv_regression
+#'@inheritParams iv_bch_regression
 #'@param avc The SCPC upper bound on the average pairwise correlation, based on
 #'  the placebo test of [iv_placebo()]. It must lie between 0.001 and 0.99.
 #'@details 2SLS is least squares of the outcome on the instrumented treatment
@@ -117,7 +117,7 @@ iv_im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,k_medoids=T
 #'  observations and weighted regressions.
 #'
 #'@return An object of class `iv_scpc_regression`, which is also an
-#'  `iv_regression`: as for [iv_regression()], with SCPC standard errors,
+#'  `iv_regression`: as for [iv_bch_regression()], with SCPC standard errors,
 #'  t statistics, p values and confidence intervals in `Coefs`, SCPC inference
 #'  for `AR` and `AR_Set`, `F` set to `NA`, and `avc` in place of `Clusters`.
 #'  Show it with [iv_regression_table()] or [iv_regression_plot()].
@@ -141,7 +141,7 @@ iv_scpc_regression=function(fm,df,splines,pc_num,avc,weights=NULL,scpc_weighting
   return(obj)
 }
 
-######2SLS with the spatial basis and BCH, HC, IM or SCPC inference, for iv_regression(),
+######2SLS with the spatial basis and BCH, HC, IM or SCPC inference, for iv_bch_regression(),
 ######iv_im_regression() and iv_scpc_regression().
 iv_basis_regression=function(fm,df,splines,pc_num,clusters,weights,cov,k_medoids=TRUE,avc=NULL,
                              scpc_weighting="scpcR"){

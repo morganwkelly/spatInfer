@@ -2,14 +2,17 @@
 #'
 #'@description
 #' `iv_combined_table()` is the instrumental variable version of [combined_table()]. It makes
-#' one summary table from an [iv_placebo()] test and the matching [iv_synth()] test, with a block
+#' one summary table from an [iv_placebo()] test and the matching [iv_synth()] test, or from the
+#' output of [iv_placebo_synth()], with a block
 #' of 2SLS results followed by a block of Anderson-Rubin (AR) results. Each block starts with the
 #' HC row and then, for each inference method chosen, the row with the chosen number of clusters
 #' (BCH and IM) or SCPC bound `avc`, with the synthetic outcome p value from the same row of the
 #' synth.
 #'
-#' @param plbo An object created by [iv_placebo()].
-#' @param syn An object created by [iv_synth()] for the same regression and spatial basis.
+#' @param plbo An object created by [iv_placebo()], or by [iv_placebo_synth()], in which case
+#'   `syn` is left out.
+#' @param syn An object created by [iv_synth()] for the same regression and spatial basis. Leave
+#'   it out when `plbo` comes from [iv_placebo_synth()].
 #' @param select A named numeric vector giving, for each inference method to show, the number of
 #'   clusters (`BCH` and `IM`) or the value of `avc` (`SCPC`) of the 2SLS row, for example
 #'   `c(BCH=7, IM=5, SCPC=0.04)`. Rows appear in this order. SCPC needs `avc` in [iv_placebo()]
@@ -39,9 +42,18 @@
 #' iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04))
 #' # Different choices for the AR rows.
 #' iv_combined_table(plbo,syn,select=c(BCH=6,IM=5,SCPC=0.04),ar_select=c(BCH=5,IM=6,SCPC=0.04))
+#' # Or both tests from one command.
+#' ps=iv_placebo_synth(fm,china,splines=6,pc_num=13,nSim=100,weights="timepwt48",Parallel=FALSE,
+#'   avc=0.04,progress=FALSE)
+#' iv_combined_table(ps,select=c(BCH=6,IM=5,SCPC=0.04))
 #' }
 
-iv_combined_table=function(plbo, syn, select, ar_select=select, caption=""){
+iv_combined_table=function(plbo, syn=NULL, select, ar_select=select, caption=""){
+if(missing(select)) select=NULL
+inp=unpack_placebo_synth(plbo,syn,select,"iv_placebo_synth()")
+plbo=inp$plbo; syn=inp$syn
+if(missing(ar_select)) ar_select=inp$select
+select=inp$select
 check_combined_input(plbo,"Plac p","plbo","iv_placebo()",iv=TRUE)
 check_combined_input(syn,"Synth p","syn","iv_synth()",iv=TRUE)
 check_same_regression(list(plbo,syn))

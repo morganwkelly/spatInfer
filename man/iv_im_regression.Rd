@@ -40,7 +40,7 @@ to use Clara, as for large datasets: use the same setting as in
 }
 \value{
 An object of class \code{iv_im_regression}, which is also an
-\code{iv_regression}: as for \code{\link[=iv_regression]{iv_regression()}}, with IM inference for \code{AR} and \code{AR_Set}, with \code{F} set to \code{NA}, and in place of \code{Fit} it
+\code{iv_regression}: as for \code{\link[=iv_bch_regression]{iv_bch_regression()}}, with IM inference for \code{AR} and \code{AR_Set}, with \code{F} set to \code{NA}, and in place of \code{Fit} it
 contains \code{Cluster_Coefs}, with one row per cluster and one column per
 coefficient, and \code{Cluster_N}, the number of observations in each cluster.
 \code{\link[=im_table]{im_table()}} shows its coefficients or its estimates in each cluster.
@@ -48,7 +48,7 @@ coefficient, and \code{Cluster_N}, the number of observations in each cluster.
 \description{
 \code{iv_im_regression()} runs the spatial basis instrumental variable
 regression with IM inference on every coefficient: each is estimated by
-2SLS separately in k-medoids clusters (the same clusters \code{\link[=iv_regression]{iv_regression()}}
+2SLS separately in k-medoids clusters (the same clusters \code{\link[=iv_bch_regression]{iv_bch_regression()}}
 and \code{\link[=iv_placebo]{iv_placebo()}} use) and tested with a t-test of its cluster estimates.
 The Anderson-Rubin (AR) test and confidence set use IM inference too: the
 reduced forms of the outcome and treatment on the instrument are estimated

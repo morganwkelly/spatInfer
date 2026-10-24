@@ -9,7 +9,7 @@ test_that("final regressions use the placebo's clusters, including Clara", {
   expect_false(isTRUE(all.equal(as.integer(clara),
                                 as.integer(make_clusters(fixture_coords(), 4, TRUE)))))
 
-  bch <- quietly(basis_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4, k_medoids = FALSE))
+  bch <- quietly(bch_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4, k_medoids = FALSE))
   expect_equal(fixest::se(bch), fixest::se(summary(bch, cluster = clara)))
 
   im <- quietly(im_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4, k_medoids = FALSE))

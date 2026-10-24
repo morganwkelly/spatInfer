@@ -10,7 +10,7 @@
 #' @param orig An optional [fixest::feols()] regression, typically the original
 #'   regression without a spatial basis, shown in a first column labelled "Original"
 #'   with the confidence intervals of the standard errors it was estimated with.
-#' @param bch Output of [basis_regression()] with BCH standard errors.
+#' @param bch Output of [bch_regression()] with BCH standard errors.
 #' @param im Output of [im_regression()].
 #' @param scpc Output of [scpc_regression()].
 #' @param statistic Passed to [modelsummary::modelsummary()]. Defaults to 95%
@@ -38,7 +38,7 @@
 #' set.seed(123)
 #' opportunity=opportunity |> dplyr::slice_sample(n=250)
 #' fm=mobility~single_mothers+short_commute+gini+dropout_rate+social_cap
-#' bch=basis_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
+#' bch=bch_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
 #' im=im_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
 #' sc=scpc_regression(fm,opportunity,splines=4,pc_num=3,avc=0.04)
 #' orig=fixest::feols(fm,opportunity,vcov="hetero")
@@ -81,7 +81,7 @@ regression_table=function(orig=NULL,bch=NULL,im=NULL,scpc=NULL,statistic="conf.i
 #' set.seed(123)
 #' opportunity=opportunity |> dplyr::slice_sample(n=250)
 #' fm=mobility~single_mothers+short_commute+gini+dropout_rate+social_cap
-#' bch=basis_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
+#' bch=bch_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
 #' im=im_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
 #' sc=scpc_regression(fm,opportunity,splines=4,pc_num=3,avc=0.04)
 #' orig=fixest::feols(fm,opportunity,vcov="hetero")
@@ -107,7 +107,7 @@ regression_models=function(orig,bch,im,scpc,caller){
   if(is.null(orig)&&is.null(bch)&&is.null(im)&&is.null(scpc))
     stop("Give at least one of orig, bch, im and scpc.",call.=FALSE)
   if(inherits(bch,"iv_regression")||inherits(im,"iv_regression")||inherits(scpc,"iv_regression"))
-    stop("For iv_regression(), iv_im_regression() and iv_scpc_regression() results use iv_regression_table() and iv_regression_plot().",
+    stop("For iv_bch_regression(), iv_im_regression() and iv_scpc_regression() results use iv_regression_table() and iv_regression_plot().",
          call.=FALSE)
 
   models=list()
@@ -119,7 +119,7 @@ regression_models=function(orig,bch,im,scpc,caller){
   }
   if(!is.null(bch)){
     if(!inherits(bch,"fixest"))
-      stop("bch must be the output of basis_regression().",call.=FALSE)
+      stop("bch must be the output of bch_regression().",call.=FALSE)
     G=attr(bch$cov.scaled,"G")
     models$BCH=as_modelsummary_list(broom::tidy(bch,conf.int=TRUE),stats::nobs(bch))
     model_notes=c(model_notes,if(is.null(G)) "BCH: heteroskedasticity robust standard errors."

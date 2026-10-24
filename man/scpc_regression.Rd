@@ -45,7 +45,7 @@ left out of \code{Coefs}. Use \code{\link[=regression_table]{regression_table()}
 BCH and IM results.
 }
 \description{
-\code{scpc_regression()} runs the spatial basis regression of \code{\link[=basis_regression]{basis_regression()}}
+\code{scpc_regression()} runs the spatial basis regression of \code{\link[=bch_regression]{bch_regression()}}
 with SCPC inference (Mueller and Watson 2022, 2023) on every coefficient. The
 SCPC code is ported from the scpcR package, and gives the same results for
 weighted and unweighted regressions; see Details.

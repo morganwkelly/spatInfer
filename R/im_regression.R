@@ -1,7 +1,7 @@
 #' Spatial basis regression with IM inference on every coefficient.
 #'
 #' @description
-#' `im_regression()` runs the spatial basis regression of [basis_regression()]
+#' `im_regression()` runs the spatial basis regression of [bch_regression()]
 #' with Ibragimov-Mueller (IM) inference on every coefficient instead of BCH
 #' standard errors. The sample is divided into k-medoids clusters, the regression
 #' is estimated separately in each cluster, and each coefficient is tested with a
@@ -26,7 +26,7 @@
 #'   95% confidence interval, and the t statistic is the estimate divided by this
 #'   pseudo standard error, so they are comparable with BCH and SCPC results. Clusters where a coefficient cannot be estimated, for example
 #'   because its variable does not vary within the cluster, are left out of its
-#'   t-test with a warning. The clusters are the same as those [basis_regression()]
+#'   t-test with a warning. The clusters are the same as those [bch_regression()]
 #'   uses for BCH standard errors with the same number of clusters. The principal
 #'   components of the spatial basis are left out of the results.
 #'
@@ -63,7 +63,7 @@ im_regression=function(fm,df,splines,pc_num,clusters,weights=NULL,k_medoids=TRUE
   df1=basis$df
 
   Coords=as.matrix(df1 |> dplyr::select(X,Y))
-  clust=make_clusters(Coords,clusters,k_medoids)   #same clusters as BCH in basis_regression()
+  clust=make_clusters(Coords,clusters,k_medoids)   #same clusters as BCH in bch_regression()
 
   #coefficients estimated in each cluster: one column per cluster, NA where not estimated
   fits=lapply(split(df1,clust),function(d) fixest::feols(basis$eq_est,data=d,weights=~wts))
@@ -187,7 +187,7 @@ im_table=function(im,type=c("coefs","clusters"),caption="",digits=3,decimals=2){
   return(out)
 }
 
-######Data for a spatial basis regression, as in basis_regression(): the outcome is renamed
+######Data for a spatial basis regression, as in bch_regression(): the outcome is renamed
 ######dep_var, the regression weights are in wts, and the principal components of the
 ######spatial basis are added. Explanatory variables keep their names.
 basis_data=function(fm,df,splines,pc_num,weights){

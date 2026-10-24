@@ -50,7 +50,7 @@ Use \code{\link[=im_table]{im_table()}} to make tables of the results, and \code
 compare them with BCH and SCPC results.
 }
 \description{
-\code{im_regression()} runs the spatial basis regression of \code{\link[=basis_regression]{basis_regression()}}
+\code{im_regression()} runs the spatial basis regression of \code{\link[=bch_regression]{bch_regression()}}
 with Ibragimov-Mueller (IM) inference on every coefficient instead of BCH
 standard errors. The sample is divided into k-medoids clusters, the regression
 is estimated separately in each cluster, and each coefficient is tested with a
@@ -64,7 +64,7 @@ standard error is a pseudo standard error, one quarter of the width of the
 95\% confidence interval, and the t statistic is the estimate divided by this
 pseudo standard error, so they are comparable with BCH and SCPC results. Clusters where a coefficient cannot be estimated, for example
 because its variable does not vary within the cluster, are left out of its
-t-test with a warning. The clusters are the same as those \code{\link[=basis_regression]{basis_regression()}}
+t-test with a warning. The clusters are the same as those \code{\link[=bch_regression]{bch_regression()}}
 uses for BCH standard errors with the same number of clusters. The principal
 components of the spatial basis are left out of the results.
 }

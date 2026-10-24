@@ -1,7 +1,7 @@
 #' Spatial basis regression with SCPC inference on every coefficient.
 #'
 #' @description
-#' `scpc_regression()` runs the spatial basis regression of [basis_regression()]
+#' `scpc_regression()` runs the spatial basis regression of [bch_regression()]
 #' with SCPC inference (Mueller and Watson 2022, 2023) on every coefficient. The
 #' SCPC code is ported from the scpcR package, and gives the same results for
 #' weighted and unweighted regressions; see Details.

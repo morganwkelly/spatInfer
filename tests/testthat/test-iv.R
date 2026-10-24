@@ -254,15 +254,15 @@ test_that("placebo_table() and synth_table() show 2SLS and AR results in one tab
   expect_false(any(grepl("SCPC", unlist(weighted@notes))))
 })
 
-# iv_regression() and iv_im_regression() use the same clusters and tests as iv_placebo(), so their
+# iv_bch_regression() and iv_im_regression() use the same clusters and tests as iv_placebo(), so their
 # results for the real data must agree with the iv_placebo() rows for the same inference and clusters.
 fit_iv <- function(cov, clusters = 4, data = iv_fixture_data()) {
   if (cov == "IM") return(quietly(iv_im_regression(iv_fixture_fm, data, 4, 4, clusters = clusters)))
   if (cov == "SCPC") return(quietly(iv_scpc_regression(iv_fixture_fm, data, 4, 4, avc = iv_avc[1])))
-  quietly(iv_regression(iv_fixture_fm, data, 4, 4, clusters = if (cov == "HC") NULL else clusters, cov = cov))
+  quietly(iv_bch_regression(iv_fixture_fm, data, 4, 4, clusters = if (cov == "HC") NULL else clusters, cov = cov))
 }
 
-test_that("iv_regression(), iv_im_regression() and iv_scpc_regression() agree with iv_placebo()", {
+test_that("iv_bch_regression(), iv_im_regression() and iv_scpc_regression() agree with iv_placebo()", {
   plbo <- readRDS(golden_path("iv_placebo"))$Results
   row <- function(se, clusters) plbo[plbo$SE == se & plbo$Clusters == clusters, ]
   for (cov in c("BCH", "IM", "HC", "SCPC")) {
@@ -279,7 +279,7 @@ test_that("iv_regression(), iv_im_regression() and iv_scpc_regression() agree wi
   }
 })
 
-test_that("iv_regression() and iv_im_regression() return the documented components", {
+test_that("iv_bch_regression() and iv_im_regression() return the documented components", {
   bch <- fit_iv("BCH")
   expect_s3_class(bch, "iv_regression")
   expect_false(inherits(bch, "iv_im_regression"))
@@ -305,10 +305,10 @@ test_that("iv_regression() and iv_im_regression() return the documented componen
   }
 })
 
-test_that("iv_regression() and iv_im_regression() check their arguments", {
+test_that("iv_bch_regression() and iv_im_regression() check their arguments", {
   d <- iv_fixture_data()
-  expect_error(iv_regression(iv_fixture_fm, d, 4, 4), "whole number")
-  expect_error(iv_regression(iv_fixture_fm, d, 4, 4, clusters = 4, cov = "IM"), "should be one of")
+  expect_error(iv_bch_regression(iv_fixture_fm, d, 4, 4), "whole number")
+  expect_error(iv_bch_regression(iv_fixture_fm, d, 4, 4, clusters = 4, cov = "IM"), "should be one of")
   expect_error(iv_im_regression(iv_fixture_fm, d, 4, 4, clusters = 1.5), "whole number")
 })
 
@@ -345,15 +345,15 @@ test_that("iv_regression_table() gives coefficients, first stage F and AR result
   expect_identical(names(hc)[4], "HC")
 
   expect_error(iv_regression_table(), "at least one")
-  expect_error(iv_regression_table(bch = im), "iv_regression()")
+  expect_error(iv_regression_table(bch = im), "iv_bch_regression()")
   expect_error(iv_regression_table(im = bch), "iv_im_regression()")
   expect_error(regression_table(bch = bch), "iv_regression_table")
   expect_error(regression_table(im = im), "iv_regression_table")
 })
 
 test_that("iv_regression_plot() draws AR sets, with arrows for unbounded parts", {
-  bch <- quietly(iv_regression(iv_fixture_fm, iv_fixture_data(), 4, 4, clusters = 3, weights = "timepwt48"))
-  hc <- quietly(iv_regression(iv_fixture_fm, iv_fixture_data(), 4, 4, cov = "HC", weights = "timepwt48"))
+  bch <- quietly(iv_bch_regression(iv_fixture_fm, iv_fixture_data(), 4, 4, clusters = 3, weights = "timepwt48"))
+  hc <- quietly(iv_bch_regression(iv_fixture_fm, iv_fixture_data(), 4, 4, cov = "HC", weights = "timepwt48"))
   im <- quietly(iv_im_regression(iv_fixture_fm, iv_fixture_data(), 4, 4, clusters = 4, weights = "timepwt48"))
   expect_length(bch$AR_Set, 4)               # two rays
   expect_identical(hc$AR_Set, c(-Inf, Inf))  # whole line
@@ -412,7 +412,7 @@ test_that("iv_regression_table() and iv_regression_plot() take iv_scpc_regressio
   row <- function(term) unname(unlist(tab[tab$term == term, 4:5]))
   expect_identical(row("First stage F"), c(format(signif(bch$F, 3)), ""))
   expect_identical(row("AR 95% set"), c(bch$AR$CI, sc$AR$CI))
-  expect_error(iv_regression_table(bch = sc), "iv_regression()")
+  expect_error(iv_regression_table(bch = sc), "iv_bch_regression()")
   expect_error(iv_regression_table(scpc = bch), "iv_scpc_regression()")
   expect_error(regression_table(scpc = sc), "iv_regression_table")
   p <- iv_regression_plot(bch = bch, scpc = sc)

@@ -15,7 +15,7 @@
 #'   labelled "Original" with the standard errors it was estimated with. Its
 #'   first stage F statistic uses the same standard errors; no AR results are
 #'   shown for it.
-#' @param bch Output of [iv_regression()], with BCH or HC standard errors. The
+#' @param bch Output of [iv_bch_regression()], with BCH or HC standard errors. The
 #'   column is labelled "BCH" or "HC".
 #' @param im Output of [iv_im_regression()].
 #' @param scpc Output of [iv_scpc_regression()].
@@ -37,7 +37,7 @@
 #' china=subset(autor_china,t2==1)
 #' fm=d_sh_empl_mfg~l_shind_manuf_cbp+l_sh_popedu_c|d_tradeusch_pw~d_tradeotch_pw_lag
 #' orig=fixest::feols(fm,china,weights=~timepwt48,vcov="hetero")
-#' iv_bch=iv_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
+#' iv_bch=iv_bch_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
 #' iv_im=iv_im_regression(fm,china,splines=6,pc_num=8,clusters=4,weights="timepwt48")
 #' iv_sc=iv_scpc_regression(fm,china,splines=6,pc_num=8,avc=0.05,weights="timepwt48")
 #' iv_regression_table(orig=orig,bch=iv_bch,im=iv_im,scpc=iv_sc)
@@ -84,7 +84,7 @@ iv_regression_table=function(orig=NULL,bch=NULL,im=NULL,scpc=NULL,statistic="con
 #' data(autor_china)
 #' china=subset(autor_china,t2==1)
 #' fm=d_sh_empl_mfg~l_shind_manuf_cbp+l_sh_popedu_c|d_tradeusch_pw~d_tradeotch_pw_lag
-#' iv_bch=iv_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
+#' iv_bch=iv_bch_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
 #' iv_regression_plot(bch=iv_bch)
 
 iv_regression_plot=function(orig=NULL,bch=NULL,im=NULL,scpc=NULL,coef_omit="Intercept|^PC[0-9]+$"){
@@ -184,7 +184,7 @@ iv_regression_models=function(orig,bch,im,scpc,caller,need_modelsummary=TRUE){
   }
   if(!is.null(bch)){
     if(!inherits(bch,"iv_regression")||inherits(bch,c("iv_im_regression","iv_scpc_regression")))
-      stop("bch must be the output of iv_regression().",call.=FALSE)
+      stop("bch must be the output of iv_bch_regression().",call.=FALSE)
     name=bch$Inference
     models[[name]]=as_modelsummary_list(bch$Coefs,bch$N)
     F[[name]]=bch$F

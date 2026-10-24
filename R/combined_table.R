@@ -2,13 +2,15 @@
 #'
 #'@description
 #' `combined_table()` makes one summary table from a [placebo()] test and the matching [synth()]
-#' test. It starts with the HC row and then, for each inference method chosen, gives the row with
+#' test, or from the output of [placebo_synth()]. It starts with the HC row and then, for each inference method chosen, gives the row with
 #' the chosen number of clusters (BCH and IM) or SCPC bound `avc`, with the synthetic outcome p
 #' value from the same row of the synth. [iv_combined_table()] does the same for instrumental
 #' variable regressions.
 #'
-#' @param plbo An object created by [placebo()].
-#' @param syn An object created by [synth()] for the same regression and spatial basis.
+#' @param plbo An object created by [placebo()], or by [placebo_synth()], in which case `syn` is
+#'   left out.
+#' @param syn An object created by [synth()] for the same regression and spatial basis. Leave it
+#'   out when `plbo` comes from [placebo_synth()].
 #' @param select A named numeric vector giving, for each inference method to show, the number of
 #'   clusters (`BCH` and `IM`) or the value of `avc` (`SCPC`) of its row, for example
 #'   `c(BCH=7, IM=5, SCPC=0.04)`. Rows appear in this order. SCPC needs `avc` in [placebo()] and
@@ -35,9 +37,16 @@
 #' synt=synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7, avc=0.04)
 #' combined_table(plbo, synt, select=c(BCH=5, IM=4, SCPC=0.04),
 #'   caption="Placebo and synthetic outcome significance levels for single mothers variable.")
+#' # Or both tests from one command.
+#' ps=placebo_synth(fm, opportunity, splines=6, pc_num=15, nSim=100, Parallel=FALSE, max_clus=7,
+#'   avc=0.04, progress=FALSE)
+#' combined_table(ps, select=c(BCH=5, IM=4, SCPC=0.04))
 
 
-combined_table=function(plbo, syn, select, caption=""){
+combined_table=function(plbo, syn=NULL, select, caption=""){
+if(missing(select)) select=NULL
+inp=unpack_placebo_synth(plbo,syn,select,"placebo_synth()")
+plbo=inp$plbo; syn=inp$syn; select=inp$select
 check_combined_input(plbo,"Plac p","plbo","placebo()")
 check_combined_input(syn,"Synth p","syn","synth()")
 check_same_regression(list(plbo,syn))
@@ -87,6 +96,20 @@ comb_tab= comb_tab |>
 return(comb_tab)
 }
 
+#####combined_table() and iv_combined_table() take a placebo and a synth, or the output of
+#####placebo_synth() alone, in which case select may also be given second, in the place of syn.
+unpack_placebo_synth=function(plbo,syn,select,fun){
+  is_ps=is.list(plbo) && is.null(plbo$Results) && all(c("Placebo","Synth") %in% names(plbo))
+  if(!is_ps) return(list(plbo=plbo,syn=syn,select=select))
+  if(is.null(select) && is.numeric(syn)){
+    select=syn
+    syn=NULL
+  }
+  if(!is.null(syn))
+    stop("`syn` must be left out when `plbo` is the output of ",fun,".",call.=FALSE)
+  list(plbo=plbo$Placebo,syn=plbo$Synth,select=select)
+}
+
 #####Placebo and synth results with the expected simulated p value column. iv is TRUE for
 #####iv_combined_table(), which takes only IV results; combined_table() takes none.
 check_combined_input=function(x,p_col,arg,fun,iv=FALSE){
@@ -121,21 +144,6 @@ check_same_regression=function(xs){
   if(any(abs(hc_p-hc_p[1])>1e-12) || any(basis!=basis[1]))
     stop("All placebos and synths must come from the same regression, with the same splines and PCs.",
          call.=FALSE)
-}
-
-#####Row of results whose SE label is `se` and whose clusters or avc (the second column, stored as
-#####character with "." for HC) equal `value`. value is NA for HC rows, which have no level.
-pick_row=function(results,se,value){
-  level=results[[2]]
-  rows=results$SE==se
-  if(!is.na(value)) rows=rows & (abs(suppressWarnings(as.numeric(level))-value)<1e-8) %in% TRUE
-  rows=which(rows %in% TRUE)
-  if(length(rows)==0){
-    available=paste(level[results$SE==se],collapse=", ")
-    stop("No ",se," row with ",names(results)[2]," = ",value,". Available values: ",available,".",
-         call.=FALSE)
-  }
-  results[rows[1],,drop=FALSE]
 }
 
 #####Row of results whose SE label is `se` and whose clusters or avc (the second column, stored as

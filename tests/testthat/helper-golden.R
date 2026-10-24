@@ -79,15 +79,15 @@ golden_cases <- list(
     summarise_basis(quietly(optimal_basis(fixture_fm, fixture_data(), max_splines = 3)))
   },
   basis_regression_bch = function() {
-    summarise_feols(quietly(basis_regression(fixture_fm, fixture_data(),
+    summarise_feols(quietly(bch_regression(fixture_fm, fixture_data(),
       splines = 4, pc_num = 4, clusters = 4, cov = "BCH")))
   },
   basis_regression_hc = function() {
-    summarise_feols(quietly(basis_regression(fixture_fm, fixture_data(),
+    summarise_feols(quietly(bch_regression(fixture_fm, fixture_data(),
       splines = 4, pc_num = 4, clusters = 4, cov = "HC")))
   },
   basis_regression_weighted = function() {
-    summarise_feols(quietly(basis_regression(fixture_fm, fixture_data(TRUE),
+    summarise_feols(quietly(bch_regression(fixture_fm, fixture_data(TRUE),
       splines = 4, pc_num = 4, clusters = 4, weights = "wt")))
   },
   # Least squares placebo and synth cases were recorded when the BCH, IM and SCPC versions were

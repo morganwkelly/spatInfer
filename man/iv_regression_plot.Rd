@@ -19,7 +19,7 @@ labelled "Original" with the standard errors it was estimated with. Its
 first stage F statistic uses the same standard errors; no AR results are
 shown for it.}
 
-\item{bch}{Output of \code{\link[=iv_regression]{iv_regression()}}, with BCH or HC standard errors. The
+\item{bch}{Output of \code{\link[=iv_bch_regression]{iv_bch_regression()}}, with BCH or HC standard errors. The
 column is labelled "BCH" or "HC".}
 
 \item{im}{Output of \code{\link[=iv_im_regression]{iv_im_regression()}}.}
@@ -44,6 +44,6 @@ library(spatInfer)
 data(autor_china)
 china=subset(autor_china,t2==1)
 fm=d_sh_empl_mfg~l_shind_manuf_cbp+l_sh_popedu_c|d_tradeusch_pw~d_tradeotch_pw_lag
-iv_bch=iv_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
+iv_bch=iv_bch_regression(fm,china,splines=6,pc_num=8,clusters=6,weights="timepwt48")
 iv_regression_plot(bch=iv_bch)
 }

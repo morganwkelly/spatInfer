@@ -21,7 +21,7 @@ regression_table(
 regression without a spatial basis, shown in a first column labelled "Original"
 with the confidence intervals of the standard errors it was estimated with.}
 
-\item{bch}{Output of \code{\link[=basis_regression]{basis_regression()}} with BCH standard errors.}
+\item{bch}{Output of \code{\link[=bch_regression]{bch_regression()}} with BCH standard errors.}
 
 \item{im}{Output of \code{\link[=im_regression]{im_regression()}}.}
 
@@ -64,7 +64,7 @@ data(opportunity)
 set.seed(123)
 opportunity=opportunity |> dplyr::slice_sample(n=250)
 fm=mobility~single_mothers+short_commute+gini+dropout_rate+social_cap
-bch=basis_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
+bch=bch_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
 im=im_regression(fm,opportunity,splines=4,pc_num=3,clusters=5)
 sc=scpc_regression(fm,opportunity,splines=4,pc_num=3,avc=0.04)
 orig=fixest::feols(fm,opportunity,vcov="hetero")

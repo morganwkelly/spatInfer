@@ -64,7 +64,7 @@ test_that("scpc_regression() matches scpcR for every coefficient", {
 
 test_that("regression_table() combines BCH, IM and SCPC with notes", {
   skip_if_not_installed("modelsummary")
-  bch <- quietly(basis_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4))
+  bch <- quietly(bch_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4))
   tab <- regression_table(bch = bch, im = fit_im(), scpc = fit_scpc(), output = "data.frame")
   expect_identical(names(tab)[4:6], c("BCH", "IM", "SCPC"))
   expect_false(any(grepl("^PC|Intercept", tab$term)))
@@ -92,7 +92,7 @@ test_that("regression_table() shows confidence intervals, not standard errors", 
 
 test_that("regression_plot() plots BCH, IM and SCPC with notes", {
   skip_if_not_installed("modelsummary")
-  bch <- quietly(basis_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4))
+  bch <- quietly(bch_regression(fixture_fm, fixture_data(), 4, 4, clusters = 4))
   p <- regression_plot(bch = bch, im = fit_im(), scpc = fit_scpc())
   expect_s3_class(p, "ggplot")
   expect_identical(p$labels$caption, "BCH: 4 clusters. IM: 4 clusters. SCPC: avc = 0.04.")

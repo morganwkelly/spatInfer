@@ -74,6 +74,12 @@ test_that("placebo_synth_table() adds the synth p values to every placebo row", 
   sel <- c(BCH = 4, SCPC = 0.04)
   expect_identical(placebo_synth_table(ps, select = sel)@data,
                    combined_table(ps$Placebo, ps$Synth, select = sel)@data)
+  # combined_table() also takes the placebo_synth() output itself.
+  expect_identical(combined_table(ps, select = sel)@data,
+                   combined_table(ps$Placebo, ps$Synth, select = sel)@data)
+  expect_identical(combined_table(ps, sel)@data, combined_table(ps, select = sel)@data)
+  expect_error(combined_table(ps, ps$Synth, sel), "must be left out")
+  expect_error(combined_table(ps), "named vector")
 
   expect_error(placebo_synth_table(ps$Placebo), "not the output of placebo_synth")
   bad <- ps
@@ -92,4 +98,9 @@ test_that("placebo_synth_table() shows IV results in 2SLS and Anderson-Rubin blo
   sel <- c(BCH = 4, IM = 5)
   expect_identical(placebo_synth_table(ps, select = sel, ar_select = c(IM = 4))@data,
                    iv_combined_table(ps$Placebo, ps$Synth, select = sel, ar_select = c(IM = 4))@data)
+  expect_identical(iv_combined_table(ps, select = sel, ar_select = c(IM = 4))@data,
+                   iv_combined_table(ps$Placebo, ps$Synth, select = sel, ar_select = c(IM = 4))@data)
+  expect_identical(iv_combined_table(ps, sel)@data,
+                   iv_combined_table(ps$Placebo, ps$Synth, select = sel)@data)
+  expect_error(iv_combined_table(ps, ps$Synth, sel), "must be left out")
 })

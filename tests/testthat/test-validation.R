@@ -8,8 +8,8 @@ test_that("missing or incomplete coordinates are rejected", {
     expect_error(fun(fixture_fm, no_x, 4, 4), "named X and Y")
     expect_error(fun(fixture_fm, na_y, 4, 4), "missing values")
   }
-  expect_error(basis_regression(fixture_fm, no_x, 4, 4, 4), "named X and Y")
-  expect_error(basis_regression(fixture_fm, na_y, 4, 4, 4), "missing values")
+  expect_error(bch_regression(fixture_fm, no_x, 4, 4, 4), "named X and Y")
+  expect_error(bch_regression(fixture_fm, na_y, 4, 4, 4), "missing values")
 })
 
 test_that("max_clus below 3 is rejected", {
@@ -29,7 +29,7 @@ test_that("weights must name a numeric variable without missing values", {
     expect_error(fun(fixture_fm, d, 4, 4, weights = "wt_na"), "missing values")
   }
   for (w in list("pop", TRUE, c("wt", "wt_na")))
-    expect_error(basis_regression(fixture_fm, d, 4, 4, 4, weights = w))
+    expect_error(bch_regression(fixture_fm, d, 4, 4, 4, weights = w))
 })
 
 test_that("optimal_basis() rejects max_splines outside 3 to 12", {
