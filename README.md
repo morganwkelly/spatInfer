@@ -5,18 +5,18 @@
 
 <!-- badges: start -->
 
+<img src="man/figures/logo.png" align="right" alt="spatInfer logo" width="120" />
 <!-- badges: end -->
 
 Strong autocorrelation and directional trends mean that regressions
 using spatial observations are prone to return inflated t-statistics
 regardless of the validity of their identification procedure. The
-purpose of `spatInfer` is to offer applied researchers a simple workflow
-to obtain reliable spatial estimates. A parsimonious spline basis serves
-to control for trends or other large scale spatial structure. To provide
-reliable inference, three modern standard error corrections are
-implemented (Bester-Conley-Hansen, Ibragimov-Mueller, and
-Mueller-Watson) with optimal values of tuning parameters chosen by a
-spatial noise placebo.
+purpose of `spatInfer` is to offer a simple workflow to obtain reliable
+estimates from spatial regressions. A spline basis serves to control for
+trends or other large scale spatial structure. To provide reliable
+inference, three modern standard error corrections are implemented
+(Bester-Conley-Hansen, Ibragimov-Mueller, and Mueller-Watson) with the
+optimal tuning parameter for each chosen by a spatial noise placebo.
 
 ## Workflow.
 
